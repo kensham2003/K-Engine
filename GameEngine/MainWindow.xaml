@@ -43,14 +43,14 @@
         
         <TabControl Grid.Row="1" Grid.Column="0" AllowDrop="True" PreviewDrop="Host_PreviewDrop">
             <TabItem Header="Hierarchy">
-                <ListBox x:Name="HierarchyListBox" SelectionChanged="HierarchyListBox_SelectionChanged">
+                <ListBox x:Name="HierarchyListBox" SelectionChanged="HierarchyListBox_SelectionChanged" MouseLeftButtonDown="HierarchyListBox_MouseLeftButtonDown" Focusable="True">
                 </ListBox>
             </TabItem>
         </TabControl>
 
         <GridSplitter Grid.Row="1" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
 
-        <Grid Grid.Row="1" Grid.Column="2" x:Name="host" AllowDrop="True" PreviewDrop="Host_PreviewDrop" MouseMove="Host_MouseMove" MouseWheel="Host_MouseWheel" MouseDown="Host_MouseDown" MouseUp="Host_MouseUp">
+        <Grid Grid.Row="1" Grid.Column="2" x:Name="host" AllowDrop="True" PreviewDrop="Host_PreviewDrop" MouseMove="Host_MouseMove" MouseWheel="Host_MouseWheel" MouseDown="Host_MouseDown" MouseUp="Host_MouseUp" Focusable="True">
             <Image>
                 <Image.Source>
                     <DXExtensions:D3D11Image x:Name="InteropImage" />
@@ -60,9 +60,9 @@
 
         <GridSplitter Grid.Row="1" Grid.Column="3" Grid.RowSpan="3" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
 
-        <TabControl Grid.Row="1" Grid.Column="4" Grid.RowSpan="3">
+		<TabControl Grid.Row="1" Grid.Column="4" Grid.RowSpan="3" MouseLeftButtonDown="Panel_MouseLeftButtonDown" Focusable="True" Name="Inspector_Panel">
             <TabItem Header="Inspector">
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Name="Inspector_StackPanel">
 
                     <StackPanel Orientation="Horizontal">
                         <Label Content="Position" Width="70"/>

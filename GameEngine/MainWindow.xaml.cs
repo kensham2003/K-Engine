@@ -362,6 +362,7 @@ namespace GameEngine
 
         private void Host_MouseDown(object sender, MouseEventArgs e)
         {
+            host.Focus();
             if (e.RightButton == MouseButtonState.Pressed)
             {
                 hostMouseRightButtonPressed = true;
@@ -392,8 +393,22 @@ namespace GameEngine
 
         private void Host_MouseMove(object sender, MouseEventArgs e)
         {
-            Point mousePosition = e.GetPosition(host);            Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));            Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));            if (e.RightButton == MouseButtonState.Pressed)            {                hostMouseRightButtonPressed = true;                cameraRotation.Y += (float)(mousePosition.X - oldMousePosition.X) * 0.003f;                cameraRotation.X += (float)(mousePosition.Y - oldMousePosition.Y) * 0.003f;                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation("Camera", cameraRotation));
-            }
+            Point mousePosition = e.GetPosition(host);
+            Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));
+            Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));
+
+
+
+            if (e.RightButton == MouseButtonState.Pressed)
+            {
+                hostMouseRightButtonPressed = true;
+
+                cameraRotation.Y += (float)(mousePosition.X - oldMousePosition.X) * 0.003f;
+                cameraRotation.X += (float)(mousePosition.Y - oldMousePosition.Y) * 0.003f;
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation("Camera", cameraRotation));
+
+            }
 
             if(e.RightButton == MouseButtonState.Released)
             {
@@ -437,7 +452,8 @@ namespace GameEngine
         private void Host_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             int wheel = e.Delta;
-            Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));            Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));
+            Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));
+            Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));
 
             Matrix4x4 rotation = Matrix4x4.CreateFromYawPitchRoll(cameraRotation.Y, cameraRotation.X, cameraRotation.Z);
             Vector3 dz = new Vector3(rotation.M31, rotation.M32, rotation.M33);
@@ -477,7 +493,10 @@ namespace GameEngine
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddObject(objectName, filename));
         }
 
-       
+        private void Panel_MouseLeftButtonDown(object sender, MouseEventArgs e)
+        {
+            Inspector_Panel.Focus();
+        }
 
 
         private void Inspector_KeyDown(object sender, KeyEventArgs e)
@@ -638,6 +657,14 @@ namespace GameEngine
         private void HierarchyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ObjectToInspector();
+            ShowInspector();
+        }
+
+        private void HierarchyListBox_MouseLeftButtonDown(object sender, MouseEventArgs e)
+        {
+            HierarchyListBox.Focus();
+            HierarchyListBox.SelectedItem = null;
+            HideInspector();
         }
 
         private void ScriptTextBox_KeyUp(object sender, KeyEventArgs e)
@@ -672,6 +699,42 @@ namespace GameEngine
             if (!hostMouseRightButtonPressed)
             {
                 cameraMoveVelocity = Vector3.Zero;
+            }
+        }
+
+        private void HideInspector()
+        {
+            foreach (TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
+            {
+                tb.Visibility = Visibility.Collapsed;
+            }
+            foreach (Label l in FindChildren<Label>(Inspector_StackPanel))
+            {
+                l.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ShowInspector()
+        {
+            foreach(TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
+            {
+                tb.Visibility = Visibility.Visible;
+            }
+            foreach (Label l in FindChildren<Label>(Inspector_StackPanel))
+            {
+                l.Visibility = Visibility.Visible;
+            }
+        }
+
+        public static IEnumerable<T> FindChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj == null) yield return (T)Enumerable.Empty<T>();
+            for(int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                DependencyObject ithChild = VisualTreeHelper.GetChild(depObj, i);
+                if (ithChild == null) continue;
+                if (ithChild is T t) yield return t;
+                foreach (T childOfChild in FindChildren<T>(ithChild)) yield return childOfChild;
             }
         }
         
