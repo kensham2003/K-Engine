@@ -68,4 +68,25 @@ public:
 		return forward;
 	}
 
+	//位置をvecの分を移動する
+	void MovePosition(D3DXVECTOR3 vec) {
+		m_Position += vec;
+	}
+
+
+	//右にamountユニット分を移動する
+	void MoveRight(float amount) {
+		m_Position += GetRight() * amount;
+	}
+
+	//上にamountユニット分を移動する
+	void MoveTop(float amount) {
+		m_Position += GetTop() * amount;
+	}
+
+	//前にamountユニット分を移動する
+	void MoveForward(float amount) {
+		m_Position += GetForward() * amount;
+	}
+
 };

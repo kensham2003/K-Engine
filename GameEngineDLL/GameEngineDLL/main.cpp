@@ -81,6 +81,22 @@ D3DXVECTOR3 GetObjectForward(const char* ObjectName)
 	return Manager::GetGameObject(ObjectName)->GetForward();
 }
 
+void MoveObjectPosition(const char* ObjectName, D3DXVECTOR3 vec) {
+	return Manager::GetGameObject(ObjectName)->MovePosition(vec);
+}
+
+void MoveObjectRight(const char* ObjectName, float amount) {
+	return Manager::GetGameObject(ObjectName)->MoveRight(amount);
+}
+
+void MoveObjectTop(const char* ObjectName, float amount) {
+	return Manager::GetGameObject(ObjectName)->MoveTop(amount);
+}
+
+void MoveObjectForward(const char* ObjectName, float amount) {
+	return Manager::GetGameObject(ObjectName)->MoveForward(amount);
+}
+
 void CallMoveCamera() {
 	GameObject* camObj = Manager::GetGameObject("Camera");
 	Camera* camera = (Camera*)camObj;
