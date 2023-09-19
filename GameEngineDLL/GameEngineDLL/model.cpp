@@ -8,7 +8,7 @@
 #include "renderer.h"
 #include "model.h"
 
-
+bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle);
 
 void Model::Draw()
 {
@@ -47,7 +47,8 @@ void Model::Load( const char *FileName )
 	MODEL model;
 	LoadObj( FileName, &model );
 
-
+	m_VertexArray = model.VertexArray;
+	m_IndexArray = model.IndexArray;
 
 	// 頂点バッファ生成
 	{
@@ -501,3 +502,46 @@ void Model::LoadMaterial( const char *FileName, MODEL_MATERIAL **MaterialArray, 
 	*MaterialNum = materialNum;
 }
 
+bool Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX world) {
+	D3DXVECTOR3 triangle[3];
+	for (int i = 0; i < m_IndexNum - 2; i++) {
+		D3DXVECTOR4 temp;
+		for (int j = 0; j < 2; j++) {
+			triangle[j] = m_VertexArray[m_IndexArray[i + j]].Position;
+			temp = D3DXVECTOR4(triangle[j].x, triangle[j].y, triangle[j].z, 1.0f);
+			D3DXVec4Transform(&temp, &temp, &world);
+			triangle[j] = D3DXVECTOR3(temp.x, temp.y, temp.z);
+		}
+		if (RayTriangleCollision(ray, cameraPos, triangle)) { return true; }
+	}
+	return false;
+}
+
+bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle) {
+	const float eps = 0.00001f;
+	D3DXVECTOR3 edge1, edge2, h, s, q;
+	float a, f, u, v;
+	edge1 = triangle[1] - triangle[0];
+	edge2 = triangle[2] - triangle[0];
+	D3DXVec3Cross(&h, &ray, &edge2);
+	a = D3DXVec3Dot(&edge1, &h);
+
+	//ray is parallel to triangle
+	if (a > -eps && a < eps) { return false; }
+
+	f = 1.0f / a;
+	s = cameraPos - triangle[0];
+	u = f * D3DXVec3Dot(&s, &h);
+
+	if (u < 0.0f || u > 1.0f) { return false; }
+
+	D3DXVec3Cross(&q, &s, &edge1);
+	v = f * D3DXVec3Dot(&ray, &q);
+
+	if (v < 0.0f || (u + v)>1.0f) { return false; }
+
+	float t = f * D3DXVec3Dot(&edge2, &q);
+
+	if (t > eps) { return true; }
+	else { return false; }
+}

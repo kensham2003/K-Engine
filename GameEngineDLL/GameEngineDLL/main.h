@@ -16,7 +16,7 @@
 
 #pragma warning(pop)
 
-
+#include <string>
 
 #pragma comment (lib, "winmm.lib")
 #pragma comment (lib, "d3d11.lib")
@@ -56,9 +56,12 @@ extern "C" {
 	__declspec(dllexport) void __cdecl MoveObjectTop(const char* ObjectName, float amount);
 	__declspec(dllexport) void __cdecl MoveObjectForward(const char* ObjectName, float amount);
 
+	__declspec(dllexport) void __cdecl SetObjectName(const char* ObjectName, const char* newObjectName);
+
 	__declspec(dllexport) void __cdecl CallMoveCamera();
 	__declspec(dllexport) void __cdecl ResetMoveCamera();
 
+	__declspec(dllexport) char* __cdecl RaycastObject(float x, float y, float screenHeight);
 
 	__declspec(dllexport) void __cdecl AddObject(const char* ObjectName, const char* FileName);
 }

@@ -1,22 +1,49 @@
 #pragma once
 
+#include "component.h"
+#include <list>
+#include <string>
 
 class GameObject
 {
 
 protected://継承先のクラスからアクセスできる
+
 	D3DXVECTOR3	m_Position;
 	D3DXVECTOR3	m_Rotation;
 	D3DXVECTOR3	m_Scale;
+
+	std::list<Component*> m_Component;
 
 public:
 	GameObject() {}//コンストラクタ
 	virtual ~GameObject() {}//デストラクタ（仮想関数）
 
-	virtual void Init() = 0;//純粋仮想関数
-	virtual void Uninit() = 0;
-	virtual void Update() = 0;
-	virtual void Draw() = 0;
+	//virtual void Init() = 0;//純粋仮想関数
+	//virtual void Uninit() = 0;
+	//virtual void Update() = 0;
+	//virtual void Draw() = 0;
+
+	virtual void Init() {}
+
+	virtual void Uninit() {
+		for (Component* component : m_Component) {
+			component->Uninit();
+			delete component;
+		}
+		m_Component.clear();
+	}
+	virtual void Update() {
+		for (Component* component : m_Component) {
+			component->Update();
+		}
+	}
+	virtual void Draw() {
+		for (Component* component : m_Component) {
+			component->Draw();
+		}
+	}
+
 
 	void SetPosition(D3DXVECTOR3 Position) { m_Position = Position; }
 	void SetRotation(D3DXVECTOR3 Rotation) { m_Rotation = Rotation; }
@@ -87,6 +114,29 @@ public:
 	//前にamountユニット分を移動する
 	void MoveForward(float amount) {
 		m_Position += GetForward() * amount;
+	}
+
+
+	//コンポーネントを追加
+	template <typename T> //テンプレート関数
+	T* AddComponent() {
+		Component* component = new T();
+		component->m_GameObject = this;
+		m_Component.push_back(component);
+		component->Init();
+
+		return (T*)component;
+	}
+
+	//コンポーネントを取得
+	template <typename T>
+	T* GetComponent() {
+		for (Component* component : m_Component) {
+			if (typeid(*component) == typeid(T)) { //型を調べる(RTTI動的型情報)
+				return (T*)component;
+			}
+		}
+		return nullptr;
 	}
 
 };

@@ -52,6 +52,11 @@ private:
 	void LoadObj( const char *FileName, MODEL *Model );
 	void LoadMaterial( const char *FileName, MODEL_MATERIAL **MaterialArray, unsigned int *MaterialNum );
 
+	VERTEX_3D* m_VertexArray;
+	unsigned int m_VertexNum;
+	unsigned int* m_IndexArray;
+	unsigned int m_IndexNum;
+
 public:
 
 	void Draw();
@@ -59,4 +64,5 @@ public:
 	void Load( const char *FileName );
 	void Unload();
 
+	bool IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX world);
 };

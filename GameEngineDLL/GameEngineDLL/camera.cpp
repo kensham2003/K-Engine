@@ -33,6 +33,7 @@ void Camera::Draw()
 
 	Renderer::SetViewMatrix(&viewMatrix);
 
+	m_ViewMatrix = viewMatrix;
 
 	//プロジェクションマトリクス設定
 	D3DXMATRIX projectionMatrix;
@@ -135,4 +136,24 @@ void Camera::MoveCamera()
 		cameraMoveVelocity *= m_MoveSpeed;
 		m_Position += cameraMoveVelocity;
 	}
+}
+
+D3DXVECTOR3 Camera::GetRayFromScreen(float x, float y, float screenHeight) {
+	float scaledX, scaledY, scaledWidth;
+	scaledWidth = screenHeight / SCREEN_HEIGHT * SCREEN_WIDTH;
+	scaledX = x / screenHeight * SCREEN_HEIGHT;
+	scaledY = y / scaledWidth * SCREEN_WIDTH;
+	D3DXMATRIX view = m_ViewMatrix;
+	D3DXVECTOR3 viewX, viewY, viewZ;
+	viewX = D3DXVECTOR3(view._11, view._21, view._31);
+	viewY = D3DXVECTOR3(view._12, view._22, view._32);
+	viewZ = D3DXVECTOR3(view._13, view._23, view._33);
+
+	float fovy = 1.0f;
+	float fovx = 1.0f / SCREEN_HEIGHT * SCREEN_WIDTH;
+	float yTotal = 1.0f * tanf(fovy / 2);
+	float xTotal = 1.0f * tanf(fovx / 2);
+	D3DXVECTOR3 dir = viewZ + viewX * scaledX - viewY * scaledY;
+	D3DXVec3Normalize(&dir, &dir);
+	return dir;
 }

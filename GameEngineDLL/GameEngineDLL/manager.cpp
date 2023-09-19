@@ -70,3 +70,30 @@ void Manager::AddGameObject(const char* ObjectName, const char* FileName)
 
 	m_GameObject[ObjectName] = player;
 }
+
+void Manager::RenameGameObject(const char* ObjectName, const char* newName) 
+{
+	GameObject* gameObject = m_GameObject[ObjectName];
+	auto it = m_GameObject.find(ObjectName);
+	if (it != m_GameObject.end()) {
+		m_GameObject.erase(it);
+		m_GameObject[newName] = gameObject;
+	}
+}
+
+std::string Manager::RaycastObject(float x, float y, float screenHeight) {
+	//Camera* camera = (Camera*)m_GameObject["Camera"];
+	//D3DXVECTOR3 ray = camera->GetRayFromScreen(x, y, screenHeight);
+	//std::vector<Player*> players = GetGameObjects<Player>();
+	//for (auto player : players) {
+	//	return "abc";
+	//	if (player->IsRayCollideModel(ray, camera->GetPosition())) {
+	//		for (auto& it : m_GameObject) {
+	//			if (it.second == player) {
+	//				return it.first;
+	//			}
+	//		}
+	//	}
+	//}
+	return "a";
+}

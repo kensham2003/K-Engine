@@ -97,6 +97,10 @@ void MoveObjectForward(const char* ObjectName, float amount) {
 	return Manager::GetGameObject(ObjectName)->MoveForward(amount);
 }
 
+void SetObjectName(const char* ObjectName, const char* newObjectName) {
+	return Manager::RenameGameObject(ObjectName, newObjectName);
+}
+
 void CallMoveCamera() {
 	GameObject* camObj = Manager::GetGameObject("Camera");
 	Camera* camera = (Camera*)camObj;
@@ -107,6 +111,12 @@ void ResetMoveCamera() {
 	GameObject* camObj = Manager::GetGameObject("Camera");
 	Camera* camera = (Camera*)camObj;
 	camera->ResetSpeed();
+}
+
+char* RaycastObject(float x, float y, float screenHeight) {
+	//return Manager::RaycastObject(x, y, screenHeight);
+	char a = 'c';
+	return &a;
 }
 
 void AddObject(const char* ObjectName, const char* FileName)

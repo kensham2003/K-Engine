@@ -59,8 +59,12 @@ void Player::Draw()
 
 	Renderer::SetWorldMatrix(&world);
 
+	m_World = world;
 
 	m_Model->Draw();
 }
 
 
+bool Player::IsRayCollideModel(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos) {
+	return m_Model->IsRayCollide(ray, cameraPos, m_World);
+}

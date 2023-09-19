@@ -326,10 +326,16 @@ namespace GameEngine
             public static extern void MoveObjectForward(string ObjectName, float amount);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectName(string ObjectName, string newObjectName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void CallMoveCamera();
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void ResetMoveCamera();
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern string RaycastObject(float x, float y, float screenHeight);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void AddObject(string ObjectName, string FileName);
@@ -384,8 +390,21 @@ namespace GameEngine
         //左クリック：レイキャストして一番近いオブジェクトを選択
         private void Host_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Point mousePosition = e.GetPosition(host);
-
+            Point localMousePosition = e.GetPosition(host);
+            double height = host.ActualHeight;
+            double width = host.ActualWidth;
+            localMousePosition.Y -= height / 2;
+            localMousePosition.X -= width / 2;
+            float x = (float)(localMousePosition.X);
+            float y = (float)(localMousePosition.Y);
+            float screenHeight = (float)height;
+            string search;
+            search = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
+            width += 0;
+            //if (search != "")
+            //{
+            //    int a = 0;
+            //}
         }
 
         //右ボタン押しながら+WASD：カメラを移動
@@ -684,7 +703,10 @@ namespace GameEngine
         private void HierarchyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ObjectToInspector();
-            ShowInspector();
+            if (HierarchyListBox.SelectedItem != null)
+            {
+                ShowInspector();
+            }
         }
 
         private void HierarchyListBox_MouseLeftButtonDown(object sender, MouseEventArgs e)
@@ -731,34 +753,39 @@ namespace GameEngine
 
         private void HideInspector()
         {
-            foreach (TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
-            {
-                tb.Visibility = Visibility.Collapsed;
-            }
-            foreach (Label l in FindChildren<Label>(Inspector_StackPanel))
-            {
-                l.Visibility = Visibility.Collapsed;
-            }
-            foreach (Button b in FindChildren<Button>(Inspector_StackPanel))
-            {
-                b.Visibility = Visibility.Collapsed;
-            }
+            //foreach (TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
+            //{
+            //    tb.Visibility = Visibility.Collapsed;
+            //}
+            //foreach (Label l in FindChildren<Label>(Inspector_StackPanel))
+            //{
+            //    l.Visibility = Visibility.Collapsed;
+            //}
+            //foreach (Button b in FindChildren<Button>(Inspector_StackPanel))
+            //{
+            //    b.Visibility = Visibility.Collapsed;
+            //}
+            Inspector_StackPanel.Visibility = Visibility.Collapsed;
         }
 
         private void ShowInspector()
         {
-            foreach(TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
-            {
-                tb.Visibility = Visibility.Visible;
-            }
-            foreach (Label l in FindChildren<Label>(Inspector_StackPanel))
-            {
-                l.Visibility = Visibility.Visible;
-            }
-            foreach (Button b in FindChildren<Button>(Inspector_StackPanel))
-            {
-                b.Visibility = Visibility.Visible;
-            }
+            //foreach(TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
+            //{
+            //    tb.Visibility = Visibility.Visible;
+            //}
+            //foreach (Label l in FindChildren<Label>(Inspector_StackPanel))
+            //{
+            //    l.Visibility = Visibility.Visible;
+            //}
+            //foreach (Button b in FindChildren<Button>(Inspector_StackPanel))
+            //{
+            //    b.Visibility = Visibility.Visible;
+            //}
+            Inspector_StackPanel.Visibility = Visibility.Visible;
+
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+            Inspector_Name.Text = gameObject.ToString();
         }
 
         public static IEnumerable<T> FindChildren<T>(DependencyObject depObj) where T : DependencyObject
@@ -970,6 +997,32 @@ namespace GameEngine
         private void Inspector_Position_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             mouseLeftButtonPressed = false;
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+            Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(gameObject.ToString()));
+            gameObject.Position = Pos;
+        }
+
+        private void Inspector_Name_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Return)
+                return;
+
+            RenameObject();
+        }
+
+
+        private void RenameObject()
+        {
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+            if (gameObject == null)
+                return;
+
+            string objectName = gameObject.ToString();
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectName(objectName, Inspector_Name.Text));
+
+            gameObject.Content = Inspector_Name.Text;
+
+            HierarchyListBox.Items.Refresh();
         }
     }
 }

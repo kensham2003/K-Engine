@@ -64,7 +64,9 @@
 			<TabItem Header="Inspector">
 				<StackPanel Orientation="Vertical" Name="Inspector_StackPanel" Loaded="Inspector_Panel_Loaded">
 
-					<StackPanel Orientation="Horizontal">
+						<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown"/>
+
+						<StackPanel Orientation="Horizontal">
 						<Label Content="Position" Width="70"/>
 						<Label Content="X"/>
 						<TextBox x:Name="PositionX" Text="0.00" KeyDown="Inspector_KeyDown"/>
