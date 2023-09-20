@@ -56,6 +56,9 @@ namespace GameEngine
         Point mousePosition;
         Point newMousePosition;
 
+        bool inspector_isWorldCoordinate = true;
+        bool inspector_isScaleLinked = false;
+
         Task task;
 
         System.Timers.Timer timer;
@@ -326,6 +329,12 @@ namespace GameEngine
             public static extern void MoveObjectForward(string ObjectName, float amount);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void RotateObject(string ObjectName, Vector3 vec);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void ScaleObject(string ObjectName, Vector3 vec);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetObjectName(string ObjectName, string newObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -387,6 +396,10 @@ namespace GameEngine
             }
         }
 
+        //===============================
+        //            HOST
+        //===============================
+
         //左クリック：レイキャストして一番近いオブジェクトを選択
         private void Host_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -398,9 +411,10 @@ namespace GameEngine
             float x = (float)(localMousePosition.X);
             float y = (float)(localMousePosition.Y);
             float screenHeight = (float)height;
-            string search;
-            search = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
-            width += 0;
+            //↓エラー
+            //string search;
+            //search = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
+            //width += 0;
             //if (search != "")
             //{
             //    int a = 0;
@@ -538,120 +552,11 @@ namespace GameEngine
 
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddObject(objectName, filename));
         }
+        
 
-        private void Panel_MouseLeftButtonDown(object sender, MouseEventArgs e)
-        {
-            Inspector_Panel.Focus();
-        }
-
-
-        private void Inspector_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key != Key.Return)
-                return;
-
-            InspectorToObject();
-        }
-
-        private void ObjectToInspector()
-        {
-            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
-
-            if (gameObject == null)
-                return;
-
-            string objectName = gameObject.ToString();
-            {
-                PositionX.Text = gameObject.Position.X.ToString("F2");
-                PositionY.Text = gameObject.Position.Y.ToString("F2");
-                PositionZ.Text = gameObject.Position.Z.ToString("F2");
-
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
-            }
-            {
-                Vector3 rotation = gameObject.Rotation / (float)Math.PI * 180.0f; //Radian->Degree
-
-                RotationX.Text = rotation.X.ToString("F2");
-                RotationY.Text = rotation.Y.ToString("F2");
-                RotationZ.Text = rotation.Z.ToString("F2");
-
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
-            }
-            {
-                ScaleX.Text = gameObject.Scale.X.ToString("F2");
-                ScaleY.Text = gameObject.Scale.Y.ToString("F2");
-                ScaleZ.Text = gameObject.Scale.Z.ToString("F2");
-
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
-
-            }
-            ScriptTextBox.Text = gameObject.Script;
-        }
-
-        private void InspectorToObject()
-        {
-            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
-
-            if (gameObject == null)
-                return;
-
-            string objectName = gameObject.ToString();
-            
-
-            {
-                Vector3 position;
-                if(!float.TryParse(PositionX.Text, out position.X) || 
-                   !float.TryParse(PositionY.Text, out position.Y) || 
-                   !float.TryParse(PositionZ.Text, out position.Z))
-                {
-                    //入力が数字じゃない場合
-                    ObjectToInspector();
-                    return;
-                }
-                //position.X = float.Parse(PositionX.Text);
-                //position.Y = float.Parse(PositionY.Text);
-                //position.Z = float.Parse(PositionZ.Text);
-                gameObject.Position = position;
-
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
-            }
-            {
-                Vector3 rotation;
-                if (!float.TryParse(RotationX.Text, out rotation.X) ||
-                    !float.TryParse(RotationY.Text, out rotation.Y) ||
-                    !float.TryParse(RotationZ.Text, out rotation.Z))
-                {
-                    //入力が数字じゃない場合
-                    ObjectToInspector();
-                    return;
-                }
-                //rotation.X = float.Parse(RotationX.Text) * (float)Math.PI / 180.0f;
-                //rotation.Y = float.Parse(RotationY.Text) * (float)Math.PI / 180.0f;
-                //rotation.Z = float.Parse(RotationZ.Text) * (float)Math.PI / 180.0f;
-                rotation = rotation * (float)Math.PI / 180.0f;
-                gameObject.Rotation = rotation;
-
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
-            }
-            {
-                Vector3 scale;
-                if (!float.TryParse(ScaleX.Text, out scale.X) ||
-                    !float.TryParse(ScaleY.Text, out scale.Y) ||
-                    !float.TryParse(ScaleZ.Text, out scale.Z))
-                {
-                    //入力が数字じゃない場合
-                    ObjectToInspector();
-                    return;
-                }
-                //scale.X = float.Parse(ScaleX.Text);
-                //scale.Y = float.Parse(ScaleY.Text);
-                //scale.Z = float.Parse(ScaleZ.Text);
-                gameObject.Scale = scale;
-
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
-            }
-            gameObject.Script = ScriptTextBox.Text;
-        }
+        //=====================
+        //       MENU
+        //=====================
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
@@ -699,6 +604,10 @@ namespace GameEngine
         {
             timer.Stop();
         }
+
+        //========================
+        //       HIERARCHY
+        //========================
 
         private void HierarchyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -751,6 +660,127 @@ namespace GameEngine
             }
         }
 
+        //==================================
+        //           INSPECTOR
+        //==================================
+
+        private void Panel_MouseLeftButtonDown(object sender, MouseEventArgs e)
+        {
+            Inspector_Panel.Focus();
+        }
+
+        private void Inspector_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Return)
+                return;
+
+            InspectorToObject();
+        }
+
+        private void ObjectToInspector()
+        {
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+
+            if (gameObject == null)
+                return;
+
+            string objectName = gameObject.ToString();
+            {
+                PositionX.Text = gameObject.Position.X.ToString("F2");
+                PositionY.Text = gameObject.Position.Y.ToString("F2");
+                PositionZ.Text = gameObject.Position.Z.ToString("F2");
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
+            }
+            {
+                Vector3 rotation = gameObject.Rotation / (float)Math.PI * 180.0f; //Radian->Degree
+
+                RotationX.Text = rotation.X.ToString("F2");
+                RotationY.Text = rotation.Y.ToString("F2");
+                RotationZ.Text = rotation.Z.ToString("F2");
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
+            }
+            {
+                ScaleX.Text = gameObject.Scale.X.ToString("F2");
+                ScaleY.Text = gameObject.Scale.Y.ToString("F2");
+                ScaleZ.Text = gameObject.Scale.Z.ToString("F2");
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
+
+            }
+            ScriptTextBox.Text = gameObject.Script;
+        }
+
+        private void InspectorToObject()
+        {
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+
+            if (gameObject == null)
+                return;
+
+            string objectName = gameObject.ToString();
+
+
+            {
+                Vector3 position;
+                if (!float.TryParse(PositionX.Text, out position.X) ||
+                   !float.TryParse(PositionY.Text, out position.Y) ||
+                   !float.TryParse(PositionZ.Text, out position.Z))
+                {
+                    //入力が数字じゃない場合
+                    ObjectToInspector();
+                    return;
+                }
+                //position.X = float.Parse(PositionX.Text);
+                //position.Y = float.Parse(PositionY.Text);
+                //position.Z = float.Parse(PositionZ.Text);
+                gameObject.Position = position;
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
+            }
+            {
+                Vector3 rotation;
+                if (!float.TryParse(RotationX.Text, out rotation.X) ||
+                    !float.TryParse(RotationY.Text, out rotation.Y) ||
+                    !float.TryParse(RotationZ.Text, out rotation.Z))
+                {
+                    //入力が数字じゃない場合
+                    ObjectToInspector();
+                    return;
+                }
+                //rotation.X = float.Parse(RotationX.Text) * (float)Math.PI / 180.0f;
+                //rotation.Y = float.Parse(RotationY.Text) * (float)Math.PI / 180.0f;
+                //rotation.Z = float.Parse(RotationZ.Text) * (float)Math.PI / 180.0f;
+                rotation = rotation * (float)Math.PI / 180.0f;
+                gameObject.Rotation = rotation;
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
+            }
+            {
+                Vector3 scale;
+                if (!float.TryParse(ScaleX.Text, out scale.X) ||
+                    !float.TryParse(ScaleY.Text, out scale.Y) ||
+                    !float.TryParse(ScaleZ.Text, out scale.Z))
+                {
+                    //入力が数字じゃない場合
+                    ObjectToInspector();
+                    return;
+                }
+                //scale.X = float.Parse(ScaleX.Text);
+                //scale.Y = float.Parse(ScaleY.Text);
+                //scale.Z = float.Parse(ScaleZ.Text);
+                gameObject.Scale = scale;
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
+            }
+            gameObject.Script = ScriptTextBox.Text;
+        }
+
+        //=================================
+        //      INSPECTOR VISIBILITY
+        //=================================
+
         private void HideInspector()
         {
             //foreach (TextBox tb in FindChildren<TextBox>(Inspector_StackPanel))
@@ -784,26 +814,64 @@ namespace GameEngine
             //}
             Inspector_StackPanel.Visibility = Visibility.Visible;
 
+            Inspector_Position_DockPanel.Visibility = Visibility.Collapsed;
+            Inspector_Rotation_DockPanel.Visibility = Visibility.Collapsed;
+            Inspector_Scale_DockPanel.Visibility = Visibility.Collapsed;
+
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Inspector_Name.Text = gameObject.ToString();
         }
 
-        public static IEnumerable<T> FindChildren<T>(DependencyObject depObj) where T : DependencyObject
+        private void Inspector_Position_Show(object sender, RoutedEventArgs e)
         {
-            if (depObj == null) yield return (T)Enumerable.Empty<T>();
-            for(int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-            {
-                DependencyObject ithChild = VisualTreeHelper.GetChild(depObj, i);
-                if (ithChild == null) continue;
-                if (ithChild is T t) yield return t;
-                foreach (T childOfChild in FindChildren<T>(ithChild)) yield return childOfChild;
-            }
+            Inspector_Position_DockPanel.Visibility = Visibility.Visible;
+        }
+
+        private void Inspector_Rotation_Show(object sender, RoutedEventArgs e)
+        {
+            Inspector_Rotation_DockPanel.Visibility = Visibility.Visible;
+        }
+
+        private void Inspector_Scale_Show(object sender, RoutedEventArgs e)
+        {
+            Inspector_Scale_DockPanel.Visibility = Visibility.Visible;
         }
 
         private void Inspector_Panel_Loaded(object sender, RoutedEventArgs e)
         {
             HideInspector();
         }
+
+        //==============================
+        //        OBJECT NAME
+        //==============================
+
+        private void Inspector_Name_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Return)
+                return;
+
+            RenameObject();
+        }
+
+
+        private void RenameObject()
+        {
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+            if (gameObject == null)
+                return;
+
+            string objectName = gameObject.ToString();
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectName(objectName, Inspector_Name.Text));
+
+            gameObject.Content = Inspector_Name.Text;
+
+            HierarchyListBox.Items.Refresh();
+        }
+
+        //=====================================
+        //         INSPECTOR POSITION
+        //=====================================
 
         private void Inspector_Position_X_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -846,7 +914,7 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while(mouseLeftButtonPressed)
+            while (mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
@@ -854,7 +922,7 @@ namespace GameEngine
                     this.Dispatcher.Invoke(() => {
                         newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if(newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth-1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth-1)
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
                             double diff = newMousePosition.X - mousePosition.X;
                             SetCursorPos(1, (int)newMousePosition.Y);
@@ -870,16 +938,24 @@ namespace GameEngine
                             mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
-                    
+
                     xDiff = newMousePosition.X - mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
-                    xDiff *= 0.01f; 
-                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecX * (float)xDiff));
-
+                    xDiff *= 0.01f;
+                    if (inspector_isWorldCoordinate)
+                    {
+                        NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecX * (float)xDiff));
+                    }
+                    else
+                    {
+                        NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectRight(objectName, (float)xDiff));
+                    }
                     //インスペクターの数値を変更
                     this.Dispatcher.Invoke(() => {
                         Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
                         PositionX.Text = Pos.X.ToString("F2");
+                        PositionY.Text = Pos.Y.ToString("F2");
+                        PositionZ.Text = Pos.Z.ToString("F2");
                     });
 
                     mousePosition = newMousePosition;
@@ -927,12 +1003,20 @@ namespace GameEngine
                     xDiff = newMousePosition.X - mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
-                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecY * (float)xDiff));
-
+                    if (inspector_isWorldCoordinate)
+                    {
+                        NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecY * (float)xDiff));
+                    }
+                    else
+                    {
+                        NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectTop(objectName, (float)xDiff));
+                    }
                     //インスペクターの数値を変更
                     this.Dispatcher.Invoke(() => {
                         Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
+                        PositionZ.Text = Pos.Z.ToString("F2");
                     });
 
                     mousePosition = newMousePosition;
@@ -980,11 +1064,19 @@ namespace GameEngine
                     xDiff = newMousePosition.X - mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
-                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecZ * (float)xDiff));
-
+                    if (inspector_isWorldCoordinate)
+                    {
+                        NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecZ * (float)xDiff));
+                    }
+                    else
+                    {
+                        NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectForward(objectName, (float)xDiff));
+                    }
                     //インスペクターの数値を変更
                     this.Dispatcher.Invoke(() => {
                         Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        PositionX.Text = Pos.X.ToString("F2");
+                        PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
                     });
 
@@ -1002,27 +1094,459 @@ namespace GameEngine
             gameObject.Position = Pos;
         }
 
-        private void Inspector_Name_KeyDown(object sender, KeyEventArgs e)
+        private void Inspector_Change_World_Local(object sender, RoutedEventArgs e)
         {
-            if (e.Key != Key.Return)
-                return;
-
-            RenameObject();
+            if (inspector_isWorldCoordinate)
+            {
+                inspector_isWorldCoordinate = false;
+                Inspector_Coordinate_Button.Content = "ローカル";
+            }
+            else
+            {
+                inspector_isWorldCoordinate = true;
+                Inspector_Coordinate_Button.Content = "ワールド";
+            }
         }
 
+        //=====================================
+        //         INSPECTOR ROTATION
+        //=====================================
 
-        private void RenameObject()
+        private void Inspector_Rotation_X_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            mousePosition = PointToScreen(Mouse.GetPosition(this));
+            mouseLeftButtonPressed = true;
+            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            var th = new Thread(new ThreadStart(RotateObjectTaskX));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void Inspector_Rotation_Y_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            mousePosition = PointToScreen(Mouse.GetPosition(this));
+            mouseLeftButtonPressed = true;
+            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            var th = new Thread(new ThreadStart(RotateObjectTaskY));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void Inspector_Rotation_Z_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            mousePosition = PointToScreen(Mouse.GetPosition(this));
+            mouseLeftButtonPressed = true;
+            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            var th = new Thread(new ThreadStart(RotateObjectTaskZ));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void RotateObjectTaskX()
+        {
+            string objectName = selectedObject.ToString();
+            Vector3 vecX = new Vector3(1.0f, 0.0f, 0.0f);
+
+            double xDiff;
+
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+            while (mouseLeftButtonPressed)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    //マウス座標を取得
+                    this.Dispatcher.Invoke(() => {
+                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        //右いっぱいになったら左に移動
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos(1, (int)newMousePosition.Y);
+                            newMousePosition.X = 1;
+                            mousePosition.X = 1 - diff;
+                        }
+                        //左いっぱいになったら右に移動
+                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
+                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                        }
+                    });
+
+                    xDiff = newMousePosition.X - mousePosition.X;
+                    //スケーリング、プールダウンメニューで設定可能にしたら便利かも
+                    xDiff *= 0.01f;
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.RotateObject(objectName, vecX * (float)xDiff));
+
+                    //インスペクターの数値を変更
+                    this.Dispatcher.Invoke(() => {
+                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        RotationX.Text = Rot.X.ToString("F2");
+                    });
+
+                    mousePosition = newMousePosition;
+                    now = DateTime.Now;
+                }
+            }
+        }
+
+        private void RotateObjectTaskY()
+        {
+            string objectName = selectedObject.ToString();
+            Vector3 vecY = new Vector3(0.0f, 1.0f, 0.0f);
+
+            double xDiff;
+
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+            while (mouseLeftButtonPressed)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    //マウス座標を取得
+                    this.Dispatcher.Invoke(() => {
+                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        //右いっぱいになったら左に移動
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos(1, (int)newMousePosition.Y);
+                            newMousePosition.X = 1;
+                            mousePosition.X = 1 - diff;
+                        }
+                        //左いっぱいになったら右に移動
+                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
+                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                        }
+                    });
+
+                    xDiff = newMousePosition.X - mousePosition.X;
+                    //スケーリング、プールダウンメニューで設定可能にしたら便利かも
+                    xDiff *= 0.01f;
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.RotateObject(objectName, vecY * (float)xDiff));
+
+                    //インスペクターの数値を変更
+                    this.Dispatcher.Invoke(() => {
+                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        RotationY.Text = Rot.Y.ToString("F2");
+                    });
+
+                    mousePosition = newMousePosition;
+                    now = DateTime.Now;
+                }
+            }
+        }
+        
+        private void RotateObjectTaskZ()
+        {
+            string objectName = selectedObject.ToString();
+            Vector3 vecZ = new Vector3(0.0f, 0.0f, 1.0f);
+
+            double xDiff;
+
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+            while (mouseLeftButtonPressed)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    //マウス座標を取得
+                    this.Dispatcher.Invoke(() => {
+                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        //右いっぱいになったら左に移動
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos(1, (int)newMousePosition.Y);
+                            newMousePosition.X = 1;
+                            mousePosition.X = 1 - diff;
+                        }
+                        //左いっぱいになったら右に移動
+                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
+                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                        }
+                    });
+
+                    xDiff = newMousePosition.X - mousePosition.X;
+                    //スケーリング、プールダウンメニューで設定可能にしたら便利かも
+                    xDiff *= 0.01f;
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.RotateObject(objectName, vecZ * (float)xDiff));
+
+                    //インスペクターの数値を変更
+                    this.Dispatcher.Invoke(() => {
+                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        RotationZ.Text = Rot.Z.ToString("F2");
+                    });
+
+                    mousePosition = newMousePosition;
+                    now = DateTime.Now;
+                }
+            }
+        }
+
+        private void Inspector_Rotation_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            mouseLeftButtonPressed = false;
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
-            if (gameObject == null)
-                return;
+            Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(gameObject.ToString()));
+            gameObject.Rotation = Rot;
+        }
 
-            string objectName = gameObject.ToString();
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectName(objectName, Inspector_Name.Text));
+        //=====================================
+        //         INSPECTOR SCALE
+        //=====================================
 
-            gameObject.Content = Inspector_Name.Text;
+        private void Inspector_Scale_X_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            mousePosition = PointToScreen(Mouse.GetPosition(this));
+            mouseLeftButtonPressed = true;
+            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            var th = new Thread(new ThreadStart(ScaleObjectTaskX));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
 
-            HierarchyListBox.Items.Refresh();
+        private void Inspector_Scale_Y_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            mousePosition = PointToScreen(Mouse.GetPosition(this));
+            mouseLeftButtonPressed = true;
+            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            var th = new Thread(new ThreadStart(ScaleObjectTaskY));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void Inspector_Scale_Z_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            mousePosition = PointToScreen(Mouse.GetPosition(this));
+            mouseLeftButtonPressed = true;
+            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            var th = new Thread(new ThreadStart(ScaleObjectTaskZ));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void ScaleObjectTaskX()
+        {
+            string objectName = selectedObject.ToString();
+            Vector3 vecX = new Vector3(1.0f, 0.0f, 0.0f);
+            if (inspector_isScaleLinked)
+            {
+                vecX = new Vector3(1.0f, 1.0f, 1.0f);
+            }
+            double xDiff;
+
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+            while (mouseLeftButtonPressed)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    //マウス座標を取得
+                    this.Dispatcher.Invoke(() => {
+                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        //右いっぱいになったら左に移動
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos(1, (int)newMousePosition.Y);
+                            newMousePosition.X = 1;
+                            mousePosition.X = 1 - diff;
+                        }
+                        //左いっぱいになったら右に移動
+                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
+                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                        }
+                    });
+
+                    xDiff = newMousePosition.X - mousePosition.X;
+                    //スケーリング、プールダウンメニューで設定可能にしたら便利かも
+                    xDiff *= 0.01f;
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.ScaleObject(objectName, vecX * (float)xDiff));
+
+                    //インスペクターの数値を変更
+                    this.Dispatcher.Invoke(() => {
+                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        ScaleX.Text = Scl.X.ToString("F2");
+                        ScaleY.Text = Scl.Y.ToString("F2");
+                        ScaleZ.Text = Scl.Z.ToString("F2");
+                    });
+
+                    mousePosition = newMousePosition;
+                    now = DateTime.Now;
+                }
+            }
+        }
+
+        private void ScaleObjectTaskY()
+        {
+            string objectName = selectedObject.ToString();
+            Vector3 vecY = new Vector3(0.0f, 1.0f, 0.0f);
+            if (inspector_isScaleLinked)
+            {
+                vecY = new Vector3(1.0f, 1.0f, 1.0f);
+            }
+            double xDiff;
+
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+            while (mouseLeftButtonPressed)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    //マウス座標を取得
+                    this.Dispatcher.Invoke(() => {
+                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        //右いっぱいになったら左に移動
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos(1, (int)newMousePosition.Y);
+                            newMousePosition.X = 1;
+                            mousePosition.X = 1 - diff;
+                        }
+                        //左いっぱいになったら右に移動
+                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
+                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                        }
+                    });
+
+                    xDiff = newMousePosition.X - mousePosition.X;
+                    //スケーリング、プールダウンメニューで設定可能にしたら便利かも
+                    xDiff *= 0.01f;
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.ScaleObject(objectName, vecY * (float)xDiff));
+
+                    //インスペクターの数値を変更
+                    this.Dispatcher.Invoke(() => {
+                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        ScaleX.Text = Scl.X.ToString("F2");
+                        ScaleY.Text = Scl.Y.ToString("F2");
+                        ScaleZ.Text = Scl.Z.ToString("F2");
+                    });
+
+                    mousePosition = newMousePosition;
+                    now = DateTime.Now;
+                }
+            }
+        }
+
+        private void ScaleObjectTaskZ()
+        {
+            string objectName = selectedObject.ToString();
+            Vector3 vecZ = new Vector3(0.0f, 0.0f, 1.0f);
+            if (inspector_isScaleLinked)
+            {
+                vecZ = new Vector3(1.0f, 1.0f, 1.0f);
+            }
+            double xDiff;
+
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+            while (mouseLeftButtonPressed)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    //マウス座標を取得
+                    this.Dispatcher.Invoke(() => {
+                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        //右いっぱいになったら左に移動
+                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos(1, (int)newMousePosition.Y);
+                            newMousePosition.X = 1;
+                            mousePosition.X = 1 - diff;
+                        }
+                        //左いっぱいになったら右に移動
+                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        {
+                            double diff = newMousePosition.X - mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
+                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                        }
+                    });
+
+                    xDiff = newMousePosition.X - mousePosition.X;
+                    //スケーリング、プールダウンメニューで設定可能にしたら便利かも
+                    xDiff *= 0.01f;
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.ScaleObject(objectName, vecZ * (float)xDiff));
+
+                    //インスペクターの数値を変更
+                    this.Dispatcher.Invoke(() => {
+                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        ScaleX.Text = Scl.X.ToString("F2");
+                        ScaleY.Text = Scl.Y.ToString("F2");
+                        ScaleZ.Text = Scl.Z.ToString("F2");
+                    });
+
+                    mousePosition = newMousePosition;
+                    now = DateTime.Now;
+                }
+            }
+        }
+
+        private void Inspector_Scale_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            mouseLeftButtonPressed = false;
+            GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
+            Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(gameObject.ToString()));
+            gameObject.Scale = Scl;
+        }
+
+        private void Inspector_Change_Scale_Link(object sender, RoutedEventArgs e)
+        {
+            if (inspector_isScaleLinked)
+            {
+                inspector_isScaleLinked = false;
+                Inspector_Scale_Button.Content = "Not Linked";
+            }
+            else
+            {
+                inspector_isScaleLinked = true;
+                Inspector_Scale_Button.Content = "Linked";
+            }
+        }
+
+        //===========================================
+        //               FUNCTIONAL
+        //===========================================
+
+        public static IEnumerable<T> FindChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj == null) yield return (T)Enumerable.Empty<T>();
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                DependencyObject ithChild = VisualTreeHelper.GetChild(depObj, i);
+                if (ithChild == null) continue;
+                if (ithChild is T t) yield return t;
+                foreach (T childOfChild in FindChildren<T>(ithChild)) yield return childOfChild;
+            }
         }
     }
 }

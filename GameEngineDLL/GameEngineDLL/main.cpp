@@ -97,6 +97,14 @@ void MoveObjectForward(const char* ObjectName, float amount) {
 	return Manager::GetGameObject(ObjectName)->MoveForward(amount);
 }
 
+void RotateObject(const char* ObjectName, D3DXVECTOR3 vec) {
+	return Manager::GetGameObject(ObjectName)->Rotate(vec);
+}
+
+void ScaleObject(const char* ObjectName, D3DXVECTOR3 vec) {
+	return Manager::GetGameObject(ObjectName)->AddScale(vec);
+}
+
 void SetObjectName(const char* ObjectName, const char* newObjectName) {
 	return Manager::RenameGameObject(ObjectName, newObjectName);
 }

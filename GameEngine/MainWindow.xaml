@@ -64,9 +64,9 @@
 			<TabItem Header="Inspector">
 				<StackPanel Orientation="Vertical" Name="Inspector_StackPanel" Loaded="Inspector_Panel_Loaded">
 
-						<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown"/>
+					<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown"/>
 
-						<StackPanel Orientation="Horizontal">
+					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Position_Show">
 						<Label Content="Position" Width="70"/>
 						<Label Content="X"/>
 						<TextBox x:Name="PositionX" Text="0.00" KeyDown="Inspector_KeyDown"/>
@@ -76,7 +76,7 @@
 						<TextBox x:Name="PositionZ" Text="0.00" KeyDown="Inspector_KeyDown"/>
 					</StackPanel>
 
-					<DockPanel>
+					<DockPanel x:Name="Inspector_Position_DockPanel">
 						<StackPanel Orientation="Vertical" Width="130">
 							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
@@ -102,11 +102,11 @@
 						</StackPanel>
 
 						<StackPanel Orientation="Vertical" HorizontalAlignment="Right">
-							<Button Content="ワールド"/>
+							<Button x:Name="Inspector_Coordinate_Button" Content="ワールド" Click="Inspector_Change_World_Local"/>
 						</StackPanel>
 					</DockPanel>
-					
-					<StackPanel Orientation="Horizontal">
+
+					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Rotation_Show">
 						<Label Content="Rotation" Width="70"/>
 						<Label Content="X"/>
 						<TextBox x:Name="RotationX" Text="0.00" KeyDown="Inspector_KeyDown"/>
@@ -116,7 +116,33 @@
 						<TextBox x:Name="RotationZ" Text="0.00" KeyDown="Inspector_KeyDown"/>
 					</StackPanel>
 
-					<StackPanel Orientation="Horizontal">
+					<DockPanel x:Name="Inspector_Rotation_DockPanel">
+						<StackPanel Orientation="Vertical" Width="130">
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+							</StackPanel>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<Label Content="←"/>
+								<Button Content="X" Width="25" PreviewMouseLeftButtonDown="Inspector_Rotation_X_MouseLeftButtonDown" PreviewMouseLeftButtonUp="Inspector_Rotation_MouseLeftButtonUp"/>
+								<Label Content="→"/>
+							</StackPanel>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<Label Content="←"/>
+								<Button Content="Y" Width="25" PreviewMouseLeftButtonDown="Inspector_Rotation_Y_MouseLeftButtonDown" PreviewMouseLeftButtonUp="Inspector_Rotation_MouseLeftButtonUp"/>
+								<Label Content="→"/>
+							</StackPanel>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<Label Content="←"/>
+								<Button Content="Z" Width="25" PreviewMouseLeftButtonDown="Inspector_Rotation_Z_MouseLeftButtonDown" PreviewMouseLeftButtonUp="Inspector_Rotation_MouseLeftButtonUp"/>
+								<Label Content="→"/>
+							</StackPanel>
+						</StackPanel>
+					</DockPanel>
+
+					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Scale_Show">
 						<Label Content="Scale" Width="70"/>
 						<Label Content="X"/>
 						<TextBox x:Name="ScaleX" Text="1.00" KeyDown="Inspector_KeyDown"/>
@@ -125,6 +151,36 @@
 						<Label Content="Z"/>
 						<TextBox x:Name="ScaleZ" Text="1.00" KeyDown="Inspector_KeyDown"/>
 					</StackPanel>
+
+					<DockPanel x:Name="Inspector_Scale_DockPanel">
+						<StackPanel Orientation="Vertical" Width="130">
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+							</StackPanel>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<Label Content="←"/>
+								<Button Content="X" Width="25" PreviewMouseLeftButtonDown="Inspector_Scale_X_MouseLeftButtonDown" PreviewMouseLeftButtonUp="Inspector_Scale_MouseLeftButtonUp"/>
+								<Label Content="→"/>
+							</StackPanel>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<Label Content="←"/>
+								<Button Content="Y" Width="25" PreviewMouseLeftButtonDown="Inspector_Scale_Y_MouseLeftButtonDown" PreviewMouseLeftButtonUp="Inspector_Scale_MouseLeftButtonUp"/>
+								<Label Content="→"/>
+							</StackPanel>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<Label Content="←"/>
+								<Button Content="Z" Width="25" PreviewMouseLeftButtonDown="Inspector_Scale_Z_MouseLeftButtonDown" PreviewMouseLeftButtonUp="Inspector_Scale_MouseLeftButtonUp"/>
+								<Label Content="→"/>
+							</StackPanel>
+						</StackPanel>
+
+						<StackPanel Orientation="Vertical" HorizontalAlignment="Right">
+							<Button x:Name="Inspector_Scale_Button" Content="Linked" Click="Inspector_Change_Scale_Link"/>
+						</StackPanel>
+					</DockPanel>
 
 				</StackPanel>
 			</TabItem>

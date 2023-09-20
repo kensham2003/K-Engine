@@ -56,6 +56,10 @@ extern "C" {
 	__declspec(dllexport) void __cdecl MoveObjectTop(const char* ObjectName, float amount);
 	__declspec(dllexport) void __cdecl MoveObjectForward(const char* ObjectName, float amount);
 
+	__declspec(dllexport) void __cdecl RotateObject(const char* ObjectName, D3DXVECTOR3 vec);
+
+	__declspec(dllexport) void __cdecl ScaleObject(const char* ObjectName, D3DXVECTOR3 vec);
+
 	__declspec(dllexport) void __cdecl SetObjectName(const char* ObjectName, const char* newObjectName);
 
 	__declspec(dllexport) void __cdecl CallMoveCamera();

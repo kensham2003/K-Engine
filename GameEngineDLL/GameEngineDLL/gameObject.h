@@ -116,6 +116,19 @@ public:
 		m_Position += GetForward() * amount;
 	}
 
+	//回転をvecの分する
+	void Rotate(D3DXVECTOR3 vec) {
+		m_Rotation += vec;
+	}
+
+	//スケールをvec分上げる
+	void AddScale(D3DXVECTOR3 vec) {
+		if (m_Scale.x + vec.x < 0.01f)return;
+		if (m_Scale.y + vec.y < 0.01f)return;
+		if (m_Scale.z + vec.z < 0.01f)return;
+		m_Scale += vec;
+	}
+
 
 	//コンポーネントを追加
 	template <typename T> //テンプレート関数
