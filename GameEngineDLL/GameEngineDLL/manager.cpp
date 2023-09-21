@@ -10,6 +10,9 @@
 
 
 std::unordered_map<std::string, GameObject*> Manager::m_GameObject;
+bool Manager::m_IsPlaying;
+
+const char* g_RaycastName = "b";
 
 
 
@@ -41,6 +44,8 @@ void Manager::Uninit()
 
 void Manager::Update()
 {
+	if (!m_IsPlaying) { return; }
+
 	Input::Update();
 
 	for (auto object : m_GameObject)
@@ -81,19 +86,25 @@ void Manager::RenameGameObject(const char* ObjectName, const char* newName)
 	}
 }
 
-std::string Manager::RaycastObject(float x, float y, float screenHeight) {
-	//Camera* camera = (Camera*)m_GameObject["Camera"];
-	//D3DXVECTOR3 ray = camera->GetRayFromScreen(x, y, screenHeight);
-	//std::vector<Player*> players = GetGameObjects<Player>();
-	//for (auto player : players) {
-	//	return "abc";
-	//	if (player->IsRayCollideModel(ray, camera->GetPosition())) {
-	//		for (auto& it : m_GameObject) {
-	//			if (it.second == player) {
-	//				return it.first;
-	//			}
-	//		}
-	//	}
-	//}
-	return "a";
+char* Manager::RaycastObject(float x, float y, float screenHeight) {
+	Camera* camera = (Camera*)m_GameObject["Camera"];
+	D3DXVECTOR3 ray = camera->GetRayFromScreen(x, y, screenHeight);
+	std::vector<Player*> players = GetGameObjects<Player>();
+	std::string temp = "a";
+	for (auto player : players) {
+		temp += temp;
+		//return "abc";
+		//if (player->IsRayCollideModel(ray, camera->GetPosition())) {
+		//	for (auto& it : m_GameObject) {
+		//		if (it.second == player) {
+		//			return it.first.c_str();
+		//		}
+		//	}
+		//}
+	}
+	//g_RaycastName = "a";
+	int len = strlen(temp.c_str());
+	char* data = new char[len + 1];
+	memcpy(data, temp.c_str(), len + 1);
+	return data;
 }

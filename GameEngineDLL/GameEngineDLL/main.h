@@ -66,6 +66,9 @@ extern "C" {
 	__declspec(dllexport) void __cdecl ResetMoveCamera();
 
 	__declspec(dllexport) char* __cdecl RaycastObject(float x, float y, float screenHeight);
+	__declspec(dllexport) void __cdecl FreeRaycastChar(char* p);
 
 	__declspec(dllexport) void __cdecl AddObject(const char* ObjectName, const char* FileName);
+
+	__declspec(dllexport) void __cdecl SetScenePlaying(bool playing);
 }

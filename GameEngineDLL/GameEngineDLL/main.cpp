@@ -122,12 +122,18 @@ void ResetMoveCamera() {
 }
 
 char* RaycastObject(float x, float y, float screenHeight) {
-	//return Manager::RaycastObject(x, y, screenHeight);
-	char a = 'c';
-	return &a;
+	return Manager::RaycastObject(x, y, screenHeight);
+}
+
+void FreeRaycastChar(char* p) {
+	return Manager::FreeRaycastChar(p);
 }
 
 void AddObject(const char* ObjectName, const char* FileName)
 {
 	Manager::AddGameObject(ObjectName, FileName);
+}
+
+void SetScenePlaying(bool playing) {
+	Manager::SetPlaying(playing);
 }

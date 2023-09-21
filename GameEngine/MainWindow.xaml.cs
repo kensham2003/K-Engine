@@ -344,10 +344,16 @@ namespace GameEngine
             public static extern void ResetMoveCamera();
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
-            public static extern string RaycastObject(float x, float y, float screenHeight);
+            public static extern IntPtr RaycastObject(float x, float y, float screenHeight);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void FreeRaycastChar(IntPtr p);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void AddObject(string ObjectName, string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetScenePlaying(bool playing);
 
             /// <summary>
             /// Method used to invoke an Action that will catch DllNotFoundExceptions and display a warning dialog.
@@ -412,9 +418,11 @@ namespace GameEngine
             float y = (float)(localMousePosition.Y);
             float screenHeight = (float)height;
             //↓エラー
-            //string search;
-            //search = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
-            //width += 0;
+            string search;
+            IntPtr ptr = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
+            search = Marshal.PtrToStringAnsi(ptr);
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.FreeRaycastChar(ptr));
+            width += 0;
             //if (search != "")
             //{
             //    int a = 0;
@@ -603,6 +611,20 @@ namespace GameEngine
         private void MenuItem_Stop_Click(object sender, RoutedEventArgs e)
         {
             timer.Stop();
+        }
+
+        private void MenuItem_Simulate_Play_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
+            MenuItem_SimulateStop.Visibility = Visibility.Visible;
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
+        }
+
+        private void MenuItem_Simulate_Stop_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem_SimulateStop.Visibility = Visibility.Collapsed;
+            MenuItem_SimulatePlay.Visibility = Visibility.Visible;
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
         }
 
         //========================
@@ -1548,5 +1570,7 @@ namespace GameEngine
                 foreach (T childOfChild in FindChildren<T>(ithChild)) yield return childOfChild;
             }
         }
+
+
     }
 }

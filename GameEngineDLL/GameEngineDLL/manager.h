@@ -16,6 +16,8 @@ class Manager
 private:
 	static std::unordered_map<std::string, GameObject*> m_GameObject;
 
+	static bool m_IsPlaying;
+
 
 public:
 	static void Init();
@@ -46,5 +48,9 @@ public:
 		return objects;
 	}
 
-	static std::string RaycastObject(float x, float y, float screenHeight);
+	static char* RaycastObject(float x, float y, float screenHeight);
+
+	static void FreeRaycastChar(char* p) { delete[] p; }
+
+	static void SetPlaying(bool playing) { m_IsPlaying = playing; }
 };

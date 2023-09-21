@@ -36,7 +36,7 @@ void Player::Uninit()
 
 void Player::Update()
 {
-	//m_Rotation.x += 0.1f;
+	m_Rotation.x += 0.1f;
 	//m_Rotation.y += 0.1f;
 }
 
