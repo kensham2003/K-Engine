@@ -26,5 +26,5 @@ public:
 	void Draw();
 
 	bool IsRayCollideModel(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
-
+	std::string GetModelIndexNum() { return std::to_string(m_Model->GetIndexNum()); }
 };

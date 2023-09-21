@@ -49,6 +49,8 @@ void Model::Load( const char *FileName )
 
 	m_VertexArray = model.VertexArray;
 	m_IndexArray = model.IndexArray;
+	m_VertexNum = model.VertexNum;
+	m_IndexNum = model.IndexNum;
 
 	// 頂点バッファ生成
 	{
@@ -109,8 +111,8 @@ void Model::Load( const char *FileName )
 		}
 	}
 
-	delete[] model.VertexArray;
-	delete[] model.IndexArray;
+	//delete[] model.VertexArray;
+	//delete[] model.IndexArray;
 	delete[] model.SubsetArray;
 
 }
@@ -130,7 +132,8 @@ void Model::Unload()
 	}
 
 	delete[] m_SubsetArray;
-
+	delete[] m_IndexArray;
+	delete[] m_VertexArray;
 }
 
 
@@ -507,13 +510,13 @@ bool Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX worl
 	D3DXVECTOR3 triangle[3];
 	for (int i = 0; i < m_IndexNum - 2; i++) {
 		D3DXVECTOR4 temp;
-		//for (int j = 0; j < 2; j++) {
-		//	triangle[j] = m_VertexArray[m_IndexArray[i + j]].Position;
-		//	temp = D3DXVECTOR4(triangle[j].x, triangle[j].y, triangle[j].z, 1.0f);
-		//	D3DXVec4Transform(&temp, &temp, &world);
-		//	triangle[j] = D3DXVECTOR3(temp.x, temp.y, temp.z);
-		//}
-		//if (RayTriangleCollision(ray, cameraPos, triangle)) { return true; }
+		for (int j = 0; j < 2; j++) {
+			triangle[j] = m_VertexArray[m_IndexArray[i + j]].Position;
+			temp = D3DXVECTOR4(triangle[j].x, triangle[j].y, triangle[j].z, 1.0f);
+			D3DXVec4Transform(&temp, &temp, &world);
+			triangle[j] = D3DXVECTOR3(temp.x, temp.y, temp.z);
+		}
+		if (RayTriangleCollision(ray, cameraPos, triangle)) { return true; }
 	}
 	return false;
 }

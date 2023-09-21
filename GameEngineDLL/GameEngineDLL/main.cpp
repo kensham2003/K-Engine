@@ -125,6 +125,12 @@ char* RaycastObject(float x, float y, float screenHeight) {
 	return Manager::RaycastObject(x, y, screenHeight);
 }
 
+D3DXVECTOR3 GetRayFromScreen(float x, float y, float screenHeight) {
+	GameObject* camObj = Manager::GetGameObject("Camera");
+	Camera* camera = (Camera*)camObj;
+	return camera->GetRayFromScreen(x, y, screenHeight);
+}
+
 void FreeRaycastChar(char* p) {
 	return Manager::FreeRaycastChar(p);
 }

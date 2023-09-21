@@ -65,4 +65,5 @@ public:
 	void Unload();
 
 	bool IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX world);
+	int GetIndexNum() { return m_IndexNum; }
 };

@@ -347,6 +347,9 @@ namespace GameEngine
             public static extern IntPtr RaycastObject(float x, float y, float screenHeight);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern Vector3 GetRayFromScreen(float x, float y, float screenHeight);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void FreeRaycastChar(IntPtr p);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -422,6 +425,7 @@ namespace GameEngine
             IntPtr ptr = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
             search = Marshal.PtrToStringAnsi(ptr);
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.FreeRaycastChar(ptr));
+            Vector3 vec = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetRayFromScreen(x, y, screenHeight));
             width += 0;
             //if (search != "")
             //{

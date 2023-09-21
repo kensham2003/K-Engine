@@ -92,15 +92,14 @@ char* Manager::RaycastObject(float x, float y, float screenHeight) {
 	std::vector<Player*> players = GetGameObjects<Player>();
 	std::string temp = "a";
 	for (auto player : players) {
-		temp += temp;
-		//return "abc";
-		//if (player->IsRayCollideModel(ray, camera->GetPosition())) {
-		//	for (auto& it : m_GameObject) {
-		//		if (it.second == player) {
-		//			return it.first.c_str();
-		//		}
-		//	}
-		//}
+		if (player->IsRayCollideModel(ray, camera->GetPosition())) {
+			for (auto& it : m_GameObject) {
+				if (it.second == player) {
+					temp = it.first;
+				}
+			}
+		}
+		//temp += player->GetModelIndexNum();
 	}
 	//g_RaycastName = "a";
 	int len = strlen(temp.c_str());
