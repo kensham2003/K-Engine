@@ -121,14 +121,14 @@ void ResetMoveCamera() {
 	camera->ResetSpeed();
 }
 
-char* RaycastObject(float x, float y, float screenHeight) {
-	return Manager::RaycastObject(x, y, screenHeight);
+char* RaycastObject(float x, float y, float screenHeight, float screenWidth) {
+	return Manager::RaycastObject(x, y, screenHeight, screenWidth);
 }
 
-D3DXVECTOR3 GetRayFromScreen(float x, float y, float screenHeight) {
+D3DXVECTOR3 GetRayFromScreen(float x, float y, float screenHeight, float screenWidth) {
 	GameObject* camObj = Manager::GetGameObject("Camera");
 	Camera* camera = (Camera*)camObj;
-	return camera->GetRayFromScreen(x, y, screenHeight);
+	return camera->GetRayFromScreen(x, y, screenHeight, screenWidth);
 }
 
 void FreeRaycastChar(char* p) {

@@ -20,5 +20,5 @@ public:
 	void MoveCamera();
 	void ResetSpeed() { m_MoveSpeed = 0.0f; }
 
-	D3DXVECTOR3 GetRayFromScreen(float x, float y, float screenHeight);
+	D3DXVECTOR3 GetRayFromScreen(float x, float y, float screenHeight, float screenWidth);
 };

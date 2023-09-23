@@ -14,6 +14,9 @@ bool Manager::m_IsPlaying;
 
 const char* g_RaycastName = "b";
 
+//GameObject* g_Test;
+
+int g_Cnt = 1;
 
 
 void Manager::Init()
@@ -27,6 +30,9 @@ void Manager::Init()
 	m_GameObject["Field"] = new Field();
 	m_GameObject["Field"]->Init();
 
+	//AddGameObject("test", "D:\\GitProjects\\GameEngineNew\\asset\\model\\Barrel_01_1k.obj");
+	//m_GameObject["test"]->SetScale(D3DXVECTOR3(0.3f, 0.3f, 0.3f));
+	//g_Test = m_GameObject["test"];
 
 }
 
@@ -86,9 +92,13 @@ void Manager::RenameGameObject(const char* ObjectName, const char* newName)
 	}
 }
 
-char* Manager::RaycastObject(float x, float y, float screenHeight) {
+char* Manager::RaycastObject(float x, float y, float screenHeight, float screenWidth) {
 	Camera* camera = (Camera*)m_GameObject["Camera"];
-	D3DXVECTOR3 ray = camera->GetRayFromScreen(x, y, screenHeight);
+	D3DXVECTOR3 ray = camera->GetRayFromScreen(x, y, screenHeight, screenWidth);
+	D3DXVECTOR3 testRay = ray * 5;
+	//g_Test->SetPosition(camera->GetPosition() + testRay);
+	//g_Cnt++;
+	//g_Test->SetPosition(ray);
 	std::vector<Player*> players = GetGameObjects<Player>();
 	std::string temp = "a";
 	for (auto player : players) {
@@ -99,9 +109,7 @@ char* Manager::RaycastObject(float x, float y, float screenHeight) {
 				}
 			}
 		}
-		//temp += player->GetModelIndexNum();
 	}
-	//g_RaycastName = "a";
 	int len = strlen(temp.c_str());
 	char* data = new char[len + 1];
 	memcpy(data, temp.c_str(), len + 1);

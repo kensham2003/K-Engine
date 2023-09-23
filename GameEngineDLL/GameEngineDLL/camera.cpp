@@ -140,13 +140,11 @@ void Camera::MoveCamera()
 	}
 }
 
-D3DXVECTOR3 Camera::GetRayFromScreen(float x, float y, float screenHeight) {
+D3DXVECTOR3 Camera::GetRayFromScreen(float x, float y, float screenHeight, float screenWidth) {
 	float scaledX, scaledY, scaledWidth;
-	scaledWidth = screenHeight / SCREEN_HEIGHT * SCREEN_WIDTH;
-	//scaledX = x / screenHeight * SCREEN_HEIGHT;
-	//scaledY = y / scaledWidth * SCREEN_WIDTH;
-	scaledX = x / scaledWidth;
-	scaledY = y / screenHeight;
+	scaledWidth = screenHeight / (float)SCREEN_HEIGHT * (float)SCREEN_WIDTH;
+	scaledX = x / (scaledWidth/2);
+	scaledY = y / (screenHeight/2);
 	D3DXMATRIX view = m_ViewMatrix;
 	D3DXVECTOR3 viewX, viewY, viewZ;
 	viewX = D3DXVECTOR3(view._11, view._21, view._31);
@@ -154,12 +152,10 @@ D3DXVECTOR3 Camera::GetRayFromScreen(float x, float y, float screenHeight) {
 	viewZ = D3DXVECTOR3(view._13, view._23, view._33);
 
 	float fovy = 1.0f;
-	float fovx = 1.0f / SCREEN_HEIGHT * SCREEN_WIDTH;
+	float fovx = 1.54f; //‚È‚º1.54‚È‚Ì‚©‚í‚©‚ç‚È‚¢‚ª‚±‚ê‚ÅŠ®àø‚É‚¢‚¯‚é
 	float yTotal = 1.0f * tanf(fovy / 2);
 	float xTotal = 1.0f * tanf(fovx / 2);
 	D3DXVECTOR3 dir = viewZ + viewX * scaledX * xTotal - viewY * scaledY * yTotal;
 	D3DXVec3Normalize(&dir, &dir);
 	return dir;
-	//D3DXVECTOR3 temp = D3DXVECTOR3(scaledX, scaledY, scaledWidth);
-	//return temp;
 }

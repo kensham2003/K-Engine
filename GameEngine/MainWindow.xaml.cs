@@ -344,10 +344,10 @@ namespace GameEngine
             public static extern void ResetMoveCamera();
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
-            public static extern IntPtr RaycastObject(float x, float y, float screenHeight);
+            public static extern IntPtr RaycastObject(float x, float y, float screenHeight, float screenWidth);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
-            public static extern Vector3 GetRayFromScreen(float x, float y, float screenHeight);
+            public static extern Vector3 GetRayFromScreen(float x, float y, float screenHeight, float screenWidth);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void FreeRaycastChar(IntPtr p);
@@ -420,12 +420,13 @@ namespace GameEngine
             float x = (float)(localMousePosition.X);
             float y = (float)(localMousePosition.Y);
             float screenHeight = (float)height;
+            float screenWidth = (float)width;
             //↓エラー
             string search;
-            IntPtr ptr = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight));
+            IntPtr ptr = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight, screenWidth));
             search = Marshal.PtrToStringAnsi(ptr);
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.FreeRaycastChar(ptr));
-            Vector3 vec = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetRayFromScreen(x, y, screenHeight));
+            Vector3 vec = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetRayFromScreen(x, y, screenHeight, screenWidth));
             width += 0;
             //if (search != "")
             //{

@@ -48,7 +48,7 @@ public:
 		return objects;
 	}
 
-	static char* RaycastObject(float x, float y, float screenHeight);
+	static char* RaycastObject(float x, float y, float screenHeight, float screenWidth);
 
 	static void FreeRaycastChar(char* p) { delete[] p; }
 
