@@ -110,15 +110,17 @@ void SetObjectName(const char* ObjectName, const char* newObjectName) {
 }
 
 void CallMoveCamera() {
-	GameObject* camObj = Manager::GetGameObject("Camera");
-	Camera* camera = (Camera*)camObj;
-	camera->MoveCamera();
+	//GameObject* camObj = Manager::GetGameObject<GameObject>("Camera");
+	//Camera* camera = (Camera*)camObj;
+	Manager::GetGameObject("Camera")->GetComponent<Camera>()->MoveCamera();
+	//camera->MoveCamera();
 }
 
 void ResetMoveCamera() {
-	GameObject* camObj = Manager::GetGameObject("Camera");
-	Camera* camera = (Camera*)camObj;
-	camera->ResetSpeed();
+	//GameObject* camObj = Manager::GetGameObject("Camera");
+	//Camera* camera = (Camera*)camObj;
+	//camera->ResetSpeed();
+	Manager::GetGameObject("Camera")->GetComponent<Camera>()->ResetSpeed();
 }
 
 char* RaycastObject(float x, float y, float screenHeight, float screenWidth) {
@@ -126,18 +128,16 @@ char* RaycastObject(float x, float y, float screenHeight, float screenWidth) {
 }
 
 D3DXVECTOR3 GetRayFromScreen(float x, float y, float screenHeight, float screenWidth) {
-	GameObject* camObj = Manager::GetGameObject("Camera");
-	Camera* camera = (Camera*)camObj;
-	return camera->GetRayFromScreen(x, y, screenHeight, screenWidth);
+	return Manager::GetGameObject("Camera")->GetComponent<Camera>()->GetRayFromScreen(x, y, screenHeight, screenWidth);
 }
 
 void FreeRaycastChar(char* p) {
 	return Manager::FreeRaycastChar(p);
 }
 
-void AddObject(const char* ObjectName, const char* FileName)
+void AddModel(const char* ObjectName, const char* FileName)
 {
-	Manager::AddGameObject(ObjectName, FileName);
+	Manager::AddModel(ObjectName, FileName);
 }
 
 void SetScenePlaying(bool playing) {

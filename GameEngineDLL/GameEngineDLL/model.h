@@ -1,5 +1,5 @@
 #pragma once
-
+#include "component.h"
 
 
 // マテリアル構造体
@@ -39,9 +39,15 @@ struct MODEL
 
 
 
-class Model
+class Model: public Component
 {
 private:
+
+	ID3D11VertexShader*     m_VertexShader = NULL;
+	ID3D11PixelShader*      m_PixelShader = NULL;
+	ID3D11InputLayout*      m_VertexLayout = NULL;
+
+	D3DXMATRIX m_World;
 
 	ID3D11Buffer*	m_VertexBuffer;
 	ID3D11Buffer*	m_IndexBuffer;
@@ -58,12 +64,13 @@ private:
 	unsigned int m_IndexNum;
 
 public:
-
+	void Init();
+	void Uninit();
 	void Draw();
 
 	void Load( const char *FileName );
 	void Unload();
 
-	bool IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX world);
+	bool IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
 	int GetIndexNum() { return m_IndexNum; }
 };

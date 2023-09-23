@@ -7,11 +7,51 @@
 #include "main.h"
 #include "renderer.h"
 #include "model.h"
+#include "gameObject.h"
 
 bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle);
 
+void Model::Init()
+{
+	Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, "asset/shader/vertexLightingVS.cso");
+
+	Renderer::CreatePixelShader(&m_PixelShader, "asset/shader/vertexLightingPS.cso");
+}
+
+void Model::Uninit()
+{
+	Unload();
+
+	m_VertexLayout->Release();
+	m_VertexShader->Release();
+	m_PixelShader->Release();
+}
+
 void Model::Draw()
 {
+	// 入力レイアウト設定
+	Renderer::GetDeviceContext()->IASetInputLayout(m_VertexLayout);
+
+	// シェーダ設定
+	Renderer::GetDeviceContext()->VSSetShader(m_VertexShader, NULL, 0);
+	Renderer::GetDeviceContext()->PSSetShader(m_PixelShader, NULL, 0);
+
+
+	// マトリクス設定
+	D3DXMATRIX world, scale, rot, trans;
+	D3DXVECTOR3 posVec, rotVec, sclVec;
+	posVec = m_GameObject->GetPosition();
+	rotVec = m_GameObject->GetRotation();
+	sclVec = m_GameObject->GetScale();
+	D3DXMatrixScaling(&scale, sclVec.x, sclVec.y, sclVec.z);
+	D3DXMatrixRotationYawPitchRoll(&rot, rotVec.y, rotVec.x, rotVec.z);
+	D3DXMatrixTranslation(&trans, posVec.x, posVec.y, posVec.z);
+	world = scale * rot * trans;
+
+	Renderer::SetWorldMatrix(&world);
+
+	m_World = world;
+
 
 	// 頂点バッファ設定
 	UINT stride = sizeof(VERTEX_3D);
@@ -505,14 +545,14 @@ void Model::LoadMaterial( const char *FileName, MODEL_MATERIAL **MaterialArray, 
 	*MaterialNum = materialNum;
 }
 
-bool Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX world) {
+bool Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos) {
 	D3DXVECTOR3 triangle[3];
 	for (int i = 0; i < m_IndexNum - 2; i++) {
 		D3DXVECTOR4 temp;
 		for (int j = 0; j < 3; j++) {
 			triangle[j] = m_VertexArray[m_IndexArray[i + j]].Position;
 			temp = D3DXVECTOR4(triangle[j].x, triangle[j].y, triangle[j].z, 1.0f);
-			D3DXVec4Transform(&temp, &temp, &world);
+			D3DXVec4Transform(&temp, &temp, &m_World);
 			triangle[j] = D3DXVECTOR3(temp.x, temp.y, temp.z);
 		}
 		if (RayTriangleCollision(ray, cameraPos, triangle)) { return true; }

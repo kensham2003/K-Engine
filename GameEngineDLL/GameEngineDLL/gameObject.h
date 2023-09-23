@@ -9,14 +9,19 @@ class GameObject
 
 protected://継承先のクラスからアクセスできる
 
-	D3DXVECTOR3	m_Position;
-	D3DXVECTOR3	m_Rotation;
-	D3DXVECTOR3	m_Scale;
+	bool m_Destroy = false; //このゲームオブジェクトを削除するか
+
+	std::string m_Name;
+
+	D3DXVECTOR3	m_Position{};
+	D3DXVECTOR3	m_Rotation{};
+	D3DXVECTOR3	m_Scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
 
 	std::list<Component*> m_Component;
 
 public:
 	GameObject() {}//コンストラクタ
+	GameObject(std::string name) :m_Name(name) {}
 	virtual ~GameObject() {}//デストラクタ（仮想関数）
 
 	//virtual void Init() = 0;//純粋仮想関数
@@ -44,6 +49,19 @@ public:
 		}
 	}
 
+	//削除処理を設定
+	void SetDestroy() { m_Destroy = true; }
+
+	bool Destroy() {
+		if (m_Destroy) {
+			Uninit();
+			delete this;
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	void SetPosition(D3DXVECTOR3 Position) { m_Position = Position; }
 	void SetRotation(D3DXVECTOR3 Rotation) { m_Rotation = Rotation; }
@@ -52,6 +70,9 @@ public:
 	D3DXVECTOR3 GetPosition() { return m_Position; }
 	D3DXVECTOR3 GetRotation() { return m_Rotation; }
 	D3DXVECTOR3 GetScale() { return m_Scale; }
+
+	std::string GetName() { return m_Name; }
+	void SetName(std::string name) { m_Name = name; }
 
 	//右方向ベクトル取得（ローカル座標のX軸）
 	D3DXVECTOR3 GetRight() {

@@ -12,21 +12,23 @@ void Player::Init()
 	Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, "asset/shader/vertexLightingVS.cso");
 
 	Renderer::CreatePixelShader(&m_PixelShader, "asset/shader/vertexLightingPS.cso");
+
+	
 }
 
 void Player::Load(const char* FileName)
 {
 
-	m_Model = new Model();
-	m_Model->Load(FileName);
+	//m_Model = new Model();
+	//m_Model->Load(FileName);
 
 }
 
 
 void Player::Uninit()
 {
-	m_Model->Unload();
-	delete m_Model;
+	//m_Model->Unload();
+	//delete m_Model;
 
 	m_VertexLayout->Release();
 	m_VertexShader->Release();
@@ -61,10 +63,10 @@ void Player::Draw()
 
 	m_World = world;
 
-	m_Model->Draw();
+	//m_Model->Draw();
 }
 
 
-bool Player::IsRayCollideModel(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos) {
-	return m_Model->IsRayCollide(ray, cameraPos, m_World);
-}
+//bool Player::IsRayCollideModel(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos) {
+//	return m_Model->IsRayCollide(ray, cameraPos, m_World);
+//}

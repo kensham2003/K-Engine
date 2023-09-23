@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include "gameObject.h"
+#include "component.h"
 
 
 
-class Field : public GameObject
+class Field : public Component
 {
 
 private:

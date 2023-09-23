@@ -6,8 +6,8 @@
 
 void Camera::Init()
 {
-	m_Position = D3DXVECTOR3(0.0f, 2.0f, -5.0f);
-	m_Rotation = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_GameObject->SetPosition(D3DXVECTOR3(0.0f, 2.0f, -5.0f));
+	m_GameObject->SetRotation(D3DXVECTOR3(0.0f, 0.0f, 0.0f));
 }
 
 
@@ -26,8 +26,11 @@ void Camera::Draw()
 	//ビューマトリクス設定
 	D3DXMATRIX viewMatrix;
 	D3DXMATRIX world, rot, trans;
-	D3DXMatrixRotationYawPitchRoll(&rot, m_Rotation.y, m_Rotation.x, m_Rotation.z);
-	D3DXMatrixTranslation(&trans, m_Position.x, m_Position.y, m_Position.z);
+	D3DXVECTOR3 posVec, rotVec;
+	posVec = m_GameObject->GetPosition();
+	rotVec = m_GameObject->GetRotation();
+	D3DXMatrixRotationYawPitchRoll(&rot, rotVec.y, rotVec.x, rotVec.z);
+	D3DXMatrixTranslation(&trans, posVec.x, posVec.y, posVec.z);
 	world = rot * trans;
 	D3DXMatrixInverse(&viewMatrix, NULL, &world);
 
@@ -48,78 +51,78 @@ void Camera::Draw()
 void Camera::MoveCamera() 
 {
 	bool directionInput = false;
-	D3DXVECTOR3 cameraPosition = m_Position;
+	D3DXVECTOR3 cameraPosition = m_GameObject->GetPosition();
 	D3DXVECTOR3 cameraMoveVelocity = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
 	if (Input::GetKeyPress('W')) //W
 	{
 		directionInput = true;
-		D3DXVECTOR3 cameraForward = GetForward();
+		D3DXVECTOR3 cameraForward = m_GameObject->GetForward();
 		m_MoveSpeed += 0.01f;
 		cameraMoveVelocity += cameraForward;
 
 		if (Input::GetKeyPress('A'))
 		{
-			D3DXVECTOR3 cameraRight = GetRight();
+			D3DXVECTOR3 cameraRight = m_GameObject->GetRight();
 			cameraMoveVelocity -= cameraRight;
 		}
 		else if (Input::GetKeyPress('D'))
 		{
-			D3DXVECTOR3 cameraRight = GetRight();
+			D3DXVECTOR3 cameraRight = m_GameObject->GetRight();
 			cameraMoveVelocity += cameraRight;
 		}
 	}
 	else if (Input::GetKeyPress('S')) //S
 	{
 		directionInput = true;
-		D3DXVECTOR3 cameraForward = GetForward();
+		D3DXVECTOR3 cameraForward = m_GameObject->GetForward();
 		m_MoveSpeed += 0.01f;
 		cameraMoveVelocity -= cameraForward;
 
 		if (Input::GetKeyPress('A'))
 		{
-			D3DXVECTOR3 cameraRight = GetRight();
+			D3DXVECTOR3 cameraRight = m_GameObject->GetRight();
 			cameraMoveVelocity -= cameraRight;
 		}
 		else if (Input::GetKeyPress('D'))
 		{
-			D3DXVECTOR3 cameraRight = GetRight();
+			D3DXVECTOR3 cameraRight = m_GameObject->GetRight();
 			cameraMoveVelocity += cameraRight;
 		}
 	}
 	else if (Input::GetKeyPress('A')) //A
 	{
 		directionInput = true;
-		D3DXVECTOR3 cameraRight = GetRight();
+		D3DXVECTOR3 cameraRight = m_GameObject->GetRight();
 		m_MoveSpeed += 0.01f;
 		cameraMoveVelocity -= cameraRight;
 
 		if (Input::GetKeyPress('W'))
 		{
-			D3DXVECTOR3 cameraForward = GetForward();
+			D3DXVECTOR3 cameraForward = m_GameObject->GetForward();
 			cameraMoveVelocity += cameraForward;
 		}
 		else if (Input::GetKeyPress('S'))
 		{
-			D3DXVECTOR3 cameraForward = GetForward();
+			D3DXVECTOR3 cameraForward = m_GameObject->GetForward();
 			cameraMoveVelocity -= cameraForward;
 		}
 	}
 	else if (Input::GetKeyPress('D'))
 	{
 		directionInput = true;
-		D3DXVECTOR3 cameraRight = GetRight();
+		D3DXVECTOR3 cameraRight = m_GameObject->GetRight();
 		m_MoveSpeed += 0.01f;
 		cameraMoveVelocity += cameraRight;
 
 		if (Input::GetKeyPress('W'))
 		{
-			D3DXVECTOR3 cameraForward = GetForward();
+			D3DXVECTOR3 cameraForward = m_GameObject->GetForward();
 			cameraMoveVelocity += cameraForward;
 		}
 		else if (Input::GetKeyPress('S'))
 		{
-			D3DXVECTOR3 cameraForward = GetForward();
+			D3DXVECTOR3 cameraForward = m_GameObject->GetForward();
 			cameraMoveVelocity -= cameraForward;
 		}
 	}
@@ -136,7 +139,8 @@ void Camera::MoveCamera()
 	{
 		D3DXVec3Normalize(&cameraMoveVelocity, &cameraMoveVelocity);
 		cameraMoveVelocity *= m_MoveSpeed;
-		m_Position += cameraMoveVelocity;
+		//m_Position += cameraMoveVelocity;
+		m_GameObject->MovePosition(cameraMoveVelocity);
 	}
 }
 

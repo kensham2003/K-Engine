@@ -69,7 +69,7 @@ extern "C" {
 	__declspec(dllexport) D3DXVECTOR3 __cdecl GetRayFromScreen(float x, float y, float screenHeight, float screenWidth);
 	__declspec(dllexport) void __cdecl FreeRaycastChar(char* p);
 
-	__declspec(dllexport) void __cdecl AddObject(const char* ObjectName, const char* FileName);
+	__declspec(dllexport) void __cdecl AddModel(const char* ObjectName, const char* FileName);
 
 	__declspec(dllexport) void __cdecl SetScenePlaying(bool playing);
 }

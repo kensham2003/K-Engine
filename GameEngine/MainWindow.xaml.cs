@@ -160,16 +160,17 @@ namespace GameEngine
         {
 
             bool initSucceeded = NativeMethods.InvokeWithDllProtection(() => NativeMethods.Init()) >= 0;
+            //System.Threading.Thread.Sleep(500);
 
-            if (!initSucceeded)
-            {
-                MessageBox.Show("Failed to initialize.", "WPF D3D Interop", MessageBoxButton.OK, MessageBoxImage.Error);
+            //if (!initSucceeded)
+            //{
+            //    MessageBox.Show("Failed to initialize.", "WPF D3D Interop", MessageBoxButton.OK, MessageBoxImage.Error);
 
-                if (Application.Current != null)
-                {
-                    Application.Current.Shutdown();
-                }
-            }
+            //    if (Application.Current != null)
+            //    {
+            //        Application.Current.Shutdown();
+            //    }
+            //}
 
             return initSucceeded;
         }
@@ -353,7 +354,7 @@ namespace GameEngine
             public static extern void FreeRaycastChar(IntPtr p);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void AddObject(string ObjectName, string FileName);
+            public static extern void AddModel(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetScenePlaying(bool playing);
@@ -421,17 +422,21 @@ namespace GameEngine
             float y = (float)(localMousePosition.Y);
             float screenHeight = (float)height;
             float screenWidth = (float)width;
-            //↓エラー
             string search;
             IntPtr ptr = NativeMethods.InvokeWithDllProtection(() => NativeMethods.RaycastObject(x, y, screenHeight, screenWidth));
             search = Marshal.PtrToStringAnsi(ptr);
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.FreeRaycastChar(ptr));
-            Vector3 vec = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetRayFromScreen(x, y, screenHeight, screenWidth));
-            width += 0;
-            //if (search != "")
-            //{
-            //    int a = 0;
-            //}
+            if (search != "")
+            {
+                foreach(GameObject gameObject in HierarchyListBox.Items)
+                {
+                    if(gameObject.ToString() == search)
+                    {
+                        HierarchyListBox.SelectedItem = gameObject;
+                        return;
+                    }
+                }
+            }
         }
 
         //右ボタン押しながら+WASD：カメラを移動
@@ -536,6 +541,7 @@ namespace GameEngine
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition("Camera", cameraPosition));
         }
 
+        //Add Model
         private void Host_PreviewDrop(object sender, DragEventArgs e)
         {
             string[] paths = ((string[])e.Data.GetData(DataFormats.FileDrop));
@@ -563,7 +569,7 @@ namespace GameEngine
             
             HierarchyListBox.Items.Add(gameObject);
 
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddObject(objectName, filename));
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(objectName, filename));
         }
         
 
@@ -586,7 +592,7 @@ namespace GameEngine
             foreach (GameObject gameObject in gameObjects)
             {
                 HierarchyListBox.Items.Add(gameObject);
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddObject(gameObject.Content, gameObject.ModelName));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Content, gameObject.ModelName));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Content, gameObject.Position));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Content, gameObject.Rotation));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Content, gameObject.Scale));

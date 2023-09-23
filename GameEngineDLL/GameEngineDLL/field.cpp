@@ -2,6 +2,7 @@
 #include "main.h"
 #include "renderer.h"
 #include "field.h"
+#include "gameObject.h"
 
 
 
@@ -62,9 +63,9 @@ void Field::Init()
 	Renderer::CreatePixelShader(&m_PixelShader, "asset/shader/vertexLightingPS.cso");
 
 
-	m_Position = D3DXVECTOR3( 0.0f, 0.0f, 0.0f );
-	m_Rotation = D3DXVECTOR3( 0.0f, 0.0f, 0.0f );
-	m_Scale = D3DXVECTOR3( 1.0f, 1.0f, 1.0f );
+	//m_GameObject->SetPosition(D3DXVECTOR3( 0.0f, 0.0f, 0.0f ));
+	//m_GameObject->SetRotation(D3DXVECTOR3( 0.0f, 0.0f, 0.0f ));
+	//m_GameObject->SetScale(D3DXVECTOR3( 1.0f, 1.0f, 1.0f ));
 
 }
 
@@ -100,9 +101,13 @@ void Field::Draw()
 
 	// ワールドマトリクス設定
 	D3DXMATRIX world, scale, rot, trans;
-	D3DXMatrixScaling(&scale, m_Scale.x, m_Scale.y, m_Scale.z);
-	D3DXMatrixRotationYawPitchRoll(&rot, m_Rotation.y, m_Rotation.x, m_Rotation.z);
-	D3DXMatrixTranslation(&trans, m_Position.x, m_Position.y, m_Position.z);
+	D3DXVECTOR3 posVec, rotVec, sclVec;
+	posVec = m_GameObject->GetPosition();
+	rotVec = m_GameObject->GetRotation();
+	sclVec = m_GameObject->GetScale();
+	D3DXMatrixScaling(&scale, sclVec.x, sclVec.y, sclVec.z);
+	D3DXMatrixRotationYawPitchRoll(&rot, rotVec.y, rotVec.x, rotVec.z);
+	D3DXMatrixTranslation(&trans, posVec.x, posVec.y, posVec.z);
 	world = scale * rot * trans;
 	Renderer::SetWorldMatrix(&world);
 

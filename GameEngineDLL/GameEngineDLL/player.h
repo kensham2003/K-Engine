@@ -8,7 +8,7 @@ class Player : public GameObject
 
 private:
 
-	Model* m_Model;
+	//Model* m_Model;
 
 	ID3D11VertexShader*     m_VertexShader = NULL;
 	ID3D11PixelShader*      m_PixelShader = NULL;
@@ -18,6 +18,7 @@ private:
 
 public:
 	Player() : GameObject() {}
+	Player(std::string name) : GameObject(name) {}
 
 	void Init();
 	void Load(const char* FileName);
@@ -25,6 +26,6 @@ public:
 	void Update();
 	void Draw();
 
-	bool IsRayCollideModel(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
-	std::string GetModelIndexNum() { return std::to_string(m_Model->GetIndexNum()); }
+	//bool IsRayCollideModel(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
+	//std::string GetModelIndexNum() { return std::to_string(m_Model->GetIndexNum()); }
 };
