@@ -506,11 +506,10 @@ void Model::LoadMaterial( const char *FileName, MODEL_MATERIAL **MaterialArray, 
 }
 
 bool Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXMATRIX world) {
-	//return false;
 	D3DXVECTOR3 triangle[3];
 	for (int i = 0; i < m_IndexNum - 2; i++) {
 		D3DXVECTOR4 temp;
-		for (int j = 0; j < 2; j++) {
+		for (int j = 0; j < 3; j++) {
 			triangle[j] = m_VertexArray[m_IndexArray[i + j]].Position;
 			temp = D3DXVECTOR4(triangle[j].x, triangle[j].y, triangle[j].z, 1.0f);
 			D3DXVec4Transform(&temp, &temp, &world);

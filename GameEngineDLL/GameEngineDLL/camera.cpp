@@ -33,12 +33,14 @@ void Camera::Draw()
 
 	Renderer::SetViewMatrix(&viewMatrix);
 
-	m_ViewMatrix = viewMatrix;
+
 
 	//プロジェクションマトリクス設定
 	D3DXMATRIX projectionMatrix;
 	D3DXMatrixPerspectiveFovLH(&projectionMatrix, 1.0f,
 		(float)Renderer::GetScreenWidth() / Renderer::GetScreenHeight(), 0.1f, 100.0f);
+
+	m_ViewMatrix = viewMatrix;
 
 	Renderer::SetProjectionMatrix(&projectionMatrix);
 }
@@ -141,8 +143,10 @@ void Camera::MoveCamera()
 D3DXVECTOR3 Camera::GetRayFromScreen(float x, float y, float screenHeight) {
 	float scaledX, scaledY, scaledWidth;
 	scaledWidth = screenHeight / SCREEN_HEIGHT * SCREEN_WIDTH;
-	scaledX = x / screenHeight * SCREEN_HEIGHT;
-	scaledY = y / scaledWidth * SCREEN_WIDTH;
+	//scaledX = x / screenHeight * SCREEN_HEIGHT;
+	//scaledY = y / scaledWidth * SCREEN_WIDTH;
+	scaledX = x / scaledWidth;
+	scaledY = y / screenHeight;
 	D3DXMATRIX view = m_ViewMatrix;
 	D3DXVECTOR3 viewX, viewY, viewZ;
 	viewX = D3DXVECTOR3(view._11, view._21, view._31);
@@ -153,7 +157,9 @@ D3DXVECTOR3 Camera::GetRayFromScreen(float x, float y, float screenHeight) {
 	float fovx = 1.0f / SCREEN_HEIGHT * SCREEN_WIDTH;
 	float yTotal = 1.0f * tanf(fovy / 2);
 	float xTotal = 1.0f * tanf(fovx / 2);
-	D3DXVECTOR3 dir = viewZ + viewX * scaledX - viewY * scaledY;
+	D3DXVECTOR3 dir = viewZ + viewX * scaledX * xTotal - viewY * scaledY * yTotal;
 	D3DXVec3Normalize(&dir, &dir);
 	return dir;
+	//D3DXVECTOR3 temp = D3DXVECTOR3(scaledX, scaledY, scaledWidth);
+	//return temp;
 }
