@@ -27,6 +27,8 @@
 #define SCREEN_WIDTH	(960)
 #define SCREEN_HEIGHT	(540)
 
+#define GET_VARIABLE_NAME(Variable) (#Variable)
+
 
 HWND GetWindow();
 

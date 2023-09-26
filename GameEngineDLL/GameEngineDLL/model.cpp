@@ -9,7 +9,7 @@
 #include "model.h"
 #include "gameObject.h"
 
-bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle);
+bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle, D3DXVECTOR3& outIntersectionPoint);
 
 void Model::Init()
 {
@@ -545,22 +545,32 @@ void Model::LoadMaterial( const char *FileName, MODEL_MATERIAL **MaterialArray, 
 	*MaterialNum = materialNum;
 }
 
-bool Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos) {
+float Model::IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos) {
 	D3DXVECTOR3 triangle[3];
+
+	//カメラ情報をワールド座標→ローカル座標（一回で済むので速い）
+	D3DXVECTOR3 localRay, localCameraPos, intersection;
+	D3DXMATRIX worldToLocal;
+	D3DXMatrixInverse(&worldToLocal, NULL, &m_World);
+	D3DXVec3TransformNormal(&localRay, &ray, &worldToLocal);//方向ベクトルはTransformNormalを使う
+	D3DXVec3TransformCoord(&localCameraPos, &cameraPos, &worldToLocal);//座標ベクトルはTransformCoordを使う
+
 	for (int i = 0; i < m_IndexNum - 2; i++) {
-		D3DXVECTOR4 temp;
 		for (int j = 0; j < 3; j++) {
 			triangle[j] = m_VertexArray[m_IndexArray[i + j]].Position;
-			temp = D3DXVECTOR4(triangle[j].x, triangle[j].y, triangle[j].z, 1.0f);
-			D3DXVec4Transform(&temp, &temp, &m_World);
-			triangle[j] = D3DXVECTOR3(temp.x, temp.y, temp.z);
+			////頂点のローカル座標→ワールド座標（全部計算するので遅い）
+			//D3DXVec3TransformCoord(&triangle[j], &triangle[j], &m_World);
 		}
-		if (RayTriangleCollision(ray, cameraPos, triangle)) { return true; }
+		if (RayTriangleCollision(localRay, localCameraPos, triangle, intersection)) {
+			D3DXVECTOR3 distance = intersection - localCameraPos;
+			return D3DXVec3Length(&distance);
+		}
+		//if (RayTriangleCollision(ray, cameraPos, triangle)) { return true; }
 	}
-	return false;
+	return -1.0f;
 }
 
-bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle) {
+bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle, D3DXVECTOR3& outIntersectionPoint) {
 	const float eps = 0.00001f;
 	D3DXVECTOR3 edge1, edge2, h, s, q;
 	float a, f, u, v;
@@ -585,6 +595,9 @@ bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* t
 
 	float t = f * D3DXVec3Dot(&edge2, &q);
 
-	if (t > eps) { return true; }
+	if (t > eps) {
+		outIntersectionPoint = cameraPos + ray * t;
+		return true; 
+	}
 	else { return false; }
 }

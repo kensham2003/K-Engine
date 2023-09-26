@@ -4,6 +4,9 @@
 #include <list>
 #include <string>
 
+#include "cereal/cereal.hpp"
+#include "cereal/archives/json.hpp"
+
 class GameObject
 {
 
@@ -39,6 +42,7 @@ public:
 		m_Component.clear();
 	}
 	virtual void Update() {
+		m_Rotation.x += 0.01f;
 		for (Component* component : m_Component) {
 			component->Update();
 		}
@@ -173,4 +177,9 @@ public:
 		return nullptr;
 	}
 
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(CEREAL_NVP(m_Position), CEREAL_NVP(m_Rotation), CEREAL_NVP(m_Scale));
+	}
 };

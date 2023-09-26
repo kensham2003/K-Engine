@@ -2,8 +2,11 @@
 
 #include <string>
 #include <unordered_map>
+#include <sstream>
 
 #include "gameObject.h"
+
+#include "cereal/types/memory.hpp"
 
 #define LAYER_CAMERA (0)
 #define LAYER_3D_OBJECT (1)
@@ -14,9 +17,9 @@
 class Manager
 {
 private:
-	static std::unordered_map<std::string, GameObject*> m_GameObjectMap;
 
-	static std::list<GameObject*> m_GameObject[5];
+	static std::list<std::shared_ptr<GameObject>> m_GameObject[5];
+	static std::stringstream m_GameObjectCache[5];
 
 	static bool m_IsPlaying;
 
@@ -27,7 +30,7 @@ public:
 	static void Update();
 	static void Draw(void * Resource, bool NewSurface);
 
-	static GameObject* AddGameObject(const char* ObjectName, int layer); //Add empty object
+	static std::shared_ptr<GameObject> AddGameObject(const char* ObjectName, int layer); //Add empty object
 
 	//template <typename T> //テンプレート関数
 	//static T* AddGameObject(int Layer) {
@@ -48,9 +51,9 @@ public:
 	//}
 
 	//名前が合っているゲームオブジェクトを取得
-	static GameObject* GetGameObject(std::string name) {
+	static std::shared_ptr<GameObject> GetGameObject(std::string name) {
 		for (int i = 0; i < 5; i++) {
-			for (GameObject* object : m_GameObject[i]) {
+			for (auto& object : m_GameObject[i]) {
 					if (object->GetName() == name) {
 						return object;
 					}
@@ -74,10 +77,10 @@ public:
 
 	//指定したコンポーネントを持っているのオブジェクトを取得
 	template <typename T>
-	static std::vector<GameObject*> GetGameObjects() {
-		std::vector<GameObject*> objects;
+	static std::vector<std::shared_ptr<GameObject>> GetGameObjects() {
+		std::vector<std::shared_ptr<GameObject>> objects;
 		for (int i = 0; i < 5; i++) {
-			for (GameObject* object : m_GameObject[i]) {
+			for (auto& object : m_GameObject[i]) {
 				if (object->GetComponent<T>() != nullptr) {
 					objects.push_back(object);
 				}
@@ -90,5 +93,11 @@ public:
 
 	static void FreeRaycastChar(char* p) { delete[] p; }
 
-	static void SetPlaying(bool playing) { m_IsPlaying = playing; }
+	static void SetPlaying(bool playing);
 };
+
+template<class Archive>
+void serialize(Archive & archive, D3DXVECTOR3 &vector)
+{
+	archive(cereal::make_nvp("x", vector.x), cereal::make_nvp("y", vector.y), cereal::make_nvp("z", vector.z));
+}

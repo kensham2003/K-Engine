@@ -1,8 +1,8 @@
 [
   {
     "Position": {
-      "X": -0.049999997,
-      "Y": 1.19999921,
+      "X": 0,
+      "Y": 0,
       "Z": 0
     },
     "Rotation": {
@@ -15,17 +15,18 @@
       "Y": 1,
       "Z": 1
     },
-    "ModelName": "C:\\GameEngine\\asset\\model\\Barrel_01_1k.obj",
-    "Content": "Barrel_01_1k"
+    "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+    "Content": "torus",
+    "Script": "hi\r\n"
   },
   {
     "Position": {
-      "X": -2.19000006,
-      "Y": 0.670000017,
+      "X": -2.52999997,
+      "Y": -0.0299999993,
       "Z": 0
     },
     "Rotation": {
-      "X": 0.785398185,
+      "X": 0,
       "Y": 0,
       "Z": 0
     },
@@ -34,7 +35,8 @@
       "Y": 1,
       "Z": 1
     },
-    "ModelName": "C:\\GameEngine\\asset\\model\\torus.obj",
-    "Content": "torus"
+    "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\Barrel_01_1k.obj",
+    "Content": "Barrel_01_1k",
+    "Script": "aaa"
   }
 ]

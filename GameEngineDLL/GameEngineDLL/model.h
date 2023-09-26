@@ -71,6 +71,6 @@ public:
 	void Load( const char *FileName );
 	void Unload();
 
-	bool IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
+	float IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
 	int GetIndexNum() { return m_IndexNum; }
 };
