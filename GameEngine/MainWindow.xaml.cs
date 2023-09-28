@@ -32,6 +32,8 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
 
+using GameEngine.Component;
+
 namespace GameEngine
 {
     /// <summary>
@@ -63,28 +65,28 @@ namespace GameEngine
 
         System.Timers.Timer timer;
         
-        public class GameObject
-        {
-            public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-            public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-            public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+        //public class GameObject
+        //{
+        //    public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        //    public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        //    public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
 
-            public string ModelName { get; set; }
+        //    public string ModelName { get; set; }
 
-            public string Content { get; set; }
+        //    public string Content { get; set; }
 
-            public string Script { get; set; }
+        //    public string Script { get; set; }
 
-            public GameObject(string content)
-            {
-                Content = content;
-            }
+        //    public GameObject(string content)
+        //    {
+        //        Content = content;
+        //    }
 
-            public override string ToString()
-            {
-                return Content.ToString();
-            }
-        }
+        //    public override string ToString()
+        //    {
+        //        return Content.ToString();
+        //    }
+        //}
 
         public class MainWindowDataContext
         {
