@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace GameEngine.Component
 {
-    class GameObject
+    public class GameObject
     {
 
         public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
@@ -21,9 +21,9 @@ namespace GameEngine.Component
 
         public string Script { get; set; }
 
-        private readonly ObservableCollection<Component> _components = new ObservableCollection<Component>();
+        public readonly ObservableCollection<Component> Components = new ObservableCollection<Component>();
 
-        public ReadOnlyObservableCollection<Component> Components { get; }
+        //public ReadOnlyObservableCollection<Component> Components { get; }
 
         public GameObject(string content)
         {
@@ -33,6 +33,13 @@ namespace GameEngine.Component
         public override string ToString()
         {
             return Content.ToString();
+        }
+
+        public void AddModel(string modelName)
+        {
+            Model model = new Model(this);
+            model.ModelName = modelName;
+            Components.Add(model);
         }
     }
 }

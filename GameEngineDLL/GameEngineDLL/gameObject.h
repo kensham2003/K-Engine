@@ -42,7 +42,6 @@ public:
 		m_Component.clear();
 	}
 	virtual void Update() {
-		m_Rotation.x += 0.01f;
 		for (Component* component : m_Component) {
 			component->Update();
 		}

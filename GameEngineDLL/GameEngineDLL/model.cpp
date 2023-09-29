@@ -27,6 +27,13 @@ void Model::Uninit()
 	m_PixelShader->Release();
 }
 
+void Model::Update()
+{
+	D3DXVECTOR3 rot = m_GameObject->GetRotation();
+	rot.x += 0.01f;
+	m_GameObject->SetRotation(rot);
+}
+
 void Model::Draw()
 {
 	// 入力レイアウト設定

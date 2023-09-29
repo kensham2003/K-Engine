@@ -568,6 +568,7 @@ namespace GameEngine
 
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = filename;
+            gameObject.AddModel(filename);
             
             HierarchyListBox.Items.Add(gameObject);
 
@@ -611,6 +612,12 @@ namespace GameEngine
             };
 
             string fileName = "TestScene.json";
+            //foreach(object o in HierarchyListBox.Items)
+            //{
+            //    GameObject g = o as GameObject;
+            //    string jsonStr = JsonSerializer.Serialize(g.Components.ToArray(), options);
+            //    File.WriteAllText(fileName, jsonStr);
+            //}
             string jsonString = JsonSerializer.Serialize(HierarchyListBox.Items, options);
             File.WriteAllText(fileName, jsonString);
         }
