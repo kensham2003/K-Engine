@@ -55,6 +55,8 @@ namespace GameEngine
         Vector3 cameraMoveVelocity = Vector3.Zero;
         GameObject selectedObject;
 
+        bool m_simulating = false;
+
         Point mousePosition;
         Point newMousePosition;
 
@@ -638,6 +640,52 @@ namespace GameEngine
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
             MenuItem_SimulateStop.Visibility = Visibility.Visible;
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
+            m_simulating = true;
+            var th = new Thread(new ThreadStart(SimulatingInspectorTask));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void SimulatingInspectorTask()
+        {
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+
+            while (m_simulating)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                        if (inspectorObject == null) return;
+
+                        string objectName = inspectorObject.ToString();
+
+                        Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        PositionX.Text = Pos.X.ToString("F2");
+                        PositionY.Text = Pos.Y.ToString("F2");
+                        PositionZ.Text = Pos.Z.ToString("F2");
+
+                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        RotationX.Text = Rot.X.ToString("F2");
+                        RotationY.Text = Rot.Y.ToString("F2");
+                        RotationZ.Text = Rot.Z.ToString("F2");
+
+                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        ScaleX.Text = Scl.X.ToString("F2");
+                        ScaleY.Text = Scl.Y.ToString("F2");
+                        ScaleZ.Text = Scl.Z.ToString("F2");
+
+                        //inspectorObject.Position = Pos;
+                        //inspectorObject.Rotation = Rot;
+                        //inspectorObject.Scale = Scl;
+                    });
+
+                    now = DateTime.Now;
+                }
+            }
         }
 
         private void MenuItem_Simulate_Stop_Click(object sender, RoutedEventArgs e)
@@ -645,6 +693,8 @@ namespace GameEngine
             MenuItem_SimulateStop.Visibility = Visibility.Collapsed;
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
+            m_simulating = false;
+            ObjectToInspector();
         }
 
         //========================
