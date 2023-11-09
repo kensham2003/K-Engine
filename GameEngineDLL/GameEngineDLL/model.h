@@ -66,6 +66,7 @@ private:
 public:
 	void Init();
 	void Uninit();
+	void Update();
 	void Draw();
 
 	void Load( const char *FileName );

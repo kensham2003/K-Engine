@@ -32,6 +32,8 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
 
+using GameEngine.Component;
+
 namespace GameEngine
 {
     /// <summary>
@@ -53,6 +55,8 @@ namespace GameEngine
         Vector3 cameraMoveVelocity = Vector3.Zero;
         GameObject selectedObject;
 
+        bool m_simulating = false;
+
         Point mousePosition;
         Point newMousePosition;
 
@@ -63,28 +67,28 @@ namespace GameEngine
 
         System.Timers.Timer timer;
         
-        public class GameObject
-        {
-            public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-            public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-            public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+        //public class GameObject
+        //{
+        //    public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        //    public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        //    public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
 
-            public string ModelName { get; set; }
+        //    public string ModelName { get; set; }
 
-            public string Content { get; set; }
+        //    public string Content { get; set; }
 
-            public string Script { get; set; }
+        //    public string Script { get; set; }
 
-            public GameObject(string content)
-            {
-                Content = content;
-            }
+        //    public GameObject(string content)
+        //    {
+        //        Content = content;
+        //    }
 
-            public override string ToString()
-            {
-                return Content.ToString();
-            }
-        }
+        //    public override string ToString()
+        //    {
+        //        return Content.ToString();
+        //    }
+        //}
 
         public class MainWindowDataContext
         {
@@ -566,6 +570,7 @@ namespace GameEngine
 
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = filename;
+            gameObject.AddModel(filename);
             
             HierarchyListBox.Items.Add(gameObject);
 
@@ -609,6 +614,12 @@ namespace GameEngine
             };
 
             string fileName = "TestScene.json";
+            //foreach(object o in HierarchyListBox.Items)
+            //{
+            //    GameObject g = o as GameObject;
+            //    string jsonStr = JsonSerializer.Serialize(g.Components.ToArray(), options);
+            //    File.WriteAllText(fileName, jsonStr);
+            //}
             string jsonString = JsonSerializer.Serialize(HierarchyListBox.Items, options);
             File.WriteAllText(fileName, jsonString);
         }
@@ -629,6 +640,52 @@ namespace GameEngine
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
             MenuItem_SimulateStop.Visibility = Visibility.Visible;
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
+            m_simulating = true;
+            var th = new Thread(new ThreadStart(SimulatingInspectorTask));
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void SimulatingInspectorTask()
+        {
+            //60fps
+            DateTime now = DateTime.Now;
+            TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
+
+            while (m_simulating)
+            {
+                if (DateTime.Now.Subtract(now) > interval)
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                        if (inspectorObject == null) return;
+
+                        string objectName = inspectorObject.ToString();
+
+                        Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        PositionX.Text = Pos.X.ToString("F2");
+                        PositionY.Text = Pos.Y.ToString("F2");
+                        PositionZ.Text = Pos.Z.ToString("F2");
+
+                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        RotationX.Text = Rot.X.ToString("F2");
+                        RotationY.Text = Rot.Y.ToString("F2");
+                        RotationZ.Text = Rot.Z.ToString("F2");
+
+                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        ScaleX.Text = Scl.X.ToString("F2");
+                        ScaleY.Text = Scl.Y.ToString("F2");
+                        ScaleZ.Text = Scl.Z.ToString("F2");
+
+                        //inspectorObject.Position = Pos;
+                        //inspectorObject.Rotation = Rot;
+                        //inspectorObject.Scale = Scl;
+                    });
+
+                    now = DateTime.Now;
+                }
+            }
         }
 
         private void MenuItem_Simulate_Stop_Click(object sender, RoutedEventArgs e)
@@ -636,6 +693,8 @@ namespace GameEngine
             MenuItem_SimulateStop.Visibility = Visibility.Collapsed;
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
+            m_simulating = false;
+            ObjectToInspector();
         }
 
         //========================
