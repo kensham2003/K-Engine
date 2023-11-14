@@ -249,7 +249,6 @@
     <ClInclude Include="player.h" />
     <ClInclude Include="polygon2D.h" />
     <ClInclude Include="renderer.h" />
-    <ClInclude Include="script.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
@@ -261,7 +260,6 @@
     <ClCompile Include="player.cpp" />
     <ClCompile Include="polygon2D.cpp" />
     <ClCompile Include="renderer.cpp" />
-    <ClCompile Include="script.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="common.hlsl">
