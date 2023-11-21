@@ -166,6 +166,8 @@
     <Compile Include="Component\component.cs" />
     <Compile Include="Component\gameObject.cs" />
     <Compile Include="Component\model.cs" />
+    <Compile Include="Component\testComponent.cs" />
+    <Compile Include="Detail\define.cs" />
     <Compile Include="GameLoop\game.cs" />
     <Compile Include="GameLoop\gameLoop.cs" />
     <Compile Include="MainWindow.xaml.cs">

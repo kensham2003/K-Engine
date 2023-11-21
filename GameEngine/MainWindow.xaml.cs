@@ -33,6 +33,10 @@ using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
 
 using GameEngine.Component;
+using GameEngine.GameLoop;
+using GameEngine.Detail;
+
+using GameLoopClass = GameEngine.GameLoop.GameLoop;
 
 namespace GameEngine
 {
@@ -43,6 +47,9 @@ namespace GameEngine
     {
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
+
+        GameLoopClass m_gameLoop;
+        Game m_game;
 
         TimeSpan lastRender;
         bool lastVisible;
@@ -158,6 +165,12 @@ namespace GameEngine
 
             //ノードエディタ
             DataContext = new MainWindowDataContext();
+
+            //ゲームループ
+            m_gameLoop = new GameLoopClass();
+            m_game = new Game();
+            m_gameLoop.Load(m_game);
+            m_gameLoop.Start();
         }
 
         private static bool Init()
@@ -277,7 +290,7 @@ namespace GameEngine
             this.UninitializeRendering();
         }
 
-        private static class NativeMethods
+        public static class NativeMethods
         {
             /// <summary>
             /// Variable used to track whether the missing dependency dialog has been displayed,
@@ -302,6 +315,9 @@ namespace GameEngine
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetObjectScale(string ObjectName, Vector3 Scale);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectTransform(string ObjectName, Vector3 Position, Vector3 Rotation, Vector3 Scale);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern Vector3 GetObjectPosition(string ObjectName);
@@ -571,6 +587,8 @@ namespace GameEngine
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = filename;
             gameObject.AddModel(filename);
+            gameObject.AddComponent(new Component.testComponent(gameObject));
+            m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
             
             HierarchyListBox.Items.Add(gameObject);
 
@@ -597,10 +615,10 @@ namespace GameEngine
             foreach (GameObject gameObject in gameObjects)
             {
                 HierarchyListBox.Items.Add(gameObject);
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Content, gameObject.ModelName));
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Content, gameObject.Position));
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Content, gameObject.Rotation));
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Content, gameObject.Scale));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Name, gameObject.ModelName));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Name, gameObject.Position));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Name, gameObject.Rotation));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Name, gameObject.Scale));
             }
         }
 
@@ -639,7 +657,8 @@ namespace GameEngine
         {
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
             MenuItem_SimulateStop.Visibility = Visibility.Visible;
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
+            m_gameLoop.Play();
+            //NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
             m_simulating = true;
             var th = new Thread(new ThreadStart(SimulatingInspectorTask));
             th.SetApartmentState(ApartmentState.STA);
@@ -658,29 +677,43 @@ namespace GameEngine
                 {
                     this.Dispatcher.Invoke(() =>
                     {
+                        //GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                        //if (inspectorObject == null) return;
+
+                        //string objectName = inspectorObject.ToString();
+
+                        //Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        //PositionX.Text = Pos.X.ToString("F2");
+                        //PositionY.Text = Pos.Y.ToString("F2");
+                        //PositionZ.Text = Pos.Z.ToString("F2");
+
+                        //Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        //RotationX.Text = Rot.X.ToString("F2");
+                        //RotationY.Text = Rot.Y.ToString("F2");
+                        //RotationZ.Text = Rot.Z.ToString("F2");
+
+                        //Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        //ScaleX.Text = Scl.X.ToString("F2");
+                        //ScaleY.Text = Scl.Y.ToString("F2");
+                        //ScaleZ.Text = Scl.Z.ToString("F2");
+
                         GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
                         if (inspectorObject == null) return;
 
-                        string objectName = inspectorObject.ToString();
-
-                        Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        Vector3 Pos = inspectorObject.Position;
                         PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
 
-                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        Vector3 Rot = inspectorObject.Rotation;
                         RotationX.Text = Rot.X.ToString("F2");
                         RotationY.Text = Rot.Y.ToString("F2");
                         RotationZ.Text = Rot.Z.ToString("F2");
 
-                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        Vector3 Scl = inspectorObject.Scale;
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
-
-                        //inspectorObject.Position = Pos;
-                        //inspectorObject.Rotation = Rot;
-                        //inspectorObject.Scale = Scl;
                     });
 
                     now = DateTime.Now;
@@ -692,8 +725,9 @@ namespace GameEngine
         {
             MenuItem_SimulateStop.Visibility = Visibility.Collapsed;
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
+            //NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
             m_simulating = false;
+            m_gameLoop.Stop();
             ObjectToInspector();
         }
 
@@ -956,7 +990,7 @@ namespace GameEngine
             string objectName = gameObject.ToString();
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectName(objectName, Inspector_Name.Text));
 
-            gameObject.Content = Inspector_Name.Text;
+            gameObject.Name = Inspector_Name.Text;
 
             HierarchyListBox.Items.Refresh();
         }

@@ -49,6 +49,12 @@ void SetObjectScale(const char* ObjectName, D3DXVECTOR3 Scale)
 	Manager::GetGameObject(ObjectName)->SetScale(Scale);
 }
 
+void SetObjectTransform(const char* ObjectName, D3DXVECTOR3 Position, D3DXVECTOR3 Rotation, D3DXVECTOR3 Scale) {
+	std::shared_ptr<GameObject> gameObject = Manager::GetGameObject(ObjectName);
+	gameObject->SetPosition(Position);
+	gameObject->SetRotation(Rotation);
+	gameObject->SetScale(Scale);
+}
 
 
 D3DXVECTOR3 GetObjectPosition(const char* ObjectName)

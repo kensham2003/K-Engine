@@ -1,7 +1,6 @@
 #pragma once
 
 #include "component.h"
-#include "script.h"
 #include <list>
 #include <string>
 

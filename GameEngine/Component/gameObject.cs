@@ -15,9 +15,11 @@ namespace GameEngine.Component
         public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
         public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
 
+        public int Layer { get; set; }
+
         public string ModelName { get; set; }
 
-        public string Content { get; set; }
+        public string Name { get; set; }
 
         public string Script { get; set; }
 
@@ -27,12 +29,12 @@ namespace GameEngine.Component
 
         public GameObject(string content)
         {
-            Content = content;
+            Name = content;
         }
 
         public override string ToString()
         {
-            return Content.ToString();
+            return Name.ToString();
         }
 
         public void AddModel(string modelName)
@@ -40,6 +42,27 @@ namespace GameEngine.Component
             Model model = new Model(this);
             model.ModelName = modelName;
             Components.Add(model);
+        }
+
+        public void BeginPlay()
+        {
+            foreach (Component c in Components)
+            {
+                c.BeginPlay();
+            }
+        }
+
+        public void Update(TimeSpan gameTime)
+        {
+            foreach(Component c in Components)
+            {
+                c.Update(gameTime);
+            }
+        }
+
+        public void AddComponent(Component component)
+        {
+            Components.Add(component);
         }
     }
 }

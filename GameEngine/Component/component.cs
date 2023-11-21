@@ -13,7 +13,7 @@ namespace GameEngine.Component
     {
         public string Name { get; set; }
 
-        private GameObject Parent;
+        protected GameObject Parent;
 
         public Component(GameObject gameObject)
         {
@@ -21,5 +21,9 @@ namespace GameEngine.Component
         }
 
         public GameObject GetParent() { return Parent; }
+
+        public virtual void BeginPlay() { }
+
+        public virtual void Update(TimeSpan gameTime) { }
     }
 }
