@@ -32,6 +32,8 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
 
+using Microsoft.VisualStudio.Shell;
+
 using GameEngine.Component;
 using GameEngine.GameLoop;
 using GameEngine.Detail;
@@ -1675,6 +1677,33 @@ namespace GameEngine
             }
         }
 
+        private void Add_Component(object sender, RoutedEventArgs e)
+        {
+            string code = $@"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Numerics;
+using System.Threading.Tasks;
 
+namespace GameEngine.Component
+{{
+    class testComponent2 : Component
+    {{
+        public testComponent2(GameObject gameObject) : base(gameObject) {{ }}
+
+        public override void Update(TimeSpan gameTime)
+        {{
+            Vector3 rot = Parent.Rotation;
+            rot.X += 0.1f;
+            Parent.Rotation = rot;
+        }}
+    }}
+}}
+";
+            File.WriteAllText("test.cs", code);
+        }
     }
+
 }

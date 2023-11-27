@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 namespace GameEngine.Component
 {
     [JsonDerivedType(typeof(Model))]
+    [JsonDerivedType(typeof(testComponent))]
     public class Component
     {
         public string Name { get; set; }

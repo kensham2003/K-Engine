@@ -186,6 +186,11 @@
 							<Button x:Name="Inspector_Scale_Button" Content="Linked" Click="Inspector_Change_Scale_Link"/>
 						</StackPanel>
 					</DockPanel>
+					<DockPanel >
+						<StackPanel Orientation="Vertical" >
+							<Button x:Name="Add_Component_Button" Content="Add Component" Click="Add_Component"/>
+						</StackPanel>
+					</DockPanel>
 
 				</StackPanel>
 			</TabItem>
