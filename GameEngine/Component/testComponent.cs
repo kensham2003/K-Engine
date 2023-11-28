@@ -11,6 +11,10 @@ namespace GameEngine.Component
     {
         public testComponent(GameObject gameObject) : base(gameObject) { }
 
+        public override void BeginPlay()
+        {
+        }
+
         public override void Update(TimeSpan gameTime)
         {
             Vector3 rot = Parent.Rotation;

@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using System.Windows.Interop;
 using System.Numerics;
 
@@ -31,6 +32,8 @@ using System.Collections.ObjectModel;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 
 using Microsoft.VisualStudio.Shell;
 
@@ -1679,6 +1682,16 @@ namespace GameEngine
 
         private void Add_Component(object sender, RoutedEventArgs e)
         {
+            string className = "";
+            var dialog = new userInputDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                className = dialog.InputText;
+            }
+            //string className = "abc";
+            string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
+            string classDll = "asset/" + className + ".dll";
+            string path = "asset/" + className + ".cs";
             string code = $@"
 using System;
 using System.Collections.Generic;
@@ -1687,22 +1700,67 @@ using System.Text;
 using System.Numerics;
 using System.Threading.Tasks;
 
+
 namespace GameEngine.Component
 {{
-    class testComponent2 : Component
+    class {upperClassName} : Component
     {{
-        public testComponent2(GameObject gameObject) : base(gameObject) {{ }}
+        public {upperClassName}(GameObject gameObject) : base(gameObject) {{ }}
+
+        public override void BeginPlay()
+        {{
+
+        }}
 
         public override void Update(TimeSpan gameTime)
         {{
-            Vector3 rot = Parent.Rotation;
-            rot.X += 0.1f;
-            Parent.Rotation = rot;
+            
         }}
     }}
 }}
 ";
-            File.WriteAllText("test.cs", code);
+            //File.WriteAllText(path, code);
+            //作った.csをロード
+            var options = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8);
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(
+                code,
+                options,
+                path
+                );
+
+            var references = new MetadataReference[]
+            {
+                MetadataReference.CreateFromFile(
+                    typeof(object).Assembly.Location),
+            };
+
+            var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
+
+            var compilation = CSharpCompilation.Create(
+                classDll,
+                new[] {syntaxTree},
+                references,
+                compilationOptions
+                );
+
+            using (var stream = new MemoryStream())
+            {
+                var emitResult = compilation.Emit(stream);
+                if (emitResult.Success)
+                {
+                    //コンパイル成功
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    //var assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
+                    //var assembly = Compile
+                    //var assembly = Assembly.Load()
+                }
+                else
+                {
+                    //コンパイル失敗
+                }
+            }
         }
     }
 
