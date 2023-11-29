@@ -15,7 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
+//using System.Runtime.Loader;
 using System.Windows.Interop;
 using System.Numerics;
 
@@ -33,11 +33,12 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 
 using Microsoft.VisualStudio.Shell;
 
-using GameEngine.Component;
+using GameEngine.GameEntity;
 using GameEngine.GameLoop;
 using GameEngine.Detail;
 
@@ -592,7 +593,7 @@ namespace GameEngine
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = filename;
             gameObject.AddModel(filename);
-            gameObject.AddComponent(new Component.testComponent(gameObject));
+            gameObject.AddComponent(new GameEntity.testComponent(gameObject));
             m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
             
             HierarchyListBox.Items.Add(gameObject);
@@ -1701,11 +1702,15 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 
-namespace GameEngine.Component
+namespace GameEngine.GameEntity
 {{
     class {upperClassName} : Component
     {{
+        public {upperClassName}() {{ }}
+
         public {upperClassName}(GameObject gameObject) : base(gameObject) {{ }}
+
+        private float moveAmount = 0.1f;
 
         public override void BeginPlay()
         {{
@@ -1714,53 +1719,125 @@ namespace GameEngine.Component
 
         public override void Update(TimeSpan gameTime)
         {{
+            Vector3 pos = Parent.Position;
+            if(pos.X > 3 || pos.X < -3){{moveAmount *= -1;}}
             
+            pos.X += moveAmount;
+            Parent.Position = pos;
         }}
     }}
 }}
 ";
-            //File.WriteAllText(path, code);
+            File.WriteAllText(path, code);
             //作った.csをロード
-            var options = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(
-                code,
-                options,
-                path
-                );
+            var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
 
-            var references = new MetadataReference[]
-            {
-                MetadataReference.CreateFromFile(
-                    typeof(object).Assembly.Location),
-            };
-
-            var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
-
-            var compilation = CSharpCompilation.Create(
-                classDll,
-                new[] {syntaxTree},
-                references,
-                compilationOptions
-                );
-
+            var compilation
+                = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
             using (var stream = new MemoryStream())
             {
                 var emitResult = compilation.Emit(stream);
+
+                foreach (var diagnostic in emitResult.Diagnostics)
+                {
+                    var pos = diagnostic.Location.GetLineSpan();
+                    var location =
+                        "(" + pos.Path + "@Line" + (pos.StartLinePosition.Line + 1) +
+                        ":" +
+                        (pos.StartLinePosition.Character + 1) + ")";
+                    Console.WriteLine(
+                        $"[{diagnostic.Severity}, {location}]{diagnostic.Id}, {diagnostic.GetMessage()}"
+                    );
+                }
                 if (emitResult.Success)
                 {
                     //コンパイル成功
-                    stream.Seek(0, SeekOrigin.Begin);
+                    //stream.Seek(0, SeekOrigin.Begin);
 
-                    //var assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
-                    //var assembly = Compile
-                    //var assembly = Assembly.Load()
-                }
-                else
-                {
-                    //コンパイル失敗
+                    //var assembly = Assembly.Load(Encoding.UTF8.GetString(stream.ToArray()));
+
+                    string p = System.IO.Path.GetFullPath(classDll);
+
+                    //var assembly = Assembly.LoadFile(p);
+
+                    //Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
+
+                    var assembly = Assembly.Load(stream.ToArray());
+
+                    //Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
+
+                    var classType = assembly.GetType("GameEngine.GameEntity." + upperClassName);
+
+                    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+
+                    //var instance = (Component)Activator.CreateInstance(classType, null);
+
+                    var instance = (Component)Activator.CreateInstance(classType, null);
+
+                    Component component = ConvertToComponent(instance);
+
+                    inspectorObject.AddComponent(instance);
+
+                    int i = 0;
                 }
             }
+        }
+
+        private static readonly IEnumerable<string> DefaultNamespaces =
+            new[]
+            {
+                "System",
+                "System.Collections.Generic",
+                "System.Linq",
+                "System.Text",
+                "System.Numerics",
+                "System.Threading.Tasks",
+                "GameEngine.GameEntity"
+            };
+
+        private static string runtimePath = @"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.1\{0}.dll";
+
+        private static readonly IEnumerable<MetadataReference> DefaultReferences =
+            new[]
+            {
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "mscorlib")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Core")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Numerics")),
+                //MetadataReference.CreateFromFile("CoreModule.dll")
+                MetadataReference.CreateFromFile(typeof(Component).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(GameObject).Assembly.Location)
+            };
+
+        private static readonly CSharpCompilationOptions DefaultCompilationOptions =
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                    .WithOverflowChecks(true).WithOptimizationLevel(OptimizationLevel.Release)
+                    .WithUsings(DefaultNamespaces);
+
+        public SyntaxTree Parse(string text, string filename = "", CSharpParseOptions options = null)
+        {
+            var stringText = SourceText.From(text, Encoding.UTF8);
+            return SyntaxFactory.ParseSyntaxTree(stringText, options, filename);
+        }
+
+        public Component ConvertToComponent(object m)
+        {
+            // Serialize the original object to json
+            // Desarialize the json object to the new type 
+            JsonSerializerOptions options = new JsonSerializerOptions()
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+                WriteIndented = true,
+                IncludeFields = true,
+            };
+            Component obj = JsonSerializer.Deserialize<Component>(JsonSerializer.Serialize(m, options), options);
+            return obj;
+        }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            m_simulating = false;
         }
     }
 
