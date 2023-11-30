@@ -65,5 +65,12 @@ namespace GameEngine.GameEntity
             Components.Add(component);
             component.SetParent(this);
         }
+
+        public void AddScript(GameScript gameScript, string filePath)
+        {
+            Components.Add(gameScript);
+            gameScript.SetParent(this);
+            gameScript.FilePath = filePath;
+        }
     }
 }

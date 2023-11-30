@@ -15,7 +15,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
-//using System.Runtime.Loader;
 using System.Windows.Interop;
 using System.Numerics;
 
@@ -1704,7 +1703,7 @@ using System.Threading.Tasks;
 
 namespace GameEngine.GameEntity
 {{
-    class {upperClassName} : Component
+    class {upperClassName} : GameScript
     {{
         public {upperClassName}() {{ }}
 
@@ -1773,13 +1772,26 @@ namespace GameEngine.GameEntity
 
                     //var instance = (Component)Activator.CreateInstance(classType, null);
 
-                    var instance = (Component)Activator.CreateInstance(classType, null);
+                    var instance = Activator.CreateInstance(classType, null);
 
-                    Component component = ConvertToComponent(instance);
+                    dynamic ins = Convert.ChangeType(instance, classType);
 
-                    inspectorObject.AddComponent(instance);
+                    //Component component = ConvertToComponent(instance);
 
-                    int i = 0;
+                    string scriptPath = System.IO.Path.GetFullPath(path);
+
+                    inspectorObject.AddScript(ins, scriptPath);
+
+                    var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+                    stackPanel.Children.Add(new Label { Content = upperClassName });
+                    Button ComponentButton = new Button();
+                    ComponentButton.Content = "Open Script";
+                    ComponentButton.Width = 180;
+                    ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
+                    stackPanel.Children.Add(ComponentButton);
+                    stackPanel.Children.Add(new Separator());
+
+                    Component_Panel.Children.Add(stackPanel);
                 }
             }
         }
@@ -1807,7 +1819,6 @@ namespace GameEngine.GameEntity
                 MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Numerics")),
                 //MetadataReference.CreateFromFile("CoreModule.dll")
                 MetadataReference.CreateFromFile(typeof(Component).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(GameObject).Assembly.Location)
             };
 
         private static readonly CSharpCompilationOptions DefaultCompilationOptions =
@@ -1839,6 +1850,7 @@ namespace GameEngine.GameEntity
         {
             m_simulating = false;
         }
+
     }
 
 }

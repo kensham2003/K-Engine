@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GameEngine.GameEntity
 {
-    class testComponent : Component
+    class testComponent : GameScript
     {
         public testComponent() { }
         public testComponent(GameObject gameObject) : base(gameObject) { }
