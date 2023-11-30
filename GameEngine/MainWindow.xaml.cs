@@ -81,6 +81,8 @@ namespace GameEngine
 
         FileSystemWatcher m_fileSystemWatcher;
         private List<string> m_filesToIgnore = new List<string>();
+
+        CSharpCompilation m_compilation;
         
         //public class GameObject
         //{
@@ -221,8 +223,10 @@ namespace GameEngine
 
                 string upperClassName = name[0].ToString().ToUpper() + name.Substring(1);
 
-                var compilation
-                    = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+                //var compilation
+                //    = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+                var compilation = m_compilation.ReplaceSyntaxTree(m_compilation.SyntaxTrees[0], parsedSyntaxTree);
 
                 using (var stream = new MemoryStream())
                 {
@@ -1845,11 +1849,14 @@ namespace GameEngine.GameEntity
 
             var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
 
-            var compilation
-                = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+            //var compilation
+            //    = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+            m_compilation = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
             using (var stream = new MemoryStream())
             {
-                var emitResult = compilation.Emit(stream);
+                var emitResult = m_compilation.Emit(stream);
 
                 foreach (var diagnostic in emitResult.Diagnostics)
                 {
