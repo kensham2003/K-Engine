@@ -78,6 +78,9 @@ namespace GameEngine
         Task task;
 
         System.Timers.Timer timer;
+
+        FileSystemWatcher m_fileSystemWatcher;
+        private List<string> m_filesToIgnore = new List<string>();
         
         //public class GameObject
         //{
@@ -176,6 +179,117 @@ namespace GameEngine
             m_game = new Game();
             m_gameLoop.Load(m_game);
             m_gameLoop.Start();
+
+            m_fileSystemWatcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset");
+            m_fileSystemWatcher.EnableRaisingEvents = true;
+            m_fileSystemWatcher.IncludeSubdirectories = true;
+            m_fileSystemWatcher.Changed += OnFileChanged;
+            m_fileSystemWatcher.Created += OnFileCreated;
+        }
+
+        private void OnFileCreated(object sender, FileSystemEventArgs e) 
+        {
+            m_filesToIgnore.Add(e.Name);
+        }
+
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            if (m_filesToIgnore.Contains(e.Name))
+            {
+                m_filesToIgnore.Remove(e.Name);
+                return;
+            }
+
+            if (System.IO.Path.GetExtension(e.FullPath) == ".cs")
+            {
+
+                string code = "";
+
+                using(FileStream stream = File.Open(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using(StreamReader reader = new StreamReader(stream))
+                    {
+                        code = reader.ReadToEnd();
+                    }
+                }
+
+                //string code = File.ReadAllText(e.FullPath);
+
+                var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
+
+                string name = System.IO.Path.GetFileNameWithoutExtension(e.Name);
+
+                string upperClassName = name[0].ToString().ToUpper() + name.Substring(1);
+
+                var compilation
+                    = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+                using (var stream = new MemoryStream())
+                {
+                    var emitResult = compilation.Emit(stream);
+
+                    foreach (var diagnostic in emitResult.Diagnostics)
+                    {
+                        var pos = diagnostic.Location.GetLineSpan();
+                        var location =
+                            "(" + pos.Path + "@Line" + (pos.StartLinePosition.Line + 1) +
+                            ":" +
+                            (pos.StartLinePosition.Character + 1) + ")";
+                        Console.WriteLine(
+                            $"[{diagnostic.Severity}, {location}]{diagnostic.Id}, {diagnostic.GetMessage()}"
+                        );
+                    }
+                    if (emitResult.Success)
+                    {
+                        //コンパイル成功
+                        //stream.Seek(0, SeekOrigin.Begin);
+
+                        //var assembly = Assembly.Load(Encoding.UTF8.GetString(stream.ToArray()));
+
+                        //var assembly = Assembly.LoadFile(p);
+
+                        Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
+
+                        var assembly = Assembly.Load(stream.ToArray());
+
+                        Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
+
+                        var classType = assembly.GetType("GameEngine.GameEntity." + upperClassName);
+
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+
+                            inspectorObject.RemoveComponent(upperClassName);
+
+                            var instance = Activator.CreateInstance(classType, null);
+
+                            dynamic ins = Convert.ChangeType(instance, classType);
+
+                            string scriptPath = System.IO.Path.GetFullPath(e.FullPath);
+
+                            inspectorObject.AddScript(ins, scriptPath, upperClassName);
+                        });
+
+
+
+                        //var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+                        //stackPanel.Children.Add(new Label { Content = upperClassName });
+                        //Button ComponentButton = new Button();
+                        //ComponentButton.Content = "Open Script";
+                        //ComponentButton.Width = 180;
+                        //ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
+
+                        //Button CompileButton = new Button();
+                        //CompileButton.Content = "Compile Script";
+                        //CompileButton.Width = 180;
+                        //stackPanel.Children.Add(ComponentButton);
+                        //stackPanel.Children.Add(new Separator());
+
+                        //Component_Panel.Children.Add(stackPanel);
+                    }
+                }
+            }
         }
 
         private static bool Init()
@@ -1688,7 +1802,6 @@ namespace GameEngine
             {
                 className = dialog.InputText;
             }
-            //string className = "abc";
             string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
             string classDll = "asset/" + className + ".dll";
             string path = "asset/" + className + ".cs";
@@ -1756,15 +1869,13 @@ namespace GameEngine.GameEntity
 
                     //var assembly = Assembly.Load(Encoding.UTF8.GetString(stream.ToArray()));
 
-                    string p = System.IO.Path.GetFullPath(classDll);
-
                     //var assembly = Assembly.LoadFile(p);
 
-                    //Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
+                    Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
 
                     var assembly = Assembly.Load(stream.ToArray());
 
-                    //Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
+                    Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
 
                     var classType = assembly.GetType("GameEngine.GameEntity." + upperClassName);
 
@@ -1780,7 +1891,7 @@ namespace GameEngine.GameEntity
 
                     string scriptPath = System.IO.Path.GetFullPath(path);
 
-                    inspectorObject.AddScript(ins, scriptPath);
+                    inspectorObject.AddScript(ins, scriptPath, upperClassName);
 
                     var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
                     stackPanel.Children.Add(new Label { Content = upperClassName });
@@ -1788,10 +1899,16 @@ namespace GameEngine.GameEntity
                     ComponentButton.Content = "Open Script";
                     ComponentButton.Width = 180;
                     ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
+
+                    Button CompileButton = new Button();
+                    CompileButton.Content = "Compile Script";
+                    CompileButton.Width = 180;
                     stackPanel.Children.Add(ComponentButton);
                     stackPanel.Children.Add(new Separator());
 
                     Component_Panel.Children.Add(stackPanel);
+
+                    stream.Close();
                 }
             }
         }

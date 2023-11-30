@@ -66,11 +66,26 @@ namespace GameEngine.GameEntity
             component.SetParent(this);
         }
 
-        public void AddScript(GameScript gameScript, string filePath)
+        public void AddScript(GameScript gameScript, string filePath, string name)
         {
             Components.Add(gameScript);
             gameScript.SetParent(this);
+            gameScript.Name = name;
             gameScript.FilePath = filePath;
+        }
+
+        public bool RemoveComponent(string name)
+        {
+            foreach (Component component in Components)
+            {
+                if (component.Name == name)
+                {
+                    Components.Remove(component);
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
