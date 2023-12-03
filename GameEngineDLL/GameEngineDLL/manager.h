@@ -8,6 +8,7 @@
 
 #include "cereal/types/memory.hpp"
 
+
 #define LAYER_CAMERA (0)
 #define LAYER_3D_OBJECT (1)
 #define LAYER_EFFECT (2)

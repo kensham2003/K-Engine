@@ -7,17 +7,23 @@
 #include "model.h"
 #include "player.h"
 #include "input.h"
+#include <mono/jit/jit.h>
+#include <mono/metadata/assembly.h>
+
 
 
 std::list<std::shared_ptr<GameObject>> Manager::m_GameObject[5];
 std::stringstream Manager::m_GameObjectCache[5];
 bool Manager::m_IsPlaying;
 
+void InitMono();
 
 void Manager::Init()
 {
 	Renderer::Init();
 	Input::Init();
+
+	InitMono();
 
 	AddGameObject("Camera", LAYER_CAMERA)->AddComponent<Camera>();
 
@@ -134,4 +140,9 @@ void Manager::SetPlaying(bool playing)
 			}
 		}
 	}
+}
+
+
+void InitMono() {
+	mono_set_assemblies_path("mono/lib");
 }
