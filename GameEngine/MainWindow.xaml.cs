@@ -83,6 +83,7 @@ namespace GameEngine
         private List<string> m_filesToIgnore = new List<string>();
 
         CSharpCompilation m_compilation;
+        Dictionary<string, AppDomain> m_scriptDomainDictionary = new Dictionary<string, AppDomain>();
         
         //public class GameObject
         //{
@@ -254,7 +255,17 @@ namespace GameEngine
 
                         Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
 
+                        //AppDomain.Unload(m_scriptDomainDictionary[upperClassName]);
+
+                        //AppDomain newAppDomain = AppDomain.CreateDomain(upperClassName);
+
+                        //var assembly = newAppDomain.Load(stream.ToArray());
+
                         var assembly = Assembly.Load(stream.ToArray());
+
+                        //m_scriptDomainDictionary[upperClassName] = newAppDomain;
+
+                        //var assembly = Assembly.Load(stream.ToArray());
 
                         Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -1857,6 +1868,7 @@ namespace GameEngine.GameEntity
             using (var stream = new MemoryStream())
             {
                 var emitResult = m_compilation.Emit(stream);
+                //var emitResult = m_compilation.Emit(classDll);
 
                 foreach (var diagnostic in emitResult.Diagnostics)
                 {
@@ -1880,7 +1892,17 @@ namespace GameEngine.GameEntity
 
                     Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
 
-                    var assembly = Assembly.Load(stream.ToArray());
+                    AppDomain appDomain = AppDomain.CreateDomain(upperClassName);
+
+                    //AssemblyName assemblyName = new AssemblyName();
+                    //assemblyName.CodeBase = classDll;
+
+                    //var assembly = Assembly.Load(stream.ToArray());
+                    //appDomain.
+
+                    var assembly = appDomain.Load(stream.ToArray());
+
+                    m_scriptDomainDictionary.Add(upperClassName, appDomain);
 
                     Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -1975,6 +1997,25 @@ namespace GameEngine.GameEntity
             m_simulating = false;
         }
 
+    }
+
+    public class Loader : MarshalByRefObject
+    {
+        public void LoadAssembly(byte[] byteArr)
+        {
+            Assembly.Load(byteArr);
+        }
+
+        public dynamic GetInstance(string type)
+        {
+            var classType = Assembly.GetExecutingAssembly().GetType("GameEngine.GameEntity." + type);
+
+            var instance = Activator.CreateInstance(classType, null);
+
+            dynamic ins = Convert.ChangeType(instance, classType);
+
+            return ins;
+        }
     }
 
 }
