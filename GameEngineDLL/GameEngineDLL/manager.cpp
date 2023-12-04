@@ -9,12 +9,17 @@
 #include "input.h"
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <time.h>
 
 
 
 std::list<std::shared_ptr<GameObject>> Manager::m_GameObject[5];
 std::stringstream Manager::m_GameObjectCache[5];
 bool Manager::m_IsPlaying;
+bool Manager::m_firstFrame;
+DWORD Manager::m_currentTime;
+DWORD Manager::m_lastTime;
+DWORD Manager::m_gameTime;
 
 void InitMono();
 
@@ -51,14 +56,21 @@ void Manager::Update()
 
 	if (!m_IsPlaying) { return; }
 
+	m_currentTime = timeGetTime();
+	DWORD deltaTime = m_currentTime - m_lastTime;
+	m_gameTime += deltaTime;
+
 	for (int i = 0; i < 5; i++) {
 		for (auto& gameObject : m_GameObject[i]) {
 			//if (m_SceneChange) { return; }
-			gameObject->Update();
+			if (m_firstFrame) { gameObject->BeginPlay(); }
+			else{ gameObject->Update(deltaTime); }
 		}
 
 		m_GameObject[i].remove_if([](std::shared_ptr<GameObject> object) {return object->Destroy(); }); //ƒ‰ƒ€ƒ_Ž®
 	}
+
+	m_lastTime = m_currentTime;
 }
 
 void Manager::Draw(void * Resource, bool NewSurface)
@@ -122,6 +134,12 @@ void Manager::SetPlaying(bool playing)
 {
 	m_IsPlaying = playing;
 	if (playing) {
+		//Set BeginPlay()
+		m_firstFrame = true;
+		//Initialize time
+		m_gameTime = 0;
+		m_currentTime = timeGetTime();
+		m_lastTime = m_currentTime;
 		for (int i = 0; i < 5; i++) {
 			m_GameObjectCache[i].str("");
 			m_GameObjectCache[i].clear();

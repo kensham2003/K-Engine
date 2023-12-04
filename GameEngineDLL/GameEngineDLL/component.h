@@ -9,6 +9,7 @@ public:
 
 	virtual void Init() {}
 	virtual void Uninit() {}
-	virtual void Update() {}
+	virtual void BeginPlay() {}
+	virtual void Update(DWORD time) {}
 	virtual void Draw() {}
 };

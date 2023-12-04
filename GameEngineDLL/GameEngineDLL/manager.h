@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <sstream>
+#include <time.h>
 
 #include "gameObject.h"
 
@@ -23,7 +24,10 @@ private:
 	static std::stringstream m_GameObjectCache[5];
 
 	static bool m_IsPlaying;
-
+	static bool m_firstFrame;
+	static DWORD m_currentTime;
+	static DWORD m_lastTime;
+	static DWORD m_gameTime;
 
 public:
 	static void Init();

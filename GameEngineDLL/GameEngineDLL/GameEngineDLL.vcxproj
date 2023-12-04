@@ -243,6 +243,7 @@
     <ClInclude Include="component.h" />
     <ClInclude Include="field.h" />
     <ClInclude Include="gameObject.h" />
+    <ClInclude Include="gameScript.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="manager.h" />
@@ -250,6 +251,7 @@
     <ClInclude Include="player.h" />
     <ClInclude Include="polygon2D.h" />
     <ClInclude Include="renderer.h" />
+    <ClInclude Include="scripting.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
@@ -261,6 +263,7 @@
     <ClCompile Include="player.cpp" />
     <ClCompile Include="polygon2D.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="scripting.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="common.hlsl">

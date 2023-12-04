@@ -41,9 +41,19 @@ public:
 		}
 		m_Component.clear();
 	}
-	virtual void Update() {
+	//virtual void Update() {
+	//	for (Component* component : m_Component) {
+	//		component->Update();
+	//	}
+	//}
+	virtual void BeginPlay() {
 		for (Component* component : m_Component) {
-			component->Update();
+			component->BeginPlay();
+		}
+	}
+	virtual void Update(DWORD time) {
+		for (Component* component : m_Component) {
+			component->Update(time);
 		}
 	}
 	virtual void Draw() {
