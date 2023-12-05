@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace GameEngine.GameEntity
 {
+    [Serializable]
     public class GameScript : Component
     {
         public string FilePath { get; set; }

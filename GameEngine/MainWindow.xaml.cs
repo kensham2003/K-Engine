@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Windows.Interop;
 using System.Numerics;
 
@@ -42,6 +43,11 @@ using GameEngine.GameLoop;
 using GameEngine.Detail;
 
 using GameLoopClass = GameEngine.GameLoop.GameLoop;
+using System.Security;
+using System.Security.Policy;
+using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Registration;
 
 namespace GameEngine
 {
@@ -84,6 +90,9 @@ namespace GameEngine
 
         CSharpCompilation m_compilation;
         Dictionary<string, AppDomain> m_scriptDomainDictionary = new Dictionary<string, AppDomain>();
+
+        Sandbox m_sandbox;
+        Loader m_loader;
         
         //public class GameObject
         //{
@@ -1827,10 +1836,12 @@ using System.Linq;
 using System.Text;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 
 namespace GameEngine.GameEntity
 {{
+    [Serializable]
     class {upperClassName} : GameScript
     {{
         public {upperClassName}() {{ }}
@@ -1894,33 +1905,45 @@ namespace GameEngine.GameEntity
 
                     AppDomain appDomain = AppDomain.CreateDomain(upperClassName);
 
+                    var loader = (Loader)appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+
+                    loader.LoadAssembly(stream.ToArray());
+
                     //AssemblyName assemblyName = new AssemblyName();
                     //assemblyName.CodeBase = classDll;
 
                     //var assembly = Assembly.Load(stream.ToArray());
                     //appDomain.
 
-                    var assembly = appDomain.Load(stream.ToArray());
+                    //var assembly = appDomain.Load(stream.ToArray());
+
+                    //var assembly = appDomain.Load(classDll);
+
+
 
                     m_scriptDomainDictionary.Add(upperClassName, appDomain);
 
                     Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
 
-                    var classType = assembly.GetType("GameEngine.GameEntity." + upperClassName);
+                    //var classType = assembly.GetType("GameEngine.GameEntity." + upperClassName);
+
+                    //var classType = loader.GetType(upperClassName);
 
                     GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
 
-                    //var instance = (Component)Activator.CreateInstance(classType, null);
+                    //var instance = Activator.CreateInstance(classType, null);
 
-                    var instance = Activator.CreateInstance(classType, null);
+                    //dynamic ins = Convert.ChangeType(instance, classType);
 
-                    dynamic ins = Convert.ChangeType(instance, classType);
+                    dynamic ins = loader.GetInstance(upperClassName);
 
                     //Component component = ConvertToComponent(instance);
 
                     string scriptPath = System.IO.Path.GetFullPath(path);
 
                     inspectorObject.AddScript(ins, scriptPath, upperClassName);
+
+                    //loader.AddInstance(upperClassName, inspectorObject, scriptPath);
 
                     var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
                     stackPanel.Children.Add(new Label { Content = upperClassName });
@@ -1997,25 +2020,117 @@ namespace GameEngine.GameEntity
             m_simulating = false;
         }
 
+        public void ReloadDll()
+        {
+            AppDomain.Unload(m_sandbox.appDomain);
+            m_sandbox.InitSandbox();
+            m_loader = (Loader)m_sandbox.appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            string[] dlls = System.IO.Directory.GetFiles("/asset", "*.dll", SearchOption.AllDirectories);
+            foreach (string dll in dlls)
+            {
+                m_loader.LoadAssembly(dll);
+            }
+        }
+
     }
+
+    //public class Loader : MarshalByRefObject
+    //{
+    //    private Assembly assembly;
+
+    //    public void LoadAssembly(byte[] byteArr)
+    //    {
+    //        assembly = Assembly.Load(byteArr);
+    //    }
+
+    //    public Type GetType(string type)
+    //    {
+    //        var classType = assembly.GetType("GameEngine.GameEntity." + type);
+    //        return classType;
+    //    }
+
+    //    public dynamic GetInstance(string type)
+    //    {
+    //        Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
+
+    //        //var classType = Assembly.GetExecutingAssembly().GetType("GameEngine.GameEntity." + type);
+
+    //        var classType = assembly.GetType("GameEngine.GameEntity." + type);
+
+    //        var instance = Activator.CreateInstance(classType, null);
+
+    //        dynamic ins = Convert.ChangeType(instance, classType);
+
+    //        //dynamic ins = Convert.ChangeType(instance, Component);
+
+    //        return ins;
+    //    }
+
+    //    public void AddInstance(string type, GameObject gameObject, string path)
+    //    {
+    //        Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
+
+    //        //var classType = Assembly.GetExecutingAssembly().GetType("GameEngine.GameEntity." + type);
+
+    //        var classType = assembly.GetType("GameEngine.GameEntity." + type);
+
+    //        var instance = Activator.CreateInstance(classType, null);
+
+    //        dynamic ins = Convert.ChangeType(instance, classType);
+
+    //        gameObject.AddScript(ins, path, type);
+
+    //        return;
+    //    }
+    //}
+
+    public class Sandbox
+    {
+        public AppDomain appDomain { get; set; }
+
+        
+
+        public void InitSandbox()
+        {
+            appDomain = AppDomain.CreateDomain("Sandbox");
+        }
+
+    }
+
+
 
     public class Loader : MarshalByRefObject
     {
-        public void LoadAssembly(byte[] byteArr)
+        public List<GameObject> gameObjects = new List<GameObject>();
+
+        private string serializeStr;
+
+        public void LoadAssembly(string dll)
         {
-            Assembly.Load(byteArr);
+            Assembly.Load(dll);
         }
 
-        public dynamic GetInstance(string type)
+        public string Serialize()
         {
-            var classType = Assembly.GetExecutingAssembly().GetType("GameEngine.GameEntity." + type);
+            JsonSerializerOptions options = new JsonSerializerOptions()
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+                WriteIndented = true,
+                IncludeFields = true,
+            };
 
-            var instance = Activator.CreateInstance(classType, null);
+            return JsonSerializer.Serialize(gameObjects, options);
+        }
 
-            dynamic ins = Convert.ChangeType(instance, classType);
-
-            return ins;
+        public void Deserialize(string str)
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions()
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+                WriteIndented = true,
+                IncludeFields = true,
+            };
+            gameObjects = JsonSerializer.Deserialize<List<GameObject>>(str, options);
         }
     }
-
 }

@@ -5,9 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using System.Runtime.Serialization;
 
 namespace GameEngine.GameEntity
 {
+    [Serializable]
     public class GameObject
     {
 
