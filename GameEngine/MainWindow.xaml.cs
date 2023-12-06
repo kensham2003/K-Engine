@@ -187,10 +187,14 @@ namespace GameEngine
             DataContext = new MainWindowDataContext();
 
             //ゲームループ
-            m_gameLoop = new GameLoopClass();
-            m_game = new Game();
-            m_gameLoop.Load(m_game);
-            m_gameLoop.Start();
+            //m_gameLoop = new GameLoopClass();
+            //m_game = new Game();
+            //m_gameLoop.Load(m_game);
+            //m_gameLoop.Start();
+            m_sandbox = new Sandbox();
+            m_sandbox.InitSandbox();
+            m_loader = (Loader)m_sandbox.appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            m_loader.InitDomain();
 
             m_fileSystemWatcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset");
             m_fileSystemWatcher.EnableRaisingEvents = true;
@@ -684,6 +688,8 @@ namespace GameEngine
                 position.Y -= (float)Math.Cos(cameraRotation.X) * dy;
                 gameObject.Position = position;
 
+                m_loader.SetGameObjectPosition(gameObject.Name, position.X, position.Y, position.Z);
+
                 ObjectToInspector();
             }
 
@@ -730,8 +736,10 @@ namespace GameEngine
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = filename;
             gameObject.AddModel(filename);
-            gameObject.AddComponent(new GameEntity.testComponent(gameObject));
-            m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+            //gameObject.AddComponent(new GameEntity.testComponent(gameObject));
+            //m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+
+            m_loader.AddGameObject(objectName, filename);
             
             HierarchyListBox.Items.Add(gameObject);
 
@@ -800,7 +808,8 @@ namespace GameEngine
         {
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
             MenuItem_SimulateStop.Visibility = Visibility.Visible;
-            m_gameLoop.Play();
+            //m_gameLoop.Play();
+            m_loader.Play();
             //NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
             m_simulating = true;
             var th = new Thread(new ThreadStart(SimulatingInspectorTask));
@@ -870,7 +879,8 @@ namespace GameEngine
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
             //NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
             m_simulating = false;
-            m_gameLoop.Stop();
+            //m_gameLoop.Stop();
+            m_loader.Stop();
             ObjectToInspector();
         }
 
@@ -1878,8 +1888,8 @@ namespace GameEngine.GameEntity
 
             using (var stream = new MemoryStream())
             {
-                var emitResult = m_compilation.Emit(stream);
-                //var emitResult = m_compilation.Emit(classDll);
+                //var emitResult = m_compilation.Emit(stream);
+                var emitResult = m_compilation.Emit(classDll);
 
                 foreach (var diagnostic in emitResult.Diagnostics)
                 {
@@ -1903,11 +1913,13 @@ namespace GameEngine.GameEntity
 
                     Assembly[] b = AppDomain.CurrentDomain.GetAssemblies();
 
-                    AppDomain appDomain = AppDomain.CreateDomain(upperClassName);
+                    ReloadDll();
 
-                    var loader = (Loader)appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+                    //AppDomain appDomain = AppDomain.CreateDomain(upperClassName);
 
-                    loader.LoadAssembly(stream.ToArray());
+                    //var loader = (Loader)appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+
+                    //loader.LoadAssembly(stream.ToArray());
 
                     //AssemblyName assemblyName = new AssemblyName();
                     //assemblyName.CodeBase = classDll;
@@ -1917,11 +1929,13 @@ namespace GameEngine.GameEntity
 
                     //var assembly = appDomain.Load(stream.ToArray());
 
-                    //var assembly = appDomain.Load(classDll);
+                    //var assembly = Assembly.Load(classDll);
 
 
 
-                    m_scriptDomainDictionary.Add(upperClassName, appDomain);
+
+
+                    //m_scriptDomainDictionary.Add(upperClassName, appDomain);
 
                     Assembly[] a = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -1935,13 +1949,15 @@ namespace GameEngine.GameEntity
 
                     //dynamic ins = Convert.ChangeType(instance, classType);
 
-                    dynamic ins = loader.GetInstance(upperClassName);
+                    //dynamic ins = loader.GetInstance(upperClassName);
 
                     //Component component = ConvertToComponent(instance);
 
                     string scriptPath = System.IO.Path.GetFullPath(path);
 
-                    inspectorObject.AddScript(ins, scriptPath, upperClassName);
+                    m_loader.AddScriptToGameObject(inspectorObject.Name, upperClassName, scriptPath);
+
+                    //inspectorObject.AddScript(ins, scriptPath, upperClassName);
 
                     //loader.AddInstance(upperClassName, inspectorObject, scriptPath);
 
@@ -2022,14 +2038,19 @@ namespace GameEngine.GameEntity
 
         public void ReloadDll()
         {
+            string serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
-            string[] dlls = System.IO.Directory.GetFiles("/asset", "*.dll", SearchOption.AllDirectories);
+            m_loader.InitDomain();
+            string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
+            string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
             foreach (string dll in dlls)
             {
+                //File.Copy(dll.Full)
                 m_loader.LoadAssembly(dll);
             }
+            m_loader.LoadGameObjects(serializedGameObjects);
         }
 
     }
@@ -2102,12 +2123,39 @@ namespace GameEngine.GameEntity
     public class Loader : MarshalByRefObject
     {
         public List<GameObject> gameObjects = new List<GameObject>();
+        GameLoopClass gameLoop;
+        Game game;
 
-        private string serializeStr;
+
+
+        public string serializeStr;
+
+        public void InitDomain()
+        {
+            //ゲームループ
+            gameLoop = new GameLoopClass();
+            game = new Game();
+            gameLoop.Load(game);
+            gameLoop.Start();
+        }
+
+        public string UninitDomain()
+        {
+            serializeStr = Serialize();
+            gameLoop.Quit();
+            return serializeStr;
+        }
+
+        public void LoadGameObjects(string str)
+        {
+            gameObjects = new List<GameObject>();
+            Deserialize(str);
+            game.m_gameObjects[3] = gameObjects;
+        }
 
         public void LoadAssembly(string dll)
         {
-            Assembly.Load(dll);
+            Assembly.LoadFile(dll);
         }
 
         public string Serialize()
@@ -2119,7 +2167,7 @@ namespace GameEngine.GameEntity
                 IncludeFields = true,
             };
 
-            return JsonSerializer.Serialize(gameObjects, options);
+            return JsonSerializer.Serialize(game.m_gameObjects[1], options);
         }
 
         public void Deserialize(string str)
@@ -2131,6 +2179,52 @@ namespace GameEngine.GameEntity
                 IncludeFields = true,
             };
             gameObjects = JsonSerializer.Deserialize<List<GameObject>>(str, options);
+        }
+
+        public void AddGameObject(string objectName, string modelFileName)
+        {
+            GameObject gameObject = new GameObject(objectName);
+            gameObject.ModelName = modelFileName;
+            gameObject.AddModel(modelFileName);
+            //gameObjects.Add(gameObject);
+            game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+        }
+
+        public void Play()
+        {
+            gameLoop.Play();
+        }
+
+        public void Stop()
+        {
+            gameLoop.Stop();
+        }
+
+        public void SetGameObjectPosition(string name, float x, float y, float z)
+        {
+            Vector3 pos = new Vector3(x, y, z);
+            game.FindGameObject(name).Position = pos;
+        }
+
+        public void SetGameObjectRotation(string name, float x, float y, float z)
+        {
+            Vector3 rot = new Vector3(x, y, z);
+            game.FindGameObject(name).Rotation = rot;
+        }
+        public void SetGameObjectScale(string name, float x, float y, float z)
+        {
+            Vector3 scl = new Vector3(x, y, z);
+            game.FindGameObject(name).Scale = scl;
+        }
+
+        public void AddScriptToGameObject(string objectName, string classTypeName, string scriptPath)
+        {
+            GameObject gameObject = game.FindGameObject(objectName);
+            var typeName = Assembly.GetExecutingAssembly().GetType(classTypeName);
+            var instance = Activator.CreateInstance(typeName, null);
+            dynamic ins = Convert.ChangeType(instance, typeName);
+
+            gameObject.AddScript(ins, scriptPath, classTypeName);
         }
     }
 }
