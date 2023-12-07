@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -27,8 +28,23 @@ namespace GameEngine.GameEntity
 
         public readonly ObservableCollection<Component> Components = new ObservableCollection<Component>();
 
+        public readonly ObservableCollection<GameScript> GameScripts = new ObservableCollection<GameScript>();
+
+        public List<string> GameScriptName = new List<string>();
+
+        public List<int> GameScriptPropertyAmount = new List<int>();
+
+        public List<string> GameScriptPropertyName = new List<string>();
+
+        public List<Type> GameScriptPropertyType = new List<Type>();
+
+        public List<string> GameScriptPropertyValue = new List<string>();
+
+
+
         //public ReadOnlyObservableCollection<Component> Components { get; }
 
+        public GameObject() { }
         public GameObject(string content)
         {
             Name = content;
@@ -70,10 +86,17 @@ namespace GameEngine.GameEntity
 
         public void AddScript(GameScript gameScript, string filePath, string name)
         {
-            Components.Add(gameScript);
+            GameScripts.Add(gameScript);
             gameScript.SetParent(this);
             gameScript.Name = name;
             gameScript.FilePath = filePath;
+        }
+
+        public void AddScript(GameScript gameScript, string name)
+        {
+            GameScripts.Add(gameScript);
+            gameScript.SetParent(this);
+            gameScript.Name = name;
         }
 
         public bool RemoveComponent(string name)

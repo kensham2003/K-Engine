@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 
 namespace GameEngine.GameEntity
 {
+    //[JsonPolymorphic(UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor)]
     [JsonDerivedType(typeof(Model))]
     [JsonDerivedType(typeof(testComponent))]
     [JsonDerivedType(typeof(GameScript))]

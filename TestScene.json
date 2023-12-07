@@ -1,8 +1,8 @@
 [
   {
     "Position": {
-      "X": -1.48999941,
-      "Y": 0.659999847,
+      "X": 0,
+      "Y": 0,
       "Z": 0
     },
     "Rotation": {
@@ -16,12 +16,12 @@
       "Z": 1
     },
     "Layer": 0,
-    "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+    "ModelName": "C:\\Users\\ken\\Documents\\GitHub\\GameEngineNew\\asset\\model\\torus.obj",
     "Name": "torus",
     "Script": null,
     "Components": [
       {
-        "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+        "ModelName": "C:\\Users\\ken\\Documents\\GitHub\\GameEngineNew\\asset\\model\\torus.obj",
         "Name": null
       }
     ]
