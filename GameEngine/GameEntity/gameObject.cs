@@ -32,13 +32,17 @@ namespace GameEngine.GameEntity
 
         public List<string> GameScriptName = new List<string>();
 
-        public List<int> GameScriptPropertyAmount = new List<int>();
+        //public List<int> GameScriptPropertyAmount = new List<int>();
 
-        public List<string> GameScriptPropertyName = new List<string>();
+        //public List<string> GameScriptPropertyName = new List<string>();
 
-        public List<Type> GameScriptPropertyType = new List<Type>();
+        //public List<Type> GameScriptPropertyType = new List<Type>();
 
-        public List<string> GameScriptPropertyValue = new List<string>();
+        //public List<string> GameScriptPropertyValue = new List<string>();
+
+        public List<GameScriptPropInfo> GameScriptPropInfos = new List<GameScriptPropInfo>();
+
+        public List<GameScriptPropInfo> GameScriptFieldInfos = new List<GameScriptPropInfo>();
 
 
 
@@ -64,6 +68,10 @@ namespace GameEngine.GameEntity
 
         public void BeginPlay()
         {
+            foreach (GameScript s in GameScripts)
+            {
+                s.BeginPlay();
+            }
             foreach (Component c in Components)
             {
                 c.BeginPlay();
@@ -72,6 +80,10 @@ namespace GameEngine.GameEntity
 
         public void Update(TimeSpan gameTime)
         {
+            foreach(GameScript s in GameScripts)
+            {
+                s.Update(gameTime);
+            }
             foreach(Component c in Components)
             {
                 c.Update(gameTime);

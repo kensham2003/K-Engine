@@ -170,9 +170,12 @@
     </ApplicationDefinition>
     <Compile Include="GameEntity\component.cs" />
     <Compile Include="GameEntity\gameObject.cs" />
+    <Compile Include="GameEntity\GameScriptPropInfo.cs" />
     <Compile Include="GameEntity\model.cs" />
     <Compile Include="GameEntity\GameScript.cs" />
     <Compile Include="GameEntity\testComponent.cs" />
+    <Compile Include="ScriptLoading\loader.cs" />
+    <Compile Include="ScriptLoading\sandbox.cs" />
     <Compile Include="userInputDialog.xaml.cs">
       <DependentUpon>userInputDialog.xaml</DependentUpon>
     </Compile>
