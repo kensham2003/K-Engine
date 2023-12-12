@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace GameEngine.GameEntity
 {
+    [Serializable]
     public class GameScriptPropInfo
     {
         public int PropAmount { get; set; }

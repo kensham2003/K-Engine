@@ -188,9 +188,9 @@
 						</StackPanel>
 					</DockPanel>
 					<Separator/>
-					<DockPanel x:Name="Component_Panel">
+					<StackPanel x:Name="Component_Panel" Orientation="Vertical">
 
-					</DockPanel>
+					</StackPanel>
 					<DockPanel >
 						<StackPanel Orientation="Vertical" >
 							<Button x:Name="Add_Component_Button" Content="Add Component" Click="Add_Component" Width="180"/>

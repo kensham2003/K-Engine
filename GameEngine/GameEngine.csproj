@@ -168,6 +168,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Detail\sVector3.cs" />
     <Compile Include="GameEntity\component.cs" />
     <Compile Include="GameEntity\gameObject.cs" />
     <Compile Include="GameEntity\GameScriptPropInfo.cs" />

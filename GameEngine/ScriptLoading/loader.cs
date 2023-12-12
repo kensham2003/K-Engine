@@ -14,6 +14,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using GameEngine.Detail;
 using GameEngine.GameEntity;
 using GameEngine.GameLoop;
@@ -209,6 +211,31 @@ namespace GameEngine.ScriptLoading
             gameObject.GameScriptFieldInfos.Add(gameScriptFieldInfo);
 
             gameObject.AddScript(ins, scriptPath, classTypeName);
+        }
+
+        public GameObject FindGameObject(string name)
+        {
+            foreach(GameObject gameObject in m_gameObjects)
+            {
+                if(gameObject.Name == name) { return gameObject; }
+            }
+            return null;
+        }
+
+        public void LoadComponents(StackPanel stackPanel, string gameObjectName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            stackPanel.Children.Clear();
+
+            foreach(GameScript gameScript in gameObject.GameScripts)
+            {
+                var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
+                stackPanelTemp.Children.Add(new Label { Content = gameScript.Name });
+                Button ComponentButton = new Button();
+                ComponentButton.Content = "Open Script";
+                ComponentButton.Width = 180;
+                ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
+            }
         }
     }
 }

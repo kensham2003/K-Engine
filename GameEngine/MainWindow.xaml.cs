@@ -1854,13 +1854,15 @@ namespace GameEngine.GameEntity
                 ComponentButton.Width = 180;
                 ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
 
-                Button CompileButton = new Button();
-                CompileButton.Content = "Compile Script";
-                CompileButton.Width = 180;
-                stackPanel.Children.Add(ComponentButton);
-                stackPanel.Children.Add(new Separator());
+                //Button CompileButton = new Button();
+                //CompileButton.Content = "Compile Script";
+                //CompileButton.Width = 180;
+                //stackPanel.Children.Add(ComponentButton);
+                //stackPanel.Children.Add(new Separator());
 
-                Component_Panel.Children.Add(stackPanel);
+                //Component_Panel.Children.Add(stackPanel);
+
+                m_loader.LoadComponents(Component_Panel);
 
                 //stream.Close();
             }
@@ -1925,6 +1927,14 @@ namespace GameEngine.GameEntity
                 m_loader.LoadAssembly(dll);
             }
             m_loader.LoadGameObjects(serializedGameObjects);
+        }
+
+        public void LoadComponents(StackPanel stackPanel)
+        {
+            //GameObject obj = m_loader.FindGameObject(gameObject.Name);
+            //Vector3 a = new Vector3(0.0f, 0.0f, 0.0f);
+            //string b = a.ToString();
+
         }
 
     }

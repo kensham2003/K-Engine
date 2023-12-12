@@ -8,15 +8,17 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Runtime.Serialization;
 
+using GameEngine.Detail;
+
 namespace GameEngine.GameEntity
 {
     [Serializable]
     public class GameObject
     {
 
-        public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-        public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-        public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+        public SVector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        public SVector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        public SVector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
 
         public int Layer { get; set; }
 
