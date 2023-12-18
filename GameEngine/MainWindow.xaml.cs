@@ -251,7 +251,15 @@ namespace GameEngine
                 }
                 m_loader.LoadGameObjects(serializedGameObjects);
             }
-            }
+            this.Dispatcher.Invoke(() =>
+            {
+                GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                if (inspectorObject == null) return;
+
+                LoadComponents(inspectorObject.Name);
+            });
+
+        }
 
         private static bool Init()
         {
@@ -504,6 +512,11 @@ namespace GameEngine
 
                 return default(T);
             }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Application.Current.MainWindow = this;
         }
 
         //===============================
@@ -1769,6 +1782,7 @@ namespace GameEngine
             {
                 className = dialog.InputText;
             }
+            else { return; }
             string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
             string classDll = "asset/" + className + ".dll";
             string path = "asset/" + className + ".cs";
@@ -1847,12 +1861,12 @@ namespace GameEngine.GameEntity
 
                 m_loader.AddScriptToGameObject(inspectorObject.Name, upperClassName, scriptPath);
 
-                var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
-                stackPanel.Children.Add(new Label { Content = upperClassName });
-                Button ComponentButton = new Button();
-                ComponentButton.Content = "Open Script";
-                ComponentButton.Width = 180;
-                ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
+                //var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+                //stackPanel.Children.Add(new Label { Content = upperClassName });
+                //Button ComponentButton = new Button();
+                //ComponentButton.Content = "Open Script";
+                //ComponentButton.Width = 180;
+                //ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
 
                 //Button CompileButton = new Button();
                 //CompileButton.Content = "Compile Script";
@@ -1862,7 +1876,7 @@ namespace GameEngine.GameEntity
 
                 //Component_Panel.Children.Add(stackPanel);
 
-                m_loader.LoadComponents(Component_Panel);
+                LoadComponents(inspectorObject.Name);
 
                 //stream.Close();
             }
@@ -1929,11 +1943,72 @@ namespace GameEngine.GameEntity
             m_loader.LoadGameObjects(serializedGameObjects);
         }
 
-        public void LoadComponents(StackPanel stackPanel)
+        public void LoadComponents(string gameObjectName)
         {
-            //GameObject obj = m_loader.FindGameObject(gameObject.Name);
-            //Vector3 a = new Vector3(0.0f, 0.0f, 0.0f);
-            //string b = a.ToString();
+            List<string> scriptNames = m_loader.GetScriptsName(gameObjectName);
+            List<string> scriptPaths = m_loader.GetScriptsPath(gameObjectName);
+            List<GameScriptPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
+            List<GameScriptPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
+
+            Component_Panel.Children.Clear();
+
+            for (int i = 0; i < scriptNames.Count(); i++)
+            {
+                var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
+                string scriptName = scriptNames[i];
+                stackPanelTemp.Children.Add(new Label { Content = scriptName });
+
+                var stackPanelProp = new StackPanel { Orientation = Orientation.Vertical };
+                for (int j = 0; j < propInfos[i].PropAmount; j++) {
+                    string propName = propInfos[i].PropNames[j];
+                    if (propName == "FilePath" || propName == "Name") continue;
+                    var stackPanelOneProp = new StackPanel { Orientation = Orientation.Horizontal };
+                    stackPanelOneProp.Children.Add(new Label { Content = propInfos[i].PropNames[j] });
+                    TextBox propInputField = new TextBox();
+                    propInputField.Text = propInfos[i].PropValues[j];
+                    propInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                    {
+                        if (e.Key != Key.Return)
+                            return;
+
+                        m_loader.SetPropValue(gameObjectName, scriptName, propName, propInputField.Text);
+                    };
+                    stackPanelOneProp.Children.Add(propInputField);
+
+                    stackPanelProp.Children.Add(stackPanelOneProp);
+                }
+                stackPanelTemp.Children.Add(stackPanelProp);
+
+                var stackPanelField = new StackPanel { Orientation = Orientation.Vertical };
+                for (int k = 0; k < fieldInfos[i].PropAmount; k++)
+                {
+                    string fieldName = fieldInfos[i].PropNames[k];
+                    var stackPanelOneField = new StackPanel { Orientation = Orientation.Horizontal };
+                    stackPanelOneField.Children.Add(new Label { Content = fieldInfos[i].PropNames[k] });
+                    TextBox fieldInputField = new TextBox();
+                    fieldInputField.Text = fieldInfos[i].PropValues[k];
+                    fieldInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                    {
+                        if (e.Key != Key.Return)
+                            return;
+
+                        m_loader.SetFieldValue(gameObjectName, scriptName, fieldName, fieldInputField.Text);
+                    };
+                    stackPanelOneField.Children.Add(fieldInputField);
+
+                    stackPanelField.Children.Add(stackPanelOneField);
+                }
+                stackPanelTemp.Children.Add(stackPanelField);
+
+                Button ComponentButton = new Button();
+                ComponentButton.Content = "Open Script";
+                ComponentButton.Width = 180;
+                string path = scriptPaths[i];
+                ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(path); };
+                stackPanelTemp.Children.Add(ComponentButton);
+                Component_Panel.Children.Add(stackPanelTemp);
+                Component_Panel.Children.Add(new Separator());
+            }
 
         }
 

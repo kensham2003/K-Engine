@@ -34,6 +34,8 @@ namespace GameEngine.GameEntity
 
         public List<string> GameScriptName = new List<string>();
 
+        public List<string> GameScriptPath = new List<string>();
+
         //public List<int> GameScriptPropertyAmount = new List<int>();
 
         //public List<string> GameScriptPropertyName = new List<string>();
@@ -104,11 +106,20 @@ namespace GameEngine.GameEntity
             gameScript.SetParent(this);
             gameScript.Name = name;
             gameScript.FilePath = filePath;
+            GameScriptPath.Add(filePath);
         }
 
         public void AddScript(GameScript gameScript, string name)
         {
             GameScripts.Add(gameScript);
+            gameScript.SetParent(this);
+            gameScript.Name = name;
+        }
+
+        public void ReplaceScript(GameScript gameScript, int index)
+        {
+            string name = GameScripts[index].Name;
+            GameScripts[index] = gameScript;
             gameScript.SetParent(this);
             gameScript.Name = name;
         }

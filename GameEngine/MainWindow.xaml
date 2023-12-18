@@ -10,7 +10,8 @@
         mc:Ignorable="d"
         xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         Title="MainWindow"
-		Closing="MainWindow_Closing">
+		Closing="MainWindow_Closing"
+		Loaded="MainWindow_Loaded">
 	<!--Height="600" Width="1000"-->
 	<Grid>
 

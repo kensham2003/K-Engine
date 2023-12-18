@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameEngine"
         mc:Ignorable="d"
-        Title="userInputDialog" Height="450" Width="800">
+        Title="userInputDialog" Height="275" Width="450">
     <Grid>
-		<StackPanel>
-			<TextBlock Text="クラス名を入力："/>
-			<TextBox x:Name="InputBox"/>
-			<Button Content="Enter" Click="OnClick_Dialog"/>
-		</StackPanel>
+		<!--<StackPanel>-->
+			<TextBlock Text="クラス名を入力：" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,80,146.6,124"/>
+			<TextBox x:Name="InputBox" KeyDown="Keydown_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" TextAlignment="Center"/>
+			<Button Content="Enter" Click="OnClick_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Margin="150,125,150,50"/>
+		<!--</StackPanel>-->
 	</Grid>
 </Window>

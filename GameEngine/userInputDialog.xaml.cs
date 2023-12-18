@@ -34,5 +34,13 @@ namespace GameEngine
         {
             DialogResult = true;
         }
+
+        private void Keydown_Dialog(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Return)
+                return;
+
+            DialogResult = true;
+        }
     }
 }

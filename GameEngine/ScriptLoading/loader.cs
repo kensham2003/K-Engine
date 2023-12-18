@@ -16,6 +16,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using GameEngine;
 using GameEngine.Detail;
 using GameEngine.GameEntity;
 using GameEngine.GameLoop;
@@ -65,28 +66,114 @@ namespace GameEngine.ScriptLoading
                     var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                     var instance = Activator.CreateInstance(typeName, null);
                     dynamic ins = Convert.ChangeType(instance, typeName);
-                    GameScriptPropInfo propInfo = gameObject.GameScriptPropInfos[i];
-                    int propAmount = propInfo.PropAmount;
-                    for (int j = 0; j < propAmount; j++)
+                    GameScriptPropInfo oldGameScriptPropInfo = gameObject.GameScriptPropInfos[i];
+                    GameScriptPropInfo newGameScriptPropInfo = new GameScriptPropInfo();
+                    PropertyInfo[] newPropInfos = typeName.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    int propAmount = oldGameScriptPropInfo.PropAmount;
+                    newGameScriptPropInfo.PropAmount = newPropInfos.Count();
+                    foreach (PropertyInfo newInfo in newPropInfos)
                     {
-                        string propName = propInfo.PropNames[j];
-                        string propTypeName = propInfo.PropTypes[j];
-                        Type type = Type.GetType(propTypeName);
-                        string propValue = propInfo.PropValues[j];
-                        var prop = typeName.GetProperty(propName);
-                        prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                        bool isSet = false;
+                        for (int m = 0; m < oldGameScriptPropInfo.PropAmount; m++)
+                        {
+                            //変数が減った場合
+                            if (newPropInfos.Count() < m) break;
+
+                            //変数名前が同じ（タイプを含む）の場合
+                            if (newInfo.Name == oldGameScriptPropInfo.PropNames[m] && newInfo.PropertyType.AssemblyQualifiedName == oldGameScriptPropInfo.PropTypes[m])
+                            {
+                                //前の値をそのままで代入
+                                string propName = oldGameScriptPropInfo.PropNames[m];
+                                string propTypeName = oldGameScriptPropInfo.PropTypes[m];
+                                Type type = Type.GetType(propTypeName);
+                                string propValue = oldGameScriptPropInfo.PropValues[m];
+                                var prop = typeName.GetProperty(propName);
+                                prop.SetValue(ins, Convert.ChangeType(propValue, type));
+
+                                newGameScriptPropInfo.PropNames.Add(propName);
+                                newGameScriptPropInfo.PropTypes.Add(propTypeName);
+                                newGameScriptPropInfo.PropValues.Add(propValue);
+
+                                isSet = true;
+                                break;
+                            }
+                        }
+
+                        //元のリストにない変数である場合（dllの値をそのまま使う）
+                        if (!isSet)
+                        {
+                            newGameScriptPropInfo.PropTypes.Add(newInfo.PropertyType.AssemblyQualifiedName);
+                            newGameScriptPropInfo.PropNames.Add(newInfo.Name);
+                            newGameScriptPropInfo.PropValues.Add(Convert.ToString(newInfo.GetValue(ins)));
+                        }
                     }
-                    GameScriptPropInfo fieldInfo = gameObject.GameScriptFieldInfos[i];
-                    int fieldAmount = fieldInfo.PropAmount;
-                    for (int k = 0; k < fieldAmount; k++)
+                    gameObject.GameScriptPropInfos[i] = newGameScriptPropInfo;
+
+                    //for (int j = 0; j < propAmount; j++)
+                    //{
+                    //    string propName = propInfo.PropNames[j];
+                    //    string propTypeName = propInfo.PropTypes[j];
+                    //    Type type = Type.GetType(propTypeName);
+                    //    string propValue = propInfo.PropValues[j];
+                    //    var prop = typeName.GetProperty(propName);
+                    //    prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                    //}
+                    GameScriptPropInfo oldGameScriptFieldInfo = gameObject.GameScriptFieldInfos[i];
+                    GameScriptPropInfo newGameScriptFieldInfo = new GameScriptPropInfo();
+                    FieldInfo[] newFieldInfos = typeName.GetFields();
+                    int fieldAmount = oldGameScriptFieldInfo.PropAmount;
+                    newGameScriptFieldInfo.PropAmount = newFieldInfos.Count();
+                    foreach(FieldInfo newInfo in newFieldInfos)
                     {
-                        string fieldName = fieldInfo.PropNames[k];
-                        string fieldTypeName = fieldInfo.PropTypes[k];
-                        Type type = Type.GetType(fieldTypeName);
-                        string propValue = fieldInfo.PropValues[k];
-                        var field = typeName.GetField(fieldName);
-                        //field.SetValue(ins, Convert.ChangeType(propValue, type));
+                        bool isSet = false;
+                        for(int m = 0; m < oldGameScriptFieldInfo.PropAmount; m++)
+                        {
+                            //変数が減った場合
+                            if (newFieldInfos.Count() < m) break;
+
+                            //変数名前が同じ（タイプを含む）の場合
+                            if(newInfo.Name == oldGameScriptFieldInfo.PropNames[m] && newInfo.FieldType.AssemblyQualifiedName == oldGameScriptFieldInfo.PropTypes[m])
+                            {
+                                //前の値をそのままで代入
+                                string fieldName = oldGameScriptFieldInfo.PropNames[m];
+                                string fieldTypeName = oldGameScriptFieldInfo.PropTypes[m];
+                                Type type = Type.GetType(fieldTypeName);
+                                string propValue = oldGameScriptFieldInfo.PropValues[m];
+                                var field = typeName.GetField(fieldName);
+                                field.SetValue(ins, Convert.ChangeType(propValue, type));
+
+                                newGameScriptFieldInfo.PropNames.Add(fieldName);
+                                newGameScriptFieldInfo.PropTypes.Add(fieldTypeName);
+                                newGameScriptFieldInfo.PropValues.Add(propValue);
+
+                                isSet = true;
+                                break;
+                            }
+                        }
+
+                        //元のリストにない変数である場合（dllの値をそのまま使う）
+                        if (!isSet)
+                        {
+                            newGameScriptFieldInfo.PropTypes.Add(newInfo.FieldType.AssemblyQualifiedName);
+                            newGameScriptFieldInfo.PropNames.Add(newInfo.Name);
+                            newGameScriptFieldInfo.PropValues.Add(Convert.ToString(newInfo.GetValue(ins)));
+                        }
                     }
+                    gameObject.GameScriptFieldInfos[i] = newGameScriptFieldInfo;
+                    //if (fieldAmount == newFieldInfos.Count())
+                    //{
+                    //    for (int k = 0; k < fieldAmount; k++)
+                    //    {
+                            
+                    //        string fieldName = oldGameScriptFieldInfo.PropNames[k];
+                    //        string fieldTypeName = oldGameScriptFieldInfo.PropTypes[k];
+                    //        Type type = Type.GetType(fieldTypeName);
+                    //        string propValue = oldGameScriptFieldInfo.PropValues[k];
+                    //        var field = typeName.GetField(fieldName);
+                    //        field.SetValue(ins, Convert.ChangeType(propValue, type));
+                    //    }
+                    //}
+
                     gameObject.AddScript(ins, gameObject.GameScriptName[i]);
                 }
             }
@@ -222,19 +309,134 @@ namespace GameEngine.ScriptLoading
             return null;
         }
 
-        public void LoadComponents(StackPanel stackPanel, string gameObjectName)
+        //public void LoadComponents(string gameObjectName)
+        //{
+        //    GameObject gameObject = FindGameObject(gameObjectName);
+        //    StackPanel component_Panel = ((MainWindow)Application.Current.MainWindow).Component_Panel;
+        //    component_Panel.Children.Clear();
+
+        //    foreach(GameScript gameScript in gameObject.GameScripts)
+        //    {
+        //        var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
+        //        stackPanelTemp.Children.Add(new Label { Content = gameScript.Name });
+        //        Button ComponentButton = new Button();
+        //        ComponentButton.Content = "Open Script";
+        //        ComponentButton.Width = 180;
+        //        ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(gameScript.FilePath); };
+        //        stackPanelTemp.Children.Add(ComponentButton);
+        //        component_Panel.Children.Add(stackPanelTemp);
+        //    }
+        //}
+
+        public List<string> GetScriptsName(string gameObjectName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
-            stackPanel.Children.Clear();
+            return gameObject.GameScriptName;
+        }
 
-            foreach(GameScript gameScript in gameObject.GameScripts)
+        public List<string> GetScriptsPath(string gameObjectName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            return gameObject.GameScriptPath;
+        }
+
+        public List<GameScriptPropInfo> GetScriptsPropInfos(string gameObjectName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            return gameObject.GameScriptPropInfos;
+        }
+
+        public List<GameScriptPropInfo> GetScriptsFieldInfos(string gameObjectName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            return gameObject.GameScriptFieldInfos;
+        }
+
+        public void SetPropValue(string gameObjectName, string scriptName, string changedPropName, string changedPropValue)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            for (int i = 0; i < gameObject.GameScriptName.Count; i++)
             {
-                var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
-                stackPanelTemp.Children.Add(new Label { Content = gameScript.Name });
-                Button ComponentButton = new Button();
-                ComponentButton.Content = "Open Script";
-                ComponentButton.Width = 180;
-                ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
+                if (gameObject.GameScriptName[i] != scriptName) { continue; }
+
+                var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                var instance = Activator.CreateInstance(typeName, null);
+                dynamic ins = Convert.ChangeType(instance, typeName);
+                GameScriptPropInfo propInfo = gameObject.GameScriptPropInfos[i];
+                int propAmount = propInfo.PropAmount;
+                for (int j = 0; j < propAmount; j++)
+                {
+                    string propName = propInfo.PropNames[j];
+                    string propTypeName = propInfo.PropTypes[j];
+                    Type type = Type.GetType(propTypeName);
+                    string propValue;
+                    //変更後の値にする
+                    if (propName == changedPropName)
+                    {
+                        propValue = changedPropValue;
+                        propInfo.PropValues[j] = changedPropValue;
+                    }
+                    else { propValue = propInfo.PropValues[j]; }
+                    var prop = typeName.GetProperty(propName);
+                    prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                }
+                GameScriptPropInfo fieldInfo = gameObject.GameScriptFieldInfos[i];
+                int fieldAmount = fieldInfo.PropAmount;
+                for (int k = 0; k < fieldAmount; k++)
+                {
+                    string fieldName = fieldInfo.PropNames[k];
+                    string fieldTypeName = fieldInfo.PropTypes[k];
+                    Type type = Type.GetType(fieldTypeName);
+                    string propValue = fieldInfo.PropValues[k];
+                    var field = typeName.GetField(fieldName);
+                    field.SetValue(ins, Convert.ChangeType(propValue, type));
+                }
+
+                gameObject.ReplaceScript(ins, i);
+            }
+        }
+
+        public void SetFieldValue(string gameObjectName, string scriptName, string changedFieldName, string changedFieldValue)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            for (int i = 0; i < gameObject.GameScriptName.Count; i++)
+            {
+                if (gameObject.GameScriptName[i] != scriptName) { continue; }
+
+                var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                var instance = Activator.CreateInstance(typeName, null);
+                dynamic ins = Convert.ChangeType(instance, typeName);
+                GameScriptPropInfo propInfo = gameObject.GameScriptPropInfos[i];
+                int propAmount = propInfo.PropAmount;
+                for (int j = 0; j < propAmount; j++)
+                {
+                    string propName = propInfo.PropNames[j];
+                    string propTypeName = propInfo.PropTypes[j];
+                    Type type = Type.GetType(propTypeName);
+                    string propValue = propInfo.PropValues[j];
+                    var prop = typeName.GetProperty(propName);
+                    prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                }
+                GameScriptPropInfo fieldInfo = gameObject.GameScriptFieldInfos[i];
+                int fieldAmount = fieldInfo.PropAmount;
+                for (int k = 0; k < fieldAmount; k++)
+                {
+                    string fieldName = fieldInfo.PropNames[k];
+                    string fieldTypeName = fieldInfo.PropTypes[k];
+                    Type type = Type.GetType(fieldTypeName);
+                    string fieldValue;
+                    //変更後の値にする
+                    if (fieldName == changedFieldName)
+                    {
+                        fieldValue = changedFieldValue;
+                        fieldInfo.PropValues[k] = changedFieldValue;
+                    }
+                    else { fieldValue = fieldInfo.PropValues[k]; }
+                    var field = typeName.GetField(fieldName);
+                    field.SetValue(ins, Convert.ChangeType(fieldValue, type));
+                }
+
+                gameObject.ReplaceScript(ins, i);
             }
         }
     }
