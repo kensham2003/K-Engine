@@ -1089,6 +1089,8 @@ namespace GameEngine
             string objectName = gameObject.ToString();
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectName(objectName, Inspector_Name.Text));
 
+            m_loader.RenameObject(objectName, Inspector_Name.Text);
+
             gameObject.Name = Inspector_Name.Text;
 
             HierarchyListBox.Items.Refresh();

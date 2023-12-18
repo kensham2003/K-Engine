@@ -246,6 +246,11 @@ namespace GameEngine.ScriptLoading
             m_gameLoop.Stop();
         }
 
+        public void RenameObject(string oldName, string newName)
+        {
+            m_game.FindGameObject(oldName).Name = newName;
+        }
+
         public void SetGameObjectPosition(string name, float x, float y, float z)
         {
             Vector3 pos = new Vector3(x, y, z);
