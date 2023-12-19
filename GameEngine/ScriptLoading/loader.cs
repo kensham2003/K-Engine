@@ -435,10 +435,17 @@ namespace GameEngine.ScriptLoading
                     {
                         fieldValue = changedFieldValue;
                         fieldInfo.PropValues[k] = changedFieldValue;
+                        var field = typeName.GetField(fieldName);
+                        try { }
+                        field.SetValue(ins, Convert.ChangeType(fieldValue, type));
                     }
-                    else { fieldValue = fieldInfo.PropValues[k]; }
-                    var field = typeName.GetField(fieldName);
-                    field.SetValue(ins, Convert.ChangeType(fieldValue, type));
+                    else
+                    {
+                        fieldValue = fieldInfo.PropValues[k];
+                        var field = typeName.GetField(fieldName);
+                        field.SetValue(ins, Convert.ChangeType(fieldValue, type));
+                    }
+
                 }
 
                 gameObject.ReplaceScript(ins, i);
