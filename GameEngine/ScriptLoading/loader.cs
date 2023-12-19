@@ -401,7 +401,7 @@ namespace GameEngine.ScriptLoading
             }
         }
 
-        public void SetFieldValue(string gameObjectName, string scriptName, string changedFieldName, string changedFieldValue)
+        public bool SetFieldValue(string gameObjectName, string scriptName, string changedFieldName, string changedFieldValue)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             for (int i = 0; i < gameObject.GameScriptName.Count; i++)
@@ -443,6 +443,7 @@ namespace GameEngine.ScriptLoading
 
                 gameObject.ReplaceScript(ins, i);
             }
+            return true;
         }
     }
 }

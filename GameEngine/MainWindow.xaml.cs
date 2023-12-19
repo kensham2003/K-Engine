@@ -295,6 +295,7 @@ namespace GameEngine
         {
             Init();
             this.InitializeRendering();
+            ReloadDll();
 
         }
 
@@ -1994,7 +1995,10 @@ namespace GameEngine.GameEntity
                         if (e.Key != Key.Return)
                             return;
 
-                        m_loader.SetFieldValue(gameObjectName, scriptName, fieldName, fieldInputField.Text);
+                        if(!m_loader.SetFieldValue(gameObjectName, scriptName, fieldName, fieldInputField.Text))
+                        {
+
+                        }
                     };
                     stackPanelOneField.Children.Add(fieldInputField);
 
