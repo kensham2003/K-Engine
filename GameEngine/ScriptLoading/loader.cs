@@ -29,10 +29,10 @@ namespace GameEngine.ScriptLoading
         GameEngine.GameLoop.GameLoop m_gameLoop;
         Game m_game;
 
-
-
+        //シーンオブジェクトをシリアライズした文字列
         public string m_serializeStr;
 
+        //ロードしたアセンブリ
         private Dictionary<string, Assembly> m_nameAssemblyDict;
 
         public void InitDomain()
@@ -53,6 +53,7 @@ namespace GameEngine.ScriptLoading
             return m_serializeStr;
         }
 
+        //デシリアライズして全ゲームオブジェクトを生成
         public void LoadGameObjects(string str)
         {
             m_gameObjects = new List<GameObject>();
@@ -60,12 +61,14 @@ namespace GameEngine.ScriptLoading
             foreach (GameObject gameObject in m_gameObjects)
             {
                 //GameScriptのリストで再構築する
-                //int nowPropIndex = 0;
                 for (int i = 0; i < gameObject.GameScriptName.Count; i++)
                 {
+                    //インスタンス生成
                     var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                     var instance = Activator.CreateInstance(typeName, null);
                     dynamic ins = Convert.ChangeType(instance, typeName);
+
+                    //プロパティ情報再構築
                     GameScriptPropInfo oldGameScriptPropInfo = gameObject.GameScriptPropInfos[i];
                     GameScriptPropInfo newGameScriptPropInfo = new GameScriptPropInfo();
                     PropertyInfo[] newPropInfos = typeName.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -109,15 +112,7 @@ namespace GameEngine.ScriptLoading
                     }
                     gameObject.GameScriptPropInfos[i] = newGameScriptPropInfo;
 
-                    //for (int j = 0; j < propAmount; j++)
-                    //{
-                    //    string propName = propInfo.PropNames[j];
-                    //    string propTypeName = propInfo.PropTypes[j];
-                    //    Type type = Type.GetType(propTypeName);
-                    //    string propValue = propInfo.PropValues[j];
-                    //    var prop = typeName.GetProperty(propName);
-                    //    prop.SetValue(ins, Convert.ChangeType(propValue, type));
-                    //}
+                    //フィールド情報再構築
                     GameScriptPropInfo oldGameScriptFieldInfo = gameObject.GameScriptFieldInfos[i];
                     GameScriptPropInfo newGameScriptFieldInfo = new GameScriptPropInfo();
                     FieldInfo[] newFieldInfos = typeName.GetFields();
@@ -160,19 +155,6 @@ namespace GameEngine.ScriptLoading
                         }
                     }
                     gameObject.GameScriptFieldInfos[i] = newGameScriptFieldInfo;
-                    //if (fieldAmount == newFieldInfos.Count())
-                    //{
-                    //    for (int k = 0; k < fieldAmount; k++)
-                    //    {
-                            
-                    //        string fieldName = oldGameScriptFieldInfo.PropNames[k];
-                    //        string fieldTypeName = oldGameScriptFieldInfo.PropTypes[k];
-                    //        Type type = Type.GetType(fieldTypeName);
-                    //        string propValue = oldGameScriptFieldInfo.PropValues[k];
-                    //        var field = typeName.GetField(fieldName);
-                    //        field.SetValue(ins, Convert.ChangeType(propValue, type));
-                    //    }
-                    //}
 
                     gameObject.AddScript(ins, gameObject.GameScriptName[i]);
                 }
@@ -180,6 +162,7 @@ namespace GameEngine.ScriptLoading
             m_game.m_gameObjects[1] = m_gameObjects;
         }
 
+        //.dllファイルをロード
         public void LoadAssembly(string dll)
         {
             string fileName = System.IO.Path.GetFileNameWithoutExtension(dll);
@@ -188,23 +171,16 @@ namespace GameEngine.ScriptLoading
             m_nameAssemblyDict.Add(className, a);
         }
 
+        //文字ストリームからアセンブリロード（.dllでロードするため使われていない）
         public void LoadAssembly(byte[] stream, string className)
         {
             Assembly a = Assembly.Load(stream);
             m_nameAssemblyDict.Add(className, a);
         }
 
+        //シリアライズ
         public string Serialize()
         {
-            //foreach(GameObject gameObject in game.m_gameObjects[1])
-            //{
-            //    for(int i = 0; i < gameObject.GameScripts.Count; i++)
-            //    {
-            //        gameObject.GameScriptName.Add(gameObject.GameScripts[i].Name);
-            //        var typeName = nameAssemblyDict[gameObject.GameScripts[i].Name].GetType("GameEngine.GameEntity." + gameObject.GameScripts[i].Name);
-
-            //    }
-            //}
 
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
@@ -216,6 +192,7 @@ namespace GameEngine.ScriptLoading
             return JsonSerializer.Serialize(m_game.m_gameObjects[1], options);
         }
 
+        //デシリアライズ
         public void Deserialize(string str)
         {
             JsonSerializerOptions options = new JsonSerializerOptions()
@@ -268,16 +245,18 @@ namespace GameEngine.ScriptLoading
             m_game.FindGameObject(name).Scale = scl;
         }
 
+        //スクリプトをゲームオブジェクトに追加
         public void AddScriptToGameObject(string objectName, string classTypeName, string scriptPath)
         {
             GameObject gameObject = m_game.FindGameObject(objectName);
-            //var typeName = Assembly.GetExecutingAssembly().GetType("GameEngine.GameEntity." + classTypeName);
+
+            //対象タイプのインスタンスを生成
             var typeName = m_nameAssemblyDict[classTypeName].GetType("GameEngine.GameEntity." + classTypeName);
             var instance = Activator.CreateInstance(typeName, null);
             dynamic ins = Convert.ChangeType(instance, typeName);
 
+            //スクリプト情報をゲームオブジェクトに追加（シリアライズ、エンジン側との情報交換用）
             gameObject.GameScriptName.Add(classTypeName);
-            //PropertyDescriptorCollection props = TypeDescriptor.GetProperties(ins);
             FieldInfo[] fieldInfos = typeName.GetFields();
             PropertyInfo[] propInfos = typeName.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             GameScriptPropInfo gameScriptPropInfo = new GameScriptPropInfo();
@@ -314,25 +293,6 @@ namespace GameEngine.ScriptLoading
             return null;
         }
 
-        //public void LoadComponents(string gameObjectName)
-        //{
-        //    GameObject gameObject = FindGameObject(gameObjectName);
-        //    StackPanel component_Panel = ((MainWindow)Application.Current.MainWindow).Component_Panel;
-        //    component_Panel.Children.Clear();
-
-        //    foreach(GameScript gameScript in gameObject.GameScripts)
-        //    {
-        //        var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
-        //        stackPanelTemp.Children.Add(new Label { Content = gameScript.Name });
-        //        Button ComponentButton = new Button();
-        //        ComponentButton.Content = "Open Script";
-        //        ComponentButton.Width = 180;
-        //        ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(gameScript.FilePath); };
-        //        stackPanelTemp.Children.Add(ComponentButton);
-        //        component_Panel.Children.Add(stackPanelTemp);
-        //    }
-        //}
-
         public List<string> GetScriptsName(string gameObjectName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
@@ -357,16 +317,24 @@ namespace GameEngine.ScriptLoading
             return gameObject.GameScriptFieldInfos;
         }
 
-        public void SetPropValue(string gameObjectName, string scriptName, string changedPropName, string changedPropValue)
+        /// <summary>
+        /// プロパティ／フィールドの値を変更
+        /// </summary>
+        /// <param name="isProperty">変更タイプ（プロパティ：true　フィールド：false）</param>
+        public string SetPropertyOrFieldValue(bool isProperty, string gameObjectName, string scriptName, string changedName, string changedValue)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             for (int i = 0; i < gameObject.GameScriptName.Count; i++)
             {
+                //対象のスクリプトを探す
                 if (gameObject.GameScriptName[i] != scriptName) { continue; }
 
+                //新しいインスタンスを生成
                 var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                 var instance = Activator.CreateInstance(typeName, null);
                 dynamic ins = Convert.ChangeType(instance, typeName);
+
+                //プロパティの値を代入（変更した値以外はそのまま）
                 GameScriptPropInfo propInfo = gameObject.GameScriptPropInfos[i];
                 int propAmount = propInfo.PropAmount;
                 for (int j = 0; j < propAmount; j++)
@@ -375,53 +343,37 @@ namespace GameEngine.ScriptLoading
                     string propTypeName = propInfo.PropTypes[j];
                     Type type = Type.GetType(propTypeName);
                     string propValue;
-                    //変更後の値にする
-                    if (propName == changedPropName)
+                    if (isProperty)
                     {
-                        propValue = changedPropValue;
-                        propInfo.PropValues[j] = changedPropValue;
+                        //対象のプロパティであれば、変更後の値にする
+                        if (propName == changedName)
+                        {
+                            propValue = changedValue;
+                            var prop = typeName.GetProperty(propName);
+
+                            //型変換を試す
+                            //成功した場合はnullを返し、エラーの場合は元の値を返す（入力間違いなど）
+                            try
+                            {
+                                object newValue = Convert.ChangeType(propValue, type);
+                                prop.SetValue(ins, newValue);
+                                propInfo.PropValues[j] = changedValue;
+                            }
+                            catch
+                            {
+                                return propInfo.PropValues[j];
+                            }
+                        }
                     }
-                    else { propValue = propInfo.PropValues[j]; }
-                    var prop = typeName.GetProperty(propName);
-                    prop.SetValue(ins, Convert.ChangeType(propValue, type));
-                }
-                GameScriptPropInfo fieldInfo = gameObject.GameScriptFieldInfos[i];
-                int fieldAmount = fieldInfo.PropAmount;
-                for (int k = 0; k < fieldAmount; k++)
-                {
-                    string fieldName = fieldInfo.PropNames[k];
-                    string fieldTypeName = fieldInfo.PropTypes[k];
-                    Type type = Type.GetType(fieldTypeName);
-                    string propValue = fieldInfo.PropValues[k];
-                    var field = typeName.GetField(fieldName);
-                    field.SetValue(ins, Convert.ChangeType(propValue, type));
+                    else
+                    {
+                        propValue = propInfo.PropValues[j];
+                        var prop = typeName.GetProperty(propName);
+                        prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                    }
                 }
 
-                gameObject.ReplaceScript(ins, i);
-            }
-        }
-
-        public bool SetFieldValue(string gameObjectName, string scriptName, string changedFieldName, string changedFieldValue)
-        {
-            GameObject gameObject = FindGameObject(gameObjectName);
-            for (int i = 0; i < gameObject.GameScriptName.Count; i++)
-            {
-                if (gameObject.GameScriptName[i] != scriptName) { continue; }
-
-                var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
-                var instance = Activator.CreateInstance(typeName, null);
-                dynamic ins = Convert.ChangeType(instance, typeName);
-                GameScriptPropInfo propInfo = gameObject.GameScriptPropInfos[i];
-                int propAmount = propInfo.PropAmount;
-                for (int j = 0; j < propAmount; j++)
-                {
-                    string propName = propInfo.PropNames[j];
-                    string propTypeName = propInfo.PropTypes[j];
-                    Type type = Type.GetType(propTypeName);
-                    string propValue = propInfo.PropValues[j];
-                    var prop = typeName.GetProperty(propName);
-                    prop.SetValue(ins, Convert.ChangeType(propValue, type));
-                }
+                //フィールドの値を代入（変更した値以外はそのまま）
                 GameScriptPropInfo fieldInfo = gameObject.GameScriptFieldInfos[i];
                 int fieldAmount = fieldInfo.PropAmount;
                 for (int k = 0; k < fieldAmount; k++)
@@ -430,14 +382,27 @@ namespace GameEngine.ScriptLoading
                     string fieldTypeName = fieldInfo.PropTypes[k];
                     Type type = Type.GetType(fieldTypeName);
                     string fieldValue;
-                    //変更後の値にする
-                    if (fieldName == changedFieldName)
+                    if (!isProperty)
                     {
-                        fieldValue = changedFieldValue;
-                        fieldInfo.PropValues[k] = changedFieldValue;
-                        var field = typeName.GetField(fieldName);
-                        try { }
-                        field.SetValue(ins, Convert.ChangeType(fieldValue, type));
+                        //対象のフィールドであれば、変更後の値にする
+                        if (fieldName == changedName)
+                        {
+                            fieldValue = changedValue;
+                            var field = typeName.GetField(fieldName);
+
+                            //型変換を試す
+                            //成功した場合はnullを返し、エラーの場合は元の値を返す（入力間違いなど）
+                            try
+                            {
+                                object newValue = Convert.ChangeType(fieldValue, type);
+                                field.SetValue(ins, newValue);
+                                fieldInfo.PropValues[k] = changedValue;
+                            }
+                            catch
+                            {
+                                return fieldInfo.PropValues[k];
+                            }
+                        }
                     }
                     else
                     {
@@ -447,10 +412,10 @@ namespace GameEngine.ScriptLoading
                     }
 
                 }
-
+                //新しいインスタンスに替える
                 gameObject.ReplaceScript(ins, i);
             }
-            return true;
+            return null;
         }
     }
 }

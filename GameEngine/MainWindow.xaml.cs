@@ -1777,15 +1777,20 @@ namespace GameEngine
             }
         }
 
+        //新しいスクリプトを生成、ロードする
         private void Add_Component(object sender, RoutedEventArgs e)
         {
             string className = "";
+
+            //スクリプト名を入力するウインドウを起動
             var dialog = new userInputDialog();
             if (dialog.ShowDialog() == true)
             {
                 className = dialog.InputText;
             }
             else { return; }
+
+            //テンプレート.csファイルを生成
             string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
             string classDll = "asset/" + className + ".dll";
             string path = "asset/" + className + ".cs";
@@ -1827,20 +1832,16 @@ namespace GameEngine.GameEntity
 }}
 ";
             File.WriteAllText(path, code);
+
             //作った.csをロード
-
             var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
-
-            //var compilation
-            //    = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
 
             m_compilation = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
 
-           // using (var stream = new MemoryStream())
-            //{
-            //var emitResult = m_compilation.Emit(stream);
+            //.dllとして出力
             var emitResult = m_compilation.Emit(classDll);
 
+            //コンパイルエラーメッセージ
             foreach (var diagnostic in emitResult.Diagnostics)
             {
                 var pos = diagnostic.Location.GetLineSpan();
@@ -1852,38 +1853,20 @@ namespace GameEngine.GameEntity
                     $"[{diagnostic.Severity}, {location}]{diagnostic.Id}, {diagnostic.GetMessage()}"
                 );
             }
+
+            //コンパイル成功
             if (emitResult.Success)
             {
-                //コンパイル成功
-
                 ReloadDll();
 
+                //選択中のゲームオブジェクトに作成されたスクリプトを追加
                 GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
-
                 string scriptPath = System.IO.Path.GetFullPath(path);
-
                 m_loader.AddScriptToGameObject(inspectorObject.Name, upperClassName, scriptPath);
 
-                //var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
-                //stackPanel.Children.Add(new Label { Content = upperClassName });
-                //Button ComponentButton = new Button();
-                //ComponentButton.Content = "Open Script";
-                //ComponentButton.Width = 180;
-                //ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(scriptPath); };
-
-                //Button CompileButton = new Button();
-                //CompileButton.Content = "Compile Script";
-                //CompileButton.Width = 180;
-                //stackPanel.Children.Add(ComponentButton);
-                //stackPanel.Children.Add(new Separator());
-
-                //Component_Panel.Children.Add(stackPanel);
-
+                //インスペクターへ反映
                 LoadComponents(inspectorObject.Name);
-
-                //stream.Close();
             }
-            //}
         }
 
         //スクリプトコンパイル用
@@ -1946,6 +1929,7 @@ namespace GameEngine.GameEntity
             m_loader.LoadGameObjects(serializedGameObjects);
         }
 
+        //ゲームオブジェクトのスクリプトをインスペクターへ反映する
         public void LoadComponents(string gameObjectName)
         {
             List<string> scriptNames = m_loader.GetScriptsName(gameObjectName);
@@ -1962,6 +1946,19 @@ namespace GameEngine.GameEntity
                 stackPanelTemp.Children.Add(new Label { Content = scriptName });
 
                 var stackPanelProp = new StackPanel { Orientation = Orientation.Vertical };
+
+                //テキストボックスの値をオブジェクトの値へ代入（ローカル関数）
+                void SetValue(bool isProperty, TextBox tb, string changedName, string changedValue)
+                {
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue);
+
+                    //Set value失敗
+                    if (result != null)
+                    {
+                        tb.Text = result;
+                    }
+                };
+
                 for (int j = 0; j < propInfos[i].PropAmount; j++) {
                     string propName = propInfos[i].PropNames[j];
                     if (propName == "FilePath" || propName == "Name") continue;
@@ -1969,15 +1966,23 @@ namespace GameEngine.GameEntity
                     stackPanelOneProp.Children.Add(new Label { Content = propInfos[i].PropNames[j] });
                     TextBox propInputField = new TextBox();
                     propInputField.Text = propInfos[i].PropValues[j];
+
+                    //ENTERを押したらSetValueを呼ぶ
                     propInputField.KeyDown += (object sender, KeyEventArgs e) =>
                     {
                         if (e.Key != Key.Return)
                             return;
 
-                        m_loader.SetPropValue(gameObjectName, scriptName, propName, propInputField.Text);
+                        SetValue(true, propInputField, propName, propInputField.Text);
                     };
-                    stackPanelOneProp.Children.Add(propInputField);
 
+                    //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                    propInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                    {
+                        SetValue(true, propInputField, propName, propInputField.Text);
+                    };
+
+                    stackPanelOneProp.Children.Add(propInputField);
                     stackPanelProp.Children.Add(stackPanelOneProp);
                 }
                 stackPanelTemp.Children.Add(stackPanelProp);
@@ -1990,18 +1995,23 @@ namespace GameEngine.GameEntity
                     stackPanelOneField.Children.Add(new Label { Content = fieldInfos[i].PropNames[k] });
                     TextBox fieldInputField = new TextBox();
                     fieldInputField.Text = fieldInfos[i].PropValues[k];
+
+                    //ENTERを押したらSetValueを呼ぶ
                     fieldInputField.KeyDown += (object sender, KeyEventArgs e) =>
                     {
                         if (e.Key != Key.Return)
                             return;
 
-                        if(!m_loader.SetFieldValue(gameObjectName, scriptName, fieldName, fieldInputField.Text))
-                        {
-
-                        }
+                        SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
                     };
-                    stackPanelOneField.Children.Add(fieldInputField);
 
+                    //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                    fieldInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                    {
+                        SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                    };
+
+                    stackPanelOneField.Children.Add(fieldInputField);
                     stackPanelField.Children.Add(stackPanelOneField);
                 }
                 stackPanelTemp.Children.Add(stackPanelField);
