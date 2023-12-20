@@ -1,8 +1,72 @@
 [
   {
     "Position": {
-      "X": -1.56800008,
-      "Y": 1.48800004,
+      "X": 2.46999931,
+      "Y": 2.42990088,
+      "Z": -0.0218612924
+    },
+    "Rotation": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "Scale": {
+      "X": 1,
+      "Y": 1,
+      "Z": 1
+    },
+    "Layer": 0,
+    "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+    "Name": "torus",
+    "Script": null,
+    "Components": [
+      {
+        "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+        "Name": null
+      }
+    ],
+    "GameScripts": [],
+    "GameScriptName": [],
+    "GameScriptPath": [],
+    "GameScriptPropInfos": [],
+    "GameScriptFieldInfos": []
+  },
+  {
+    "Position": {
+      "X": 1.69999957,
+      "Y": 0.409983397,
+      "Z": -0.00368414656
+    },
+    "Rotation": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "Scale": {
+      "X": 1,
+      "Y": 1,
+      "Z": 1
+    },
+    "Layer": 0,
+    "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+    "Name": "anotherTorus",
+    "Script": "",
+    "Components": [
+      {
+        "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\torus.obj",
+        "Name": null
+      }
+    ],
+    "GameScripts": [],
+    "GameScriptName": [],
+    "GameScriptPath": [],
+    "GameScriptPropInfos": [],
+    "GameScriptFieldInfos": []
+  },
+  {
+    "Position": {
+      "X": 0,
+      "Y": 0,
       "Z": 0
     },
     "Rotation": {
@@ -15,14 +79,20 @@
       "Y": 1,
       "Z": 1
     },
-    "ModelName": "C:\\Users\\ken\\Documents\\GitHub\\GameEngineNew\\asset\\model\\torus.obj",
-    "Content": "torus",
+    "Layer": 0,
+    "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\Barrel_01_1k.obj",
+    "Name": "Barrel",
     "Script": null,
     "Components": [
       {
-        "ModelName": "C:\\Users\\ken\\Documents\\GitHub\\GameEngineNew\\asset\\model\\torus.obj",
+        "ModelName": "D:\\GitProjects\\GameEngineNew\\asset\\model\\Barrel_01_1k.obj",
         "Name": null
       }
-    ]
+    ],
+    "GameScripts": [],
+    "GameScriptName": [],
+    "GameScriptPath": [],
+    "GameScriptPropInfos": [],
+    "GameScriptFieldInfos": []
   }
 ]

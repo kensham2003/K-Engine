@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Windows.Interop;
 using System.Numerics;
 
@@ -31,8 +32,25 @@ using System.Collections.ObjectModel;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis;
 
-using GameEngine.Component;
+using Microsoft.VisualStudio.Shell;
+
+using GameEngine.GameEntity;
+using GameEngine.GameLoop;
+using GameEngine.Detail;
+using GameEngine.ScriptLoading;
+
+using GameLoopClass = GameEngine.GameLoop.GameLoop;
+using Component = GameEngine.GameEntity.Component;
+using System.Security;
+using System.Security.Policy;
+using System.ComponentModel;
+using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Registration;
 
 namespace GameEngine
 {
@@ -43,6 +61,9 @@ namespace GameEngine
     {
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
+
+        GameLoopClass m_gameLoop;
+        Game m_game;
 
         TimeSpan lastRender;
         bool lastVisible;
@@ -66,29 +87,17 @@ namespace GameEngine
         Task task;
 
         System.Timers.Timer timer;
+
+        FileSystemWatcher m_fileSystemWatcher;
+        private List<string> m_filesToIgnore = new List<string>();
+        DateTime m_lastWatch = DateTime.MinValue;
+
+        CSharpCompilation m_compilation;
+        Dictionary<string, AppDomain> m_scriptDomainDictionary = new Dictionary<string, AppDomain>();
+
+        Sandbox m_sandbox;
+        Loader m_loader;
         
-        //public class GameObject
-        //{
-        //    public Vector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-        //    public Vector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
-        //    public Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
-
-        //    public string ModelName { get; set; }
-
-        //    public string Content { get; set; }
-
-        //    public string Script { get; set; }
-
-        //    public GameObject(string content)
-        //    {
-        //        Content = content;
-        //    }
-
-        //    public override string ToString()
-        //    {
-        //        return Content.ToString();
-        //    }
-        //}
 
         public class MainWindowDataContext
         {
@@ -158,6 +167,98 @@ namespace GameEngine
 
             //ノードエディタ
             DataContext = new MainWindowDataContext();
+
+            //ゲームループ
+            //m_gameLoop = new GameLoopClass();
+            //m_game = new Game();
+            //m_gameLoop.Load(m_game);
+            //m_gameLoop.Start();
+            m_sandbox = new Sandbox();
+            m_sandbox.InitSandbox();
+            m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            m_loader.InitDomain();
+
+            m_fileSystemWatcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset", "*.cs");
+            m_fileSystemWatcher.EnableRaisingEvents = true;
+            m_fileSystemWatcher.IncludeSubdirectories = true;
+            m_fileSystemWatcher.Changed += OnFileChanged;
+            m_fileSystemWatcher.Created += OnFileCreated;
+        }
+
+        private void OnFileCreated(object sender, FileSystemEventArgs e) 
+        {
+            m_filesToIgnore.Add(e.Name);
+        }
+
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            //.csファイル作る時にも入るのを防止
+            if (m_filesToIgnore.Contains(e.Name))
+            {
+                m_filesToIgnore.Remove(e.Name);
+                return;
+            }
+
+            //この関数を一度に二回入るのを防止（FileSystemWatcherの既存バグ）
+            DateTime lastChange = File.GetLastWriteTime(e.FullPath);
+            if(lastChange == m_lastWatch) { return; }
+
+            m_lastWatch = lastChange;
+
+
+            //Sandbox AppDomainをアンロード
+            string serializedGameObjects = m_loader.UninitDomain();
+            AppDomain.Unload(m_sandbox.m_appDomain);
+            m_sandbox.InitSandbox();
+            m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            m_loader.InitDomain();
+
+            //変更した.csファイルを再度コンパイル
+            string code = "";
+
+            using (FileStream stream = File.Open(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    code = reader.ReadToEnd();
+                }
+            }
+
+            var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
+
+            string name = System.IO.Path.GetFileNameWithoutExtension(e.Name);
+
+            string classDll = "asset/" + name + ".dll";
+
+            string upperClassName = name[0].ToString().ToUpper() + name.Substring(1);
+
+            m_compilation = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+            //旧DLLファイルを削除（IOException防止）
+            File.Delete(classDll);
+
+            var emitResult = m_compilation.Emit(classDll);
+
+            if (emitResult.Success)
+            {
+
+                //全DLLをロード
+                string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
+                string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
+                foreach (string dll in dlls)
+                {
+                    m_loader.LoadAssembly(dll);
+                }
+                m_loader.LoadGameObjects(serializedGameObjects);
+            }
+            this.Dispatcher.Invoke(() =>
+            {
+                GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                if (inspectorObject == null) return;
+
+                LoadComponents(inspectorObject.Name);
+            });
+
         }
 
         private static bool Init()
@@ -194,6 +295,7 @@ namespace GameEngine
         {
             Init();
             this.InitializeRendering();
+            ReloadDll();
 
         }
 
@@ -277,7 +379,7 @@ namespace GameEngine
             this.UninitializeRendering();
         }
 
-        private static class NativeMethods
+        public static class NativeMethods
         {
             /// <summary>
             /// Variable used to track whether the missing dependency dialog has been displayed,
@@ -302,6 +404,9 @@ namespace GameEngine
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetObjectScale(string ObjectName, Vector3 Scale);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectTransform(string ObjectName, Vector3 Position, Vector3 Rotation, Vector3 Scale);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern Vector3 GetObjectPosition(string ObjectName);
@@ -408,6 +513,11 @@ namespace GameEngine
 
                 return default(T);
             }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Application.Current.MainWindow = this;
         }
 
         //===============================
@@ -525,6 +635,8 @@ namespace GameEngine
                 position.Y -= (float)Math.Cos(cameraRotation.X) * dy;
                 gameObject.Position = position;
 
+                m_loader.SetGameObjectPosition(gameObject.Name, position.X, position.Y, position.Z);
+
                 ObjectToInspector();
             }
 
@@ -571,6 +683,10 @@ namespace GameEngine
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = filename;
             gameObject.AddModel(filename);
+            //gameObject.AddComponent(new GameEntity.testComponent(gameObject));
+            //m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+
+            m_loader.AddGameObject(objectName, filename);
             
             HierarchyListBox.Items.Add(gameObject);
 
@@ -597,10 +713,10 @@ namespace GameEngine
             foreach (GameObject gameObject in gameObjects)
             {
                 HierarchyListBox.Items.Add(gameObject);
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Content, gameObject.ModelName));
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Content, gameObject.Position));
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Content, gameObject.Rotation));
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Content, gameObject.Scale));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Name, gameObject.ModelName));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Name, gameObject.Position));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Name, gameObject.Rotation));
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Name, gameObject.Scale));
             }
         }
 
@@ -639,7 +755,9 @@ namespace GameEngine
         {
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
             MenuItem_SimulateStop.Visibility = Visibility.Visible;
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
+            //m_gameLoop.Play();
+            m_loader.Play();
+            //NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(true));
             m_simulating = true;
             var th = new Thread(new ThreadStart(SimulatingInspectorTask));
             th.SetApartmentState(ApartmentState.STA);
@@ -658,29 +776,43 @@ namespace GameEngine
                 {
                     this.Dispatcher.Invoke(() =>
                     {
+                        //GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                        //if (inspectorObject == null) return;
+
+                        //string objectName = inspectorObject.ToString();
+
+                        //Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        //PositionX.Text = Pos.X.ToString("F2");
+                        //PositionY.Text = Pos.Y.ToString("F2");
+                        //PositionZ.Text = Pos.Z.ToString("F2");
+
+                        //Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        //RotationX.Text = Rot.X.ToString("F2");
+                        //RotationY.Text = Rot.Y.ToString("F2");
+                        //RotationZ.Text = Rot.Z.ToString("F2");
+
+                        //Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        //ScaleX.Text = Scl.X.ToString("F2");
+                        //ScaleY.Text = Scl.Y.ToString("F2");
+                        //ScaleZ.Text = Scl.Z.ToString("F2");
+
                         GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
                         if (inspectorObject == null) return;
 
-                        string objectName = inspectorObject.ToString();
-
-                        Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(objectName));
+                        Vector3 Pos = inspectorObject.Position;
                         PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
 
-                        Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
+                        Vector3 Rot = inspectorObject.Rotation;
                         RotationX.Text = Rot.X.ToString("F2");
                         RotationY.Text = Rot.Y.ToString("F2");
                         RotationZ.Text = Rot.Z.ToString("F2");
 
-                        Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(objectName));
+                        Vector3 Scl = inspectorObject.Scale;
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
-
-                        //inspectorObject.Position = Pos;
-                        //inspectorObject.Rotation = Rot;
-                        //inspectorObject.Scale = Scl;
                     });
 
                     now = DateTime.Now;
@@ -692,8 +824,10 @@ namespace GameEngine
         {
             MenuItem_SimulateStop.Visibility = Visibility.Collapsed;
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
+            //NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetScenePlaying(false));
             m_simulating = false;
+            //m_gameLoop.Stop();
+            m_loader.Stop();
             ObjectToInspector();
         }
 
@@ -956,7 +1090,9 @@ namespace GameEngine
             string objectName = gameObject.ToString();
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectName(objectName, Inspector_Name.Text));
 
-            gameObject.Content = Inspector_Name.Text;
+            m_loader.RenameObject(objectName, Inspector_Name.Text);
+
+            gameObject.Name = Inspector_Name.Text;
 
             HierarchyListBox.Items.Refresh();
         }
@@ -1641,6 +1777,257 @@ namespace GameEngine
             }
         }
 
+        //新しいスクリプトを生成、ロードする
+        private void Add_Component(object sender, RoutedEventArgs e)
+        {
+            string className = "";
+
+            //スクリプト名を入力するウインドウを起動
+            var dialog = new userInputDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                className = dialog.InputText;
+            }
+            else { return; }
+
+            //テンプレート.csファイルを生成
+            string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
+            string classDll = "asset/" + className + ".dll";
+            string path = "asset/" + className + ".cs";
+            string code = $@"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Numerics;
+using System.Threading.Tasks;
+using System.Runtime.Serialization;
+
+
+namespace GameEngine.GameEntity
+{{
+    [Serializable]
+    class {upperClassName} : GameScript
+    {{
+        public {upperClassName}() {{ }}
+
+        public {upperClassName}(GameObject gameObject) : base(gameObject) {{ }}
+
+        public float moveAmount = 0.1f;
+
+        public override void BeginPlay()
+        {{
+
+        }}
+
+        public override void Update(TimeSpan gameTime)
+        {{
+            Vector3 pos = Parent.Position;
+            if(pos.X > 3 || pos.X < -3){{moveAmount *= -1;}}
+            
+            pos.X += moveAmount;
+            Parent.Position = pos;
+        }}
+    }}
+}}
+";
+            File.WriteAllText(path, code);
+
+            //作った.csをロード
+            var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
+
+            m_compilation = CSharpCompilation.Create(className, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+            //.dllとして出力
+            var emitResult = m_compilation.Emit(classDll);
+
+            //コンパイルエラーメッセージ
+            foreach (var diagnostic in emitResult.Diagnostics)
+            {
+                var pos = diagnostic.Location.GetLineSpan();
+                var location =
+                    "(" + pos.Path + "@Line" + (pos.StartLinePosition.Line + 1) +
+                    ":" +
+                    (pos.StartLinePosition.Character + 1) + ")";
+                Console.WriteLine(
+                    $"[{diagnostic.Severity}, {location}]{diagnostic.Id}, {diagnostic.GetMessage()}"
+                );
+            }
+
+            //コンパイル成功
+            if (emitResult.Success)
+            {
+                ReloadDll();
+
+                //選択中のゲームオブジェクトに作成されたスクリプトを追加
+                GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                string scriptPath = System.IO.Path.GetFullPath(path);
+                m_loader.AddScriptToGameObject(inspectorObject.Name, upperClassName, scriptPath);
+
+                //インスペクターへ反映
+                LoadComponents(inspectorObject.Name);
+            }
+        }
+
+        //スクリプトコンパイル用
+        private static readonly IEnumerable<string> DefaultNamespaces =
+            new[]
+            {
+                "System",
+                "System.Collections.Generic",
+                "System.Linq",
+                "System.Text",
+                "System.Numerics",
+                "System.Threading.Tasks",
+                "GameEngine.GameEntity"
+            };
+        //スクリプトコンパイル用
+        private static string runtimePath = @"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.1\{0}.dll";
+        //スクリプトコンパイル用
+        private static readonly IEnumerable<MetadataReference> DefaultReferences =
+            new[]
+            {
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "mscorlib")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Core")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Numerics")),
+                //MetadataReference.CreateFromFile("CoreModule.dll")
+                MetadataReference.CreateFromFile(typeof(Component).Assembly.Location),
+            };
+        //スクリプトコンパイル用
+        private static readonly CSharpCompilationOptions DefaultCompilationOptions =
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                    .WithOverflowChecks(true).WithOptimizationLevel(OptimizationLevel.Release)
+                    .WithUsings(DefaultNamespaces);
+
+        public SyntaxTree Parse(string text, string filename = "", CSharpParseOptions options = null)
+        {
+            var stringText = SourceText.From(text, Encoding.UTF8);
+            return SyntaxFactory.ParseSyntaxTree(stringText, options, filename);
+        }
+
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            m_simulating = false;
+        }
+
+        //「/asset」の中にあるDllファイルを全部リロード
+        public void ReloadDll()
+        {
+            string serializedGameObjects = m_loader.UninitDomain();
+            AppDomain.Unload(m_sandbox.m_appDomain);
+            m_sandbox.InitSandbox();
+            m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            m_loader.InitDomain();
+            string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
+            string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
+            foreach (string dll in dlls)
+            {
+                m_loader.LoadAssembly(dll);
+            }
+            m_loader.LoadGameObjects(serializedGameObjects);
+        }
+
+        //ゲームオブジェクトのスクリプトをインスペクターへ反映する
+        public void LoadComponents(string gameObjectName)
+        {
+            List<string> scriptNames = m_loader.GetScriptsName(gameObjectName);
+            List<string> scriptPaths = m_loader.GetScriptsPath(gameObjectName);
+            List<GameScriptPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
+            List<GameScriptPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
+
+            Component_Panel.Children.Clear();
+
+            for (int i = 0; i < scriptNames.Count(); i++)
+            {
+                var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
+                string scriptName = scriptNames[i];
+                stackPanelTemp.Children.Add(new Label { Content = scriptName });
+
+                var stackPanelProp = new StackPanel { Orientation = Orientation.Vertical };
+
+                //テキストボックスの値をオブジェクトの値へ代入（ローカル関数）
+                void SetValue(bool isProperty, TextBox tb, string changedName, string changedValue)
+                {
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue);
+
+                    //Set value失敗
+                    if (result != null)
+                    {
+                        tb.Text = result;
+                    }
+                };
+
+                for (int j = 0; j < propInfos[i].PropAmount; j++) {
+                    string propName = propInfos[i].PropNames[j];
+                    if (propName == "FilePath" || propName == "Name") continue;
+                    var stackPanelOneProp = new StackPanel { Orientation = Orientation.Horizontal };
+                    stackPanelOneProp.Children.Add(new Label { Content = propInfos[i].PropNames[j] });
+                    TextBox propInputField = new TextBox();
+                    propInputField.Text = propInfos[i].PropValues[j];
+
+                    //ENTERを押したらSetValueを呼ぶ
+                    propInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                    {
+                        if (e.Key != Key.Return)
+                            return;
+
+                        SetValue(true, propInputField, propName, propInputField.Text);
+                    };
+
+                    //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                    propInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                    {
+                        SetValue(true, propInputField, propName, propInputField.Text);
+                    };
+
+                    stackPanelOneProp.Children.Add(propInputField);
+                    stackPanelProp.Children.Add(stackPanelOneProp);
+                }
+                stackPanelTemp.Children.Add(stackPanelProp);
+
+                var stackPanelField = new StackPanel { Orientation = Orientation.Vertical };
+                for (int k = 0; k < fieldInfos[i].PropAmount; k++)
+                {
+                    string fieldName = fieldInfos[i].PropNames[k];
+                    var stackPanelOneField = new StackPanel { Orientation = Orientation.Horizontal };
+                    stackPanelOneField.Children.Add(new Label { Content = fieldInfos[i].PropNames[k] });
+                    TextBox fieldInputField = new TextBox();
+                    fieldInputField.Text = fieldInfos[i].PropValues[k];
+
+                    //ENTERを押したらSetValueを呼ぶ
+                    fieldInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                    {
+                        if (e.Key != Key.Return)
+                            return;
+
+                        SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                    };
+
+                    //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                    fieldInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                    {
+                        SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                    };
+
+                    stackPanelOneField.Children.Add(fieldInputField);
+                    stackPanelField.Children.Add(stackPanelOneField);
+                }
+                stackPanelTemp.Children.Add(stackPanelField);
+
+                Button ComponentButton = new Button();
+                ComponentButton.Content = "Open Script";
+                ComponentButton.Width = 180;
+                string path = scriptPaths[i];
+                ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(path); };
+                stackPanelTemp.Children.Add(ComponentButton);
+                Component_Panel.Children.Add(stackPanelTemp);
+                Component_Panel.Children.Add(new Separator());
+            }
+
+        }
 
     }
+
 }

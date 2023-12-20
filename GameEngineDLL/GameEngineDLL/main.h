@@ -40,10 +40,11 @@ extern "C" {
 	__declspec(dllexport) void __cdecl Cleanup();
 	__declspec(dllexport) void __cdecl Render(void * Resource, bool NewSurface);
 
-
 	__declspec(dllexport) void __cdecl SetObjectPosition(const char* ObjectName, D3DXVECTOR3 Position);
 	__declspec(dllexport) void __cdecl SetObjectRotation(const char* ObjectName, D3DXVECTOR3 Rotation);
 	__declspec(dllexport) void __cdecl SetObjectScale(const char* ObjectName, D3DXVECTOR3 Scale);
+
+	__declspec(dllexport) void __cdecl SetObjectTransform(const char* ObjectName, D3DXVECTOR3 Position, D3DXVECTOR3 Rotation, D3DXVECTOR3 Scale);
 
 	__declspec(dllexport) D3DXVECTOR3 __cdecl GetObjectPosition(const char* ObjectName);
 	__declspec(dllexport) D3DXVECTOR3 __cdecl GetObjectRotation(const char* ObjectName);

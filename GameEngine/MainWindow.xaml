@@ -9,7 +9,9 @@
         xmlns:controls="clr-namespace:TsNode.Controls;assembly=TsNode"
         mc:Ignorable="d"
         xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
-        Title="MainWindow">
+        Title="MainWindow"
+		Closing="MainWindow_Closing"
+		Loaded="MainWindow_Loaded">
 	<!--Height="600" Width="1000"-->
 	<Grid>
 
@@ -184,6 +186,15 @@
 
 						<StackPanel Orientation="Vertical" HorizontalAlignment="Right">
 							<Button x:Name="Inspector_Scale_Button" Content="Linked" Click="Inspector_Change_Scale_Link"/>
+						</StackPanel>
+					</DockPanel>
+					<Separator/>
+					<StackPanel x:Name="Component_Panel" Orientation="Vertical">
+
+					</StackPanel>
+					<DockPanel >
+						<StackPanel Orientation="Vertical" >
+							<Button x:Name="Add_Component_Button" Content="Add Component" Click="Add_Component" Width="180"/>
 						</StackPanel>
 					</DockPanel>
 

@@ -1,0 +1,16 @@
+﻿<Window x:Class="GameEngine.userInputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GameEngine"
+        mc:Ignorable="d"
+        Title="userInputDialog" Height="275" Width="450">
+    <Grid>
+		<!--<StackPanel>-->
+			<TextBlock Text="クラス名を入力：" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,80,146.6,124"/>
+			<TextBox x:Name="InputBox" KeyDown="Keydown_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" TextAlignment="Center"/>
+			<Button Content="Enter" Click="OnClick_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Margin="150,125,150,50"/>
+		<!--</StackPanel>-->
+	</Grid>
+</Window>
