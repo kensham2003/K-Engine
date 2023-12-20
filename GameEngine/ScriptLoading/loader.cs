@@ -35,6 +35,8 @@ namespace GameEngine.ScriptLoading
         //ロードしたアセンブリ
         private Dictionary<string, Assembly> m_nameAssemblyDict;
 
+        private Assembly m_Assembly;
+
         public void InitDomain()
         {
             m_nameAssemblyDict = new Dictionary<string, Assembly>();
@@ -65,6 +67,7 @@ namespace GameEngine.ScriptLoading
                 {
                     //インスタンス生成
                     var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                    //var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                     var instance = Activator.CreateInstance(typeName, null);
                     dynamic ins = Convert.ChangeType(instance, typeName);
 
@@ -169,6 +172,7 @@ namespace GameEngine.ScriptLoading
             string className = fileName[0].ToString().ToUpper() + fileName.Substring(1);
             Assembly a = Assembly.LoadFile(dll);
             m_nameAssemblyDict.Add(className, a);
+            m_Assembly = Assembly.LoadFile(dll);
         }
 
         //文字ストリームからアセンブリロード（.dllでロードするため使われていない）
@@ -251,7 +255,8 @@ namespace GameEngine.ScriptLoading
             GameObject gameObject = m_game.FindGameObject(objectName);
 
             //対象タイプのインスタンスを生成
-            var typeName = m_nameAssemblyDict[classTypeName].GetType("GameEngine.GameEntity." + classTypeName);
+            //var typeName = m_nameAssemblyDict[classTypeName].GetType("GameEngine.GameEntity." + classTypeName);
+            var typeName = m_Assembly.GetType("GameEngine.GameEntity." + classTypeName);
             var instance = Activator.CreateInstance(typeName, null);
             dynamic ins = Convert.ChangeType(instance, typeName);
 
@@ -280,6 +285,8 @@ namespace GameEngine.ScriptLoading
                 gameScriptFieldInfo.PropValues.Add(Convert.ToString(fieldInfos[i].GetValue(ins)));
             }
             gameObject.GameScriptFieldInfos.Add(gameScriptFieldInfo);
+
+            //Assembly a = Assembly.GetCallingAssembly();
 
             gameObject.AddScript(ins, scriptPath, classTypeName);
         }
@@ -331,6 +338,7 @@ namespace GameEngine.ScriptLoading
 
                 //新しいインスタンスを生成
                 var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                //var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                 var instance = Activator.CreateInstance(typeName, null);
                 dynamic ins = Convert.ChangeType(instance, typeName);
 

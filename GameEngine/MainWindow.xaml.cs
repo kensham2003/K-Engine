@@ -37,6 +37,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 
 using Microsoft.VisualStudio.Shell;
+using Microsoft.Build.Evaluation;
 
 using GameEngine.GameEntity;
 using GameEngine.GameLoop;
@@ -51,6 +52,7 @@ using System.ComponentModel;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Registration;
+
 
 namespace GameEngine
 {
@@ -97,7 +99,9 @@ namespace GameEngine
 
         Sandbox m_sandbox;
         Loader m_loader;
-        
+
+        Microsoft.Build.Evaluation.Project m_scriptLibrary;
+
 
         public class MainWindowDataContext
         {
@@ -183,6 +187,7 @@ namespace GameEngine
             m_fileSystemWatcher.IncludeSubdirectories = true;
             m_fileSystemWatcher.Changed += OnFileChanged;
             m_fileSystemWatcher.Created += OnFileCreated;
+            m_fileSystemWatcher.Renamed += OnFileRenamed;
         }
 
         private void OnFileCreated(object sender, FileSystemEventArgs e) 
@@ -201,10 +206,12 @@ namespace GameEngine
 
             //この関数を一度に二回入るのを防止（FileSystemWatcherの既存バグ）
             DateTime lastChange = File.GetLastWriteTime(e.FullPath);
-            if(lastChange == m_lastWatch) { return; }
+            //if(lastChange == m_lastWatch) { return; }
 
             m_lastWatch = lastChange;
 
+
+            m_scriptLibrary.Build();
 
             //Sandbox AppDomainをアンロード
             string serializedGameObjects = m_loader.UninitDomain();
@@ -213,44 +220,10 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            //変更した.csファイルを再度コンパイル
-            string code = "";
+            string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
+            m_loader.LoadAssembly(dllPath);
+            m_loader.LoadGameObjects(serializedGameObjects);
 
-            using (FileStream stream = File.Open(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    code = reader.ReadToEnd();
-                }
-            }
-
-            var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
-
-            string name = System.IO.Path.GetFileNameWithoutExtension(e.Name);
-
-            string classDll = "asset/" + name + ".dll";
-
-            string upperClassName = name[0].ToString().ToUpper() + name.Substring(1);
-
-            m_compilation = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
-
-            //旧DLLファイルを削除（IOException防止）
-            File.Delete(classDll);
-
-            var emitResult = m_compilation.Emit(classDll);
-
-            if (emitResult.Success)
-            {
-
-                //全DLLをロード
-                string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
-                string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
-                foreach (string dll in dlls)
-                {
-                    m_loader.LoadAssembly(dll);
-                }
-                m_loader.LoadGameObjects(serializedGameObjects);
-            }
             this.Dispatcher.Invoke(() =>
             {
                 GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
@@ -259,7 +232,139 @@ namespace GameEngine
                 LoadComponents(inspectorObject.Name);
             });
 
+            ////Sandbox AppDomainをアンロード
+            //string serializedGameObjects = m_loader.UninitDomain();
+            //AppDomain.Unload(m_sandbox.m_appDomain);
+            //m_sandbox.InitSandbox();
+            //m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            //m_loader.InitDomain();
+
+
+
+            ////変更した.csファイルを再度コンパイル
+            //string code = "";
+
+            //using (FileStream stream = File.Open(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            //{
+            //    using (StreamReader reader = new StreamReader(stream))
+            //    {
+            //        code = reader.ReadToEnd();
+            //    }
+            //}
+
+            //var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
+
+            //string name = System.IO.Path.GetFileNameWithoutExtension(e.Name);
+
+            //string classDll = "asset/" + name + ".dll";
+
+            //string upperClassName = name[0].ToString().ToUpper() + name.Substring(1);
+
+            //m_compilation = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+            ////旧DLLファイルを削除（IOException防止）
+            //File.Delete(classDll);
+
+            //var emitResult = m_compilation.Emit(classDll);
+
+            //if (emitResult.Success)
+            //{
+
+            //    //全DLLをロード
+            //    string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
+            //    string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
+            //    foreach (string dll in dlls)
+            //    {
+            //        m_loader.LoadAssembly(dll);
+            //    }
+            //    m_loader.LoadGameObjects(serializedGameObjects);
+            //}
+            //this.Dispatcher.Invoke(() =>
+            //{
+            //    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            //    if (inspectorObject == null) return;
+
+            //    LoadComponents(inspectorObject.Name);
+            //});
+
         }
+
+        //Visual Studio上でファイル保存する時は「.TMPファイル生成　→　旧.csファイル削除　→　.TMPファイル改名」
+        //という処理を行うので「OnFileChanged」ではなく「OnFileRenamed」でファイル変更を処理
+        //※他のテキストエディタの保存はそのまま「OnFileChanged」で処理
+        private void OnFileRenamed(object sender, RenamedEventArgs e)
+        {
+            //なん段階の改名があるので最後の.cs拡張子に改名する段階だけ処理する
+            string ext = System.IO.Path.GetExtension(e.FullPath);
+            if(ext != ".cs") { return; }
+
+            m_scriptLibrary.Build();
+
+            //Sandbox AppDomainをアンロード
+            string serializedGameObjects = m_loader.UninitDomain();
+            AppDomain.Unload(m_sandbox.m_appDomain);
+            m_sandbox.InitSandbox();
+            m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            m_loader.InitDomain();
+
+            string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
+            m_loader.LoadAssembly(dllPath);
+            m_loader.LoadGameObjects(serializedGameObjects);
+
+            this.Dispatcher.Invoke(() =>
+            {
+                GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                if (inspectorObject == null) return;
+
+                LoadComponents(inspectorObject.Name);
+            });
+
+            ////変更した.csファイルを再度コンパイル
+            //string code = "";
+            //using (FileStream stream = File.Open(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            //{
+            //    using (StreamReader reader = new StreamReader(stream))
+            //    {
+            //        code = reader.ReadToEnd();
+            //    }
+            //}
+
+            //var parsedSyntaxTree = Parse(code, "", CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
+            
+            //string name = System.IO.Path.GetFileNameWithoutExtension(e.Name);
+
+            //string classDll = "asset/" + name + ".dll";
+
+            //string upperClassName = name[0].ToString().ToUpper() + name.Substring(1);
+
+            //m_compilation = CSharpCompilation.Create(name, new SyntaxTree[] { parsedSyntaxTree }, DefaultReferences, DefaultCompilationOptions);
+
+            ////旧DLLファイルを削除（IOException防止）
+            //File.Delete(classDll);
+
+            //var emitResult = m_compilation.Emit(classDll);
+
+            //if (emitResult.Success)
+            //{
+
+            //    //全DLLをロード
+            //    string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
+            //    string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
+            //    foreach (string dll in dlls)
+            //    {
+            //        m_loader.LoadAssembly(dll);
+            //    }
+            //    m_loader.LoadGameObjects(serializedGameObjects);
+            //}
+            //this.Dispatcher.Invoke(() =>
+            //{
+            //    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            //    if (inspectorObject == null) return;
+
+            //    LoadComponents(inspectorObject.Name);
+            //});
+        }
+
 
         private static bool Init()
         {
@@ -295,8 +400,8 @@ namespace GameEngine
         {
             Init();
             this.InitializeRendering();
+            m_scriptLibrary = new Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj");
             ReloadDll();
-
         }
 
         private void Host_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -1046,6 +1151,9 @@ namespace GameEngine
 
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Inspector_Name.Text = gameObject.ToString();
+
+            Component_Panel.Children.Clear();
+            LoadComponents(gameObject.Name);
         }
 
         private void Inspector_Position_Show(object sender, RoutedEventArgs e)
@@ -1920,16 +2028,39 @@ namespace GameEngine.GameEntity
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
+
+            BasicFileLogger logger = new BasicFileLogger();
+            logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
+            logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
+
+
+
             string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
             string[] dlls = System.IO.Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
+            string[] csFiles = System.IO.Directory.GetFiles(directory, "*.cs", SearchOption.AllDirectories);
+            //var p = new Microsoft.Build.Evaluation.Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj");
+            var items = m_scriptLibrary.GetItems("Compile");
+            m_scriptLibrary.RemoveItems(items);
+            foreach(string cs in csFiles)
+            {
+                m_scriptLibrary.AddItem("Compile", cs);
+                //p.Save();
+            }
+            m_scriptLibrary.Save();
+            bool success = m_scriptLibrary.Build(logger);
             foreach (string dll in dlls)
             {
-                m_loader.LoadAssembly(dll);
+               //m_loader.LoadAssembly(dll);
             }
+            string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
+            m_loader.LoadAssembly(dllPath);
+
             m_loader.LoadGameObjects(serializedGameObjects);
         }
 
-        //ゲームオブジェクトのスクリプトをインスペクターへ反映する
+        /// <summary>
+        /// ゲームオブジェクトのスクリプトをインスペクターへ反映する
+        /// </summary>
         public void LoadComponents(string gameObjectName)
         {
             List<string> scriptNames = m_loader.GetScriptsName(gameObjectName);

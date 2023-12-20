@@ -70,8 +70,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="Detail\define.cs" />
+    <Compile Include="Detail\sVector3.cs" />
     <Compile Include="GameEntity\component.cs" />
     <Compile Include="GameEntity\gameObject.cs" />
+    <Compile Include="GameEntity\GameScriptPropInfo.cs" />
     <Compile Include="GameEntity\model.cs" />
     <Compile Include="GameEntity\GameScript.cs" />
     <Compile Include="GameEntity\testComponent.cs" />
