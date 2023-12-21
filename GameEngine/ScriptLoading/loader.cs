@@ -20,6 +20,7 @@ using GameEngine;
 using GameEngine.Detail;
 using GameEngine.GameEntity;
 using GameEngine.GameLoop;
+using System.Runtime.CompilerServices;
 
 namespace GameEngine.ScriptLoading
 {
@@ -66,8 +67,8 @@ namespace GameEngine.ScriptLoading
                 for (int i = 0; i < gameObject.GameScriptName.Count; i++)
                 {
                     //インスタンス生成
-                    var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
-                    //var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                    //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                    var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                     var instance = Activator.CreateInstance(typeName, null);
                     dynamic ins = Convert.ChangeType(instance, typeName);
 
@@ -254,6 +255,7 @@ namespace GameEngine.ScriptLoading
         {
             GameObject gameObject = m_game.FindGameObject(objectName);
 
+
             //対象タイプのインスタンスを生成
             //var typeName = m_nameAssemblyDict[classTypeName].GetType("GameEngine.GameEntity." + classTypeName);
             var typeName = m_Assembly.GetType("GameEngine.GameEntity." + classTypeName);
@@ -284,9 +286,16 @@ namespace GameEngine.ScriptLoading
                 gameScriptFieldInfo.PropNames.Add(fieldInfos[i].Name);
                 gameScriptFieldInfo.PropValues.Add(Convert.ToString(fieldInfos[i].GetValue(ins)));
             }
+
+            Assembly a = Assembly.GetExecutingAssembly();
+
+            Assembly gameObjAssembly = Assembly.GetAssembly(typeof(GameObject));
+
+            var internals = m_Assembly.GetCustomAttributes(typeof(InternalsVisibleToAttribute), false);
+
             gameObject.GameScriptFieldInfos.Add(gameScriptFieldInfo);
 
-            //Assembly a = Assembly.GetCallingAssembly();
+
 
             gameObject.AddScript(ins, scriptPath, classTypeName);
         }
@@ -337,8 +346,8 @@ namespace GameEngine.ScriptLoading
                 if (gameObject.GameScriptName[i] != scriptName) { continue; }
 
                 //新しいインスタンスを生成
-                var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
-                //var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                 var instance = Activator.CreateInstance(typeName, null);
                 dynamic ins = Convert.ChangeType(instance, typeName);
 

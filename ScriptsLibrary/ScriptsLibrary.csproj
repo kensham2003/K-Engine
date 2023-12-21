@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E11A92C9-CDE7-4441-B937-510504117092}</ProjectGuid>
+    <ProjectGuid>{AE619E33-2D35-4EEF-BB46-7C3A2A4D477D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ScriptsLibrary</RootNamespace>
@@ -51,28 +51,15 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\dhzhzn.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\iehgehe.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\jrtydtkjyk.cs" />
+    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move.cs" />
     <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move1.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move100.cs" />
     <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move2.cs" />
     <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move3.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move5.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move6.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move7.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\movee.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\rjrsjrj.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\rrrrr.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\sthstjjma.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\test.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\test2.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\test333.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\tttttt.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\uyuy.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\weshgvjgnb.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\wgrhr.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\yuio.cs" />
+    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn.cs" />
+    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn1.cs" />
+    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn2.cs" />
+    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn3.cs" />
+    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/ScriptsLibrary/Properties/AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

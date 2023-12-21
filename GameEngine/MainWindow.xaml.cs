@@ -101,6 +101,7 @@ namespace GameEngine
         Loader m_loader;
 
         Microsoft.Build.Evaluation.Project m_scriptLibrary;
+        BasicFileLogger m_logger = new BasicFileLogger();
 
 
         public class MainWindowDataContext
@@ -211,7 +212,7 @@ namespace GameEngine
             m_lastWatch = lastChange;
 
 
-            m_scriptLibrary.Build();
+            
 
             //Sandbox AppDomainをアンロード
             string serializedGameObjects = m_loader.UninitDomain();
@@ -219,6 +220,8 @@ namespace GameEngine
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
+
+            bool success = m_scriptLibrary.Build(m_logger);
 
             string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
             m_loader.LoadAssembly(dllPath);
@@ -298,7 +301,7 @@ namespace GameEngine
             string ext = System.IO.Path.GetExtension(e.FullPath);
             if(ext != ".cs") { return; }
 
-            m_scriptLibrary.Build();
+            
 
             //Sandbox AppDomainをアンロード
             string serializedGameObjects = m_loader.UninitDomain();
@@ -306,6 +309,8 @@ namespace GameEngine
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
+
+            bool success = m_scriptLibrary.Build(m_logger);
 
             string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
             m_loader.LoadAssembly(dllPath);
@@ -401,6 +406,8 @@ namespace GameEngine
             Init();
             this.InitializeRendering();
             m_scriptLibrary = new Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj");
+            m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
+            m_logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
             ReloadDll();
         }
 
@@ -2029,9 +2036,9 @@ namespace GameEngine.GameEntity
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            BasicFileLogger logger = new BasicFileLogger();
-            logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
-            logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
+            //BasicFileLogger logger = new BasicFileLogger();
+            //m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
+            //m_logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
 
 
 
@@ -2041,13 +2048,14 @@ namespace GameEngine.GameEntity
             //var p = new Microsoft.Build.Evaluation.Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj");
             var items = m_scriptLibrary.GetItems("Compile");
             m_scriptLibrary.RemoveItems(items);
-            foreach(string cs in csFiles)
+            m_scriptLibrary.AddItem("Compile", System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/Properties/AssemblyInfo.cs");
+            foreach (string cs in csFiles)
             {
                 m_scriptLibrary.AddItem("Compile", cs);
                 //p.Save();
             }
             m_scriptLibrary.Save();
-            bool success = m_scriptLibrary.Build(logger);
+            bool success = m_scriptLibrary.Build(m_logger);
             foreach (string dll in dlls)
             {
                //m_loader.LoadAssembly(dll);
