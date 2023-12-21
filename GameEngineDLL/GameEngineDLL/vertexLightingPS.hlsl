@@ -10,8 +10,16 @@ SamplerState g_SamplerState : register(s0);
 void main(in PS_IN In, out float4 outDiffuse : SV_Target)
 {
 	
-	outDiffuse = g_Texture.Sample(g_SamplerState, In.TexCoord);
-	outDiffuse *= In.Diffuse;
+	//outDiffuse = g_Texture.Sample(g_SamplerState, In.TexCoord);
+	//outDiffuse *= In.Diffuse;
+	
+	if (Material.TextureEnable) {
+		outDiffuse = g_Texture.Sample(g_SamplerState, In.TexCoord);
+		outDiffuse *= In.Diffuse;
+	}
+	else {
+		outDiffuse = In.Diffuse;
+	}
 
 }
 

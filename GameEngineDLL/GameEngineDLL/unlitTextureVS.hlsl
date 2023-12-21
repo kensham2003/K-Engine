@@ -11,7 +11,11 @@ void main(in VS_IN In, out PS_IN Out)
 
 	Out.Position = mul(In.Position, wvp);
 	Out.TexCoord = In.TexCoord;
-	Out.Diffuse = In.Diffuse;
+	//Out.Diffuse = In.Diffuse;
+	Out.Diffuse = In.Diffuse * Material.Diffuse;
+	//Out.Diffuse += In.Diffuse * Material.Ambient;
+	Out.Diffuse += Material.Emission;
+	Out.Diffuse.a = In.Diffuse.a * Material.Diffuse.a;
 
 }
 

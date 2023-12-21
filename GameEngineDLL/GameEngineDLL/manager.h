@@ -43,6 +43,12 @@ public:
 
 	static void AddModel(const char* ObjectName, const char* FileName);
 
+	static void AddBoxCollider(const char* ObjectName, const char* FileName);
+
+	static bool GetMaterialTextureEnable(const char* ObjectName);
+
+	static int GetModelSubsetNum(const char* ObjectName);
+
 	static void RenameGameObject(const char* ObjectName, const char* newName);
 
 	//static GameObject* GetGameObject(const char* Name)

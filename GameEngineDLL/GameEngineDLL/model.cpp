@@ -78,7 +78,9 @@ void Model::Draw()
 		Renderer::SetMaterial( m_SubsetArray[i].Material.Material );
 
 		// テクスチャ設定
-		Renderer::GetDeviceContext()->PSSetShaderResources( 0, 1, &m_SubsetArray[i].Material.Texture );
+		if (m_SubsetArray[i].Material.Texture) {
+			Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_SubsetArray[i].Material.Texture);
+		}
 
 		// ポリゴン描画
 		Renderer::GetDeviceContext()->DrawIndexed( m_SubsetArray[i].IndexNum, m_SubsetArray[i].StartIndex, 0 );
@@ -153,7 +155,13 @@ void Model::Load( const char *FileName )
 				&m_SubsetArray[i].Material.Texture,
 				NULL);
 
-			assert(m_SubsetArray[i].Material.Texture);
+			//assert(m_SubsetArray[i].Material.Texture);
+			if (m_SubsetArray[i].Material.Texture) {
+				m_SubsetArray[i].Material.Material.TextureEnable = true;
+			}
+			else {
+				m_SubsetArray[i].Material.Material.TextureEnable = false;
+			}
 
 		}
 	}

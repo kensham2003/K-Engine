@@ -195,6 +195,7 @@
 					<DockPanel >
 						<StackPanel Orientation="Vertical" >
 							<Button x:Name="Add_Component_Button" Content="Add Component" Click="Add_Component" Width="180"/>
+							<Button x:Name="Add_Box_Collider_Button" Content="Add Box Collider" Click="Add_BoxCollider" Width="180"/>
 						</StackPanel>
 					</DockPanel>
 

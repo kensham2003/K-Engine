@@ -51,14 +51,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move1.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move2.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\move3.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn1.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn2.cs" />
-    <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/asset\turn3.cs" />
     <Compile Include="C:\Users\ken\Documents\GitHub\GameEngineNew/ScriptsLibrary/Properties/AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

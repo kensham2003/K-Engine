@@ -22,6 +22,11 @@ ID3D11Buffer*			Renderer::m_LightBuffer = NULL;
 ID3D11DepthStencilState* Renderer::m_DepthStateEnable = NULL;
 ID3D11DepthStencilState* Renderer::m_DepthStateDisable = NULL;
 
+ID3D11RasterizerState*	Renderer::m_RasterizerStateDefault = NULL;
+ID3D11RasterizerState*	Renderer::m_RasterizerStateWireframe = NULL;
+
+bool					Renderer::m_IsDefaultRS = true;
+
 int						Renderer::m_ScreenWidth;
 int						Renderer::m_ScreenHeight;
 
@@ -78,17 +83,17 @@ void Renderer::Init()
 	m_DeviceContext->RSSetViewports(1, &viewport);
 
 
-	// ラスタライザステート設定
-	D3D11_RASTERIZER_DESC rasterizerDesc{};
-	rasterizerDesc.FillMode = D3D11_FILL_SOLID; 
-	rasterizerDesc.CullMode = D3D11_CULL_BACK; 
-	rasterizerDesc.DepthClipEnable = TRUE; 
-	rasterizerDesc.MultisampleEnable = FALSE; 
+	//// ラスタライザステート設定
+	//D3D11_RASTERIZER_DESC rasterizerDesc{};
+	//rasterizerDesc.FillMode = D3D11_FILL_SOLID; 
+	//rasterizerDesc.CullMode = D3D11_CULL_BACK; 
+	//rasterizerDesc.DepthClipEnable = TRUE; 
+	//rasterizerDesc.MultisampleEnable = FALSE; 
 
-	ID3D11RasterizerState *rs;
-	m_Device->CreateRasterizerState( &rasterizerDesc, &rs );
+	//ID3D11RasterizerState *rs;
+	//m_Device->CreateRasterizerState( &rasterizerDesc, &rs );
 
-	m_DeviceContext->RSSetState( rs );
+	//m_DeviceContext->RSSetState( rs );
 
 
 
@@ -144,6 +149,21 @@ void Renderer::Init()
 	m_DeviceContext->PSSetSamplers( 0, 1, &samplerState );
 
 
+	//ラスタライザステート設定
+	D3D11_RASTERIZER_DESC rasterDesc{};
+	ZeroMemory(&rasterDesc, sizeof(D3D11_RASTERIZER_DESC));
+	rasterDesc.DepthClipEnable = TRUE;
+	rasterDesc.MultisampleEnable = FALSE;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	m_Device->CreateRasterizerState(&rasterDesc, &m_RasterizerStateDefault);
+
+	rasterDesc.CullMode = D3D11_CULL_NONE;
+	rasterDesc.FillMode = D3D11_FILL_WIREFRAME;
+	m_Device->CreateRasterizerState(&rasterDesc, &m_RasterizerStateWireframe);
+
+	m_DeviceContext->RSSetState(m_RasterizerStateDefault);
+
 
 	// 定数バッファ生成
 	D3D11_BUFFER_DESC bufferDesc{};
@@ -168,6 +188,7 @@ void Renderer::Init()
 
 	m_Device->CreateBuffer( &bufferDesc, NULL, &m_MaterialBuffer );
 	m_DeviceContext->VSSetConstantBuffers( 3, 1, &m_MaterialBuffer );
+	m_DeviceContext->PSSetConstantBuffers( 3, 1, &m_MaterialBuffer);
 
 
 	bufferDesc.ByteWidth = sizeof(LIGHT);
