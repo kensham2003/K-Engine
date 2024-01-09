@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Forms;
 
 namespace GameEngine
 {
@@ -19,9 +20,16 @@ namespace GameEngine
     /// </summary>
     public partial class userInputDialog : Window
     {
+
         public userInputDialog()
         {
             InitializeComponent();
+        }
+
+        public userInputDialog(List<string> componentList)
+        {
+            InitializeComponent();
+            ComponentListbox.ItemsSource = componentList;
         }
 
         public string InputText
@@ -35,12 +43,21 @@ namespace GameEngine
             DialogResult = true;
         }
 
-        private void Keydown_Dialog(object sender, KeyEventArgs e)
+        private void Keydown_Dialog(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key != Key.Return)
                 return;
 
             DialogResult = true;
         }
+
+        private void MouseDoubleClick_Dialog(object sender, MouseButtonEventArgs e)
+        {
+            //int index = this.ComponentListbox.IndexFromPoint()
+            string item = ComponentListbox.SelectedItem.ToString();
+            InputBox.Text = item;
+            DialogResult = true;
+        }
+
     }
 }

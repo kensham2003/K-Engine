@@ -434,5 +434,22 @@ namespace GameEngine.ScriptLoading
             }
             return null;
         }
+
+        public List<string> GetScriptsList()
+        {
+            const string remove = "GameEngine.GameEntity.";
+            Type[] type = m_Assembly.GetTypes();
+            List<string> output = new List<string>();
+            for(int i = 0; i < type.Length; i++)
+            {
+                string typeString = type[i].ToString();
+                int removeIndex = typeString.IndexOf(remove);
+                string classString = (removeIndex < 0)
+                    ? typeString
+                    : typeString.Remove(removeIndex, remove.Length);
+                output.Add(classString);
+            }
+            return output;
+        }
     }
 }

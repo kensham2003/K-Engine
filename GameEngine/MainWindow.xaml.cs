@@ -38,6 +38,7 @@ using Microsoft.CodeAnalysis;
 
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Locator;
 
 using GameEngine.GameEntity;
 using GameEngine.GameLoop;
@@ -405,6 +406,17 @@ namespace GameEngine
         {
             Init();
             this.InitializeRendering();
+            //var a = MSBuildLocator.QueryVisualStudioInstances().ToList();
+            //var vs2019 = MSBuildLocator.QueryVisualStudioInstances().Where(x => x.Name == "Visual Studio Community 2019").First();
+            //if (MSBuildLocator.CanRegister)
+            //{
+            //    MSBuildLocator.RegisterDefaults();
+            //}
+            //else
+            //{
+            //    MSBuildLocator.RegisterInstance(vs2019);
+            //}
+
             m_scriptLibrary = new Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj");
             m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
             m_logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
@@ -1907,7 +1919,8 @@ namespace GameEngine
             string className = "";
 
             //スクリプト名を入力するウインドウを起動
-            var dialog = new userInputDialog();
+            //var dialog = new userInputDialog();
+            var dialog = new userInputDialog(m_loader.GetScriptsList());
             if (dialog.ShowDialog() == true)
             {
                 className = dialog.InputText;
@@ -2049,6 +2062,7 @@ namespace GameEngine.GameEntity
             //m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
             //m_logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
 
+            //m_scriptLibrary = new Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj", null, null, new ProjectCollection());
 
 
             string directory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset";
@@ -2063,8 +2077,10 @@ namespace GameEngine.GameEntity
                 m_scriptLibrary.AddItem("Compile", cs);
                 //p.Save();
             }
-            m_scriptLibrary.Save();
+            //m_scriptLibrary.Save();
+            //File.Delete(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.pdb");
             bool success = m_scriptLibrary.Build(m_logger);
+            //m_scriptLibrary.ProjectCollection.UnloadProject(m_scriptLibrary);
             foreach (string dll in dlls)
             {
                //m_loader.LoadAssembly(dll);

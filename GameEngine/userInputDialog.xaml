@@ -8,9 +8,10 @@
         Title="userInputDialog" Height="275" Width="450">
     <Grid>
 		<!--<StackPanel>-->
-			<TextBlock Text="クラス名を入力：" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,80,146.6,124"/>
-			<TextBox x:Name="InputBox" KeyDown="Keydown_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" TextAlignment="Center"/>
-			<Button Content="Enter" Click="OnClick_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Margin="150,125,150,50"/>
+			<TextBlock Text="クラス名を入力：" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="150,0,150,150" RenderTransformOrigin="0,0"/>
+			<TextBox x:Name="InputBox" KeyDown="Keydown_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" TextAlignment="Center" Margin="100,60,100,150"/>
+		    <ListBox x:Name="ComponentListbox" Margin="120,100,120,20" MouseDoubleClick="MouseDoubleClick_Dialog"></ListBox>
+			<!--<Button Content="Enter" Click="OnClick_Dialog" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Margin="150,125,150,00"/>-->
 		<!--</StackPanel>-->
 	</Grid>
 </Window>
