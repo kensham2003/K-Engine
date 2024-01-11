@@ -1949,6 +1949,12 @@ namespace GameEngine
                 {
                     //選択中のゲームオブジェクトに作成されたスクリプトを追加
                     GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                    //重複しているスクリプトの場合は追加しない
+                    if(m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
+                    {
+                        MessageBox.Show(upperClassName + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
                     string scriptPath = System.IO.Path.GetFullPath("asset/" + className + ".cs");
                     m_loader.AddScriptToGameObject(inspectorObject.Name, upperClassName, scriptPath);
 
@@ -2220,6 +2226,7 @@ namespace GameEngine.GameEntity
                 RemoveComponentButton.Content = "Remove Script";
                 RemoveComponentButton.Width = 180;
                 string name = scriptNames[i];
+                int index = i;
                 RemoveComponentButton.Click += (object ss, RoutedEventArgs ee) =>
                 {
                     var confirmDialog = new removeComponentConfirmDialog(name, gameObjectName);
@@ -2227,7 +2234,8 @@ namespace GameEngine.GameEntity
                     {
                         if (confirmDialog.IsConfirm)
                         {
-                            m_loader.RemoveScriptFromGameObject(gameObjectName, name);
+                            //m_loader.RemoveScriptFromGameObject(gameObjectName, name);
+                            m_loader.RemoveScriptFromGameObjectByIndex(gameObjectName, index);
                             LoadComponents(gameObjectName);
                         }
                     }

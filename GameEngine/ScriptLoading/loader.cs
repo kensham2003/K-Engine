@@ -313,6 +313,18 @@ namespace GameEngine.ScriptLoading
             gameObject.RemoveScriptAtIndex(scriptIndex);
         }
 
+        public void RemoveScriptFromGameObjectByIndex(string objectName, int index)
+        {
+            GameObject gameObject = m_game.FindGameObject(objectName);
+
+            gameObject.GameScriptName.RemoveAt(index);
+            gameObject.GameScriptPath.RemoveAt(index);
+            gameObject.GameScriptPropInfos.RemoveAt(index);
+            gameObject.GameScriptFieldInfos.RemoveAt(index);
+
+            gameObject.RemoveScriptAtIndex(index);
+        }
+
         public GameObject FindGameObject(string name)
         {
             foreach(GameObject gameObject in m_gameObjects)
@@ -463,6 +475,19 @@ namespace GameEngine.ScriptLoading
                 output.Add(classString);
             }
             return output;
+        }
+
+        public bool IsObjectContainingScript(string gameObjectName, string targetScriptName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            foreach(string scriptName in gameObject.GameScriptName)
+            {
+                if(targetScriptName == scriptName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
