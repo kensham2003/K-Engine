@@ -59,5 +59,20 @@ namespace GameEngine
             DialogResult = true;
         }
 
+        private void MouseLeftButtonDown_Dialog(object sender, MouseButtonEventArgs e)
+        {
+            ComponentListbox.SelectedItem = null;
+        }
+
+        private void SelectionChanged_Dialog(object sender, SelectionChangedEventArgs e)
+        {
+            var item = ComponentListbox.SelectedItem;
+
+            if (item != null)
+            {
+                string itemName = item.ToString();
+                InputBox.Text = itemName;
+            }
+        }
     }
 }
