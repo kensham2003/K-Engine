@@ -1097,6 +1097,7 @@ namespace GameEngine
                 gameObject.Position = position;
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
+                m_loader.SetGameObjectPosition(objectName, position.X, position.Y, position.Z);
             }
             {
                 Vector3 rotation;
@@ -1111,10 +1112,11 @@ namespace GameEngine
                 //rotation.X = float.Parse(RotationX.Text) * (float)Math.PI / 180.0f;
                 //rotation.Y = float.Parse(RotationY.Text) * (float)Math.PI / 180.0f;
                 //rotation.Z = float.Parse(RotationZ.Text) * (float)Math.PI / 180.0f;
-                rotation = rotation * (float)Math.PI / 180.0f;
+                //rotation = rotation * (float)Math.PI / 180.0f;
                 gameObject.Rotation = rotation;
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
+                m_loader.SetGameObjectRotation(objectName, rotation.X, rotation.Y, rotation.Z);
             }
             {
                 Vector3 scale;
@@ -1132,6 +1134,7 @@ namespace GameEngine
                 gameObject.Scale = scale;
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
+                m_loader.SetGameObjectScale(objectName, scale.X, scale.Y, scale.Z);
             }
             gameObject.Script = ScriptTextBox.Text;
         }
@@ -1320,6 +1323,7 @@ namespace GameEngine
                         PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
+                        m_loader.SetGameObjectPosition(objectName, Pos.X, Pos.Y, Pos.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1381,6 +1385,7 @@ namespace GameEngine
                         PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
+                        m_loader.SetGameObjectPosition(objectName, Pos.X, Pos.Y, Pos.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1442,6 +1447,7 @@ namespace GameEngine
                         PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
+                        m_loader.SetGameObjectPosition(objectName, Pos.X, Pos.Y, Pos.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1550,6 +1556,7 @@ namespace GameEngine
                     this.Dispatcher.Invoke(() => {
                         Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
                         RotationX.Text = Rot.X.ToString("F2");
+                        m_loader.SetGameObjectRotation(objectName, Rot.X, Rot.Y, Rot.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1602,6 +1609,7 @@ namespace GameEngine
                     this.Dispatcher.Invoke(() => {
                         Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
                         RotationY.Text = Rot.Y.ToString("F2");
+                        m_loader.SetGameObjectRotation(objectName, Rot.X, Rot.Y, Rot.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1654,6 +1662,7 @@ namespace GameEngine
                     this.Dispatcher.Invoke(() => {
                         Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(objectName));
                         RotationZ.Text = Rot.Z.ToString("F2");
+                        m_loader.SetGameObjectRotation(objectName, Rot.X, Rot.Y, Rot.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1753,6 +1762,7 @@ namespace GameEngine
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
+                        m_loader.SetGameObjectScale(objectName, Scl.X, Scl.Y, Scl.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1810,6 +1820,7 @@ namespace GameEngine
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
+                        m_loader.SetGameObjectScale(objectName, Scl.X, Scl.Y, Scl.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1867,6 +1878,7 @@ namespace GameEngine
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
+                        m_loader.SetGameObjectScale(objectName, Scl.X, Scl.Y, Scl.Z);
                     });
 
                     mousePosition = newMousePosition;
@@ -1920,7 +1932,8 @@ namespace GameEngine
 
             //スクリプト名を入力するウインドウを起動
             //var dialog = new userInputDialog();
-            var dialog = new userInputDialog(m_loader.GetScriptsList());
+            List<string> scriptsList = m_loader.GetScriptsList();
+            var dialog = new userInputDialog(scriptsList);
             if (dialog.ShowDialog() == true)
             {
                 className = dialog.InputText;
@@ -1929,6 +1942,22 @@ namespace GameEngine
 
             //テンプレート.csファイルを生成
             string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
+            //リストにある名前なら新しく作らずコンポーネントをそのまま追加する
+            foreach(string scriptName in scriptsList)
+            {
+                if(scriptName == upperClassName)
+                {
+                    //選択中のゲームオブジェクトに作成されたスクリプトを追加
+                    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                    string scriptPath = System.IO.Path.GetFullPath("asset/" + className + ".cs");
+                    m_loader.AddScriptToGameObject(inspectorObject.Name, upperClassName, scriptPath);
+
+                    //インスペクターへ反映
+                    LoadComponents(inspectorObject.Name);
+
+                    return;
+                }
+            }
             string classDll = "asset/" + className + ".dll";
             string path = "asset/" + className + ".cs";
             string code = $@"
@@ -2186,6 +2215,25 @@ namespace GameEngine.GameEntity
                 string path = scriptPaths[i];
                 ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(path); };
                 stackPanelTemp.Children.Add(ComponentButton);
+
+                Button RemoveComponentButton = new Button();
+                RemoveComponentButton.Content = "Remove Script";
+                RemoveComponentButton.Width = 180;
+                string name = scriptNames[i];
+                RemoveComponentButton.Click += (object ss, RoutedEventArgs ee) =>
+                {
+                    var confirmDialog = new removeComponentConfirmDialog(name, gameObjectName);
+                    if (confirmDialog.ShowDialog() == true)
+                    {
+                        if (confirmDialog.IsConfirm)
+                        {
+                            m_loader.RemoveScriptFromGameObject(gameObjectName, name);
+                            LoadComponents(gameObjectName);
+                        }
+                    }
+                };
+                stackPanelTemp.Children.Add(RemoveComponentButton);
+
                 Component_Panel.Children.Add(stackPanelTemp);
                 Component_Panel.Children.Add(new Separator());
             }

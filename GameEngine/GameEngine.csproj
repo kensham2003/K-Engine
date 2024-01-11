@@ -259,6 +259,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="removeComponentConfirmDialog.xaml.cs">
+      <DependentUpon>removeComponentConfirmDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ScriptLoading\buildLogger.cs" />
     <Compile Include="ScriptLoading\loader.cs" />
     <Compile Include="ScriptLoading\sandbox.cs" />
@@ -280,6 +283,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="removeComponentConfirmDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="userInputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

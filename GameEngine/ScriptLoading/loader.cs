@@ -300,6 +300,19 @@ namespace GameEngine.ScriptLoading
             gameObject.AddScript(ins, scriptPath, classTypeName);
         }
 
+        public void RemoveScriptFromGameObject(string objectName, string scriptName)
+        {
+            GameObject gameObject = m_game.FindGameObject(objectName);
+
+            int scriptIndex = gameObject.GameScriptName.IndexOf(scriptName);
+            gameObject.GameScriptName.RemoveAt(scriptIndex);
+            gameObject.GameScriptPath.RemoveAt(scriptIndex);
+            gameObject.GameScriptPropInfos.RemoveAt(scriptIndex);
+            gameObject.GameScriptFieldInfos.RemoveAt(scriptIndex);
+
+            gameObject.RemoveScriptAtIndex(scriptIndex);
+        }
+
         public GameObject FindGameObject(string name)
         {
             foreach(GameObject gameObject in m_gameObjects)

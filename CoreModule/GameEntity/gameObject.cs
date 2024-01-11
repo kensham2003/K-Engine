@@ -116,6 +116,11 @@ namespace GameEngine.GameEntity
             gameScript.Name = name;
         }
 
+        public void RemoveScriptAtIndex(int index)
+        {
+            GameScripts.RemoveAt(index);
+        }
+
         public void ReplaceScript(GameScript gameScript, int index)
         {
             string name = GameScripts[index].Name;
