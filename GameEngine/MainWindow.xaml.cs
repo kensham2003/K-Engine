@@ -53,7 +53,7 @@ using System.ComponentModel;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Registration;
-
+using System.Diagnostics;
 
 namespace GameEngine
 {
@@ -103,6 +103,8 @@ namespace GameEngine
 
         Microsoft.Build.Evaluation.Project m_scriptLibrary;
         BasicFileLogger m_logger = new BasicFileLogger();
+
+        bool m_slnOpening = false;
 
 
         public class MainWindowDataContext
@@ -2118,7 +2120,7 @@ namespace GameEngine.GameEntity
                 m_scriptLibrary.AddItem("Compile", cs);
                 //p.Save();
             }
-            //m_scriptLibrary.Save();
+            m_scriptLibrary.Save();
             //File.Delete(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.pdb");
             bool success = m_scriptLibrary.Build(m_logger);
             //m_scriptLibrary.ProjectCollection.UnloadProject(m_scriptLibrary);
@@ -2291,7 +2293,44 @@ namespace GameEngine.GameEntity
                 ComponentButton.Content = "Open Script";
                 ComponentButton.Width = 180;
                 string path = scriptPaths[i];
-                ComponentButton.Click += (object ss, RoutedEventArgs ee) => { System.Diagnostics.Process.Start(path); };
+                string slnPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.sln";
+                
+                ComponentButton.Click += (object ss, RoutedEventArgs ee) => {
+                    //slnが開いていない場合は新規slnを開く
+                    if (!m_slnOpening)
+                    {
+                        Process p = new Process();
+                        p.StartInfo.FileName = slnPath;
+                        p.StartInfo.UseShellExecute = true;
+                        p.EnableRaisingEvents = true;
+                        //slnが閉じるとフラグが元に戻す
+                        p.Exited += (object s, EventArgs e) => {
+                            m_slnOpening = false; 
+                        };
+                        p.Disposed += (object s, EventArgs e) => {
+                            m_slnOpening = false; 
+                        };
+                        m_slnOpening = true;
+                        p.Start();
+                        //VSが完全に開いたまで待たないと（約10秒、それでもミスする可能性がある）
+                        //下のdevenv.exeが新規VSを開いてしまうので10秒間強制中断
+                        Thread.Sleep(10000);
+                    }
+
+                    //devenv.exeを使って対象の.csファイルをsln内に開く
+                    var devEnvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe";
+                    string projPath = m_scriptLibrary.FullPath;
+                    var command = $"/edit \"{path}\"";
+                    var cmdsi = new ProcessStartInfo
+                    {
+                        WindowStyle = ProcessWindowStyle.Normal,
+                        FileName = devEnvPath,
+                        RedirectStandardInput = true,
+                        UseShellExecute = false,
+                        Arguments = command
+                    };
+                    Process cmd = Process.Start(cmdsi);
+                };
                 stackPanelTemp.Children.Add(ComponentButton);
 
                 Button RemoveComponentButton = new Button();
