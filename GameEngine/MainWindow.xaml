@@ -76,11 +76,11 @@
 					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Position_Show">
 						<Label Content="Position" Width="70"/>
 						<Label Content="X"/>
-						<TextBox x:Name="PositionX" Text="0.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="PositionX" Text="0.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 						<Label Content="Y"/>
-						<TextBox x:Name="PositionY" Text="0.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="PositionY" Text="0.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 						<Label Content="Z"/>
-						<TextBox x:Name="PositionZ" Text="0.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="PositionZ" Text="0.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 					</StackPanel>
 
 					<DockPanel x:Name="Inspector_Position_DockPanel">
@@ -116,11 +116,11 @@
 					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Rotation_Show">
 						<Label Content="Rotation" Width="70"/>
 						<Label Content="X"/>
-						<TextBox x:Name="RotationX" Text="0.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="RotationX" Text="0.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 						<Label Content="Y"/>
-						<TextBox x:Name="RotationY" Text="0.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="RotationY" Text="0.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 						<Label Content="Z"/>
-						<TextBox x:Name="RotationZ" Text="0.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="RotationZ" Text="0.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 					</StackPanel>
 
 					<DockPanel x:Name="Inspector_Rotation_DockPanel">
@@ -152,11 +152,11 @@
 					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Scale_Show">
 						<Label Content="Scale" Width="70"/>
 						<Label Content="X"/>
-						<TextBox x:Name="ScaleX" Text="1.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="ScaleX" Text="1.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 						<Label Content="Y"/>
-						<TextBox x:Name="ScaleY" Text="1.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="ScaleY" Text="1.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 						<Label Content="Z"/>
-						<TextBox x:Name="ScaleZ" Text="1.00" KeyDown="Inspector_KeyDown"/>
+						<TextBox x:Name="ScaleZ" Text="1.00" KeyDown="Inspector_KeyDown" VerticalAlignment="Center"/>
 					</StackPanel>
 
 					<DockPanel x:Name="Inspector_Scale_DockPanel">

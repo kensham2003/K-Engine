@@ -1050,6 +1050,7 @@ namespace GameEngine
                 PositionZ.Text = gameObject.Position.Z.ToString("F2");
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
+                m_loader.SetGameObjectPosition(objectName, gameObject.Position.X, gameObject.Position.Y, gameObject.Position.Z);
             }
             {
                 Vector3 rotation = gameObject.Rotation / (float)Math.PI * 180.0f; //Radian->Degree
@@ -1059,6 +1060,7 @@ namespace GameEngine
                 RotationZ.Text = rotation.Z.ToString("F2");
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
+                m_loader.SetGameObjectRotation(objectName, gameObject.Rotation.X, gameObject.Rotation.Y, gameObject.Rotation.Z);
             }
             {
                 ScaleX.Text = gameObject.Scale.X.ToString("F2");
@@ -1066,6 +1068,7 @@ namespace GameEngine
                 ScaleZ.Text = gameObject.Scale.Z.ToString("F2");
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
+                m_loader.SetGameObjectScale(objectName, gameObject.Scale.X, gameObject.Scale.Y, gameObject.Scale.Z);
 
             }
             ScriptTextBox.Text = gameObject.Script;
@@ -1987,6 +1990,8 @@ namespace GameEngine.GameEntity
 
         public float moveAmount = 0.1f;
 
+        public bool stopMoving = true;
+
         public override void BeginPlay()
         {{
 
@@ -1994,6 +1999,7 @@ namespace GameEngine.GameEntity
 
         public override void Update(TimeSpan gameTime)
         {{
+            if(stopMoving){{return;}}
             Vector3 pos = Parent.Position;
             if(pos.X > 3 || pos.X < -3){{moveAmount *= -1;}}
             
@@ -2136,6 +2142,7 @@ namespace GameEngine.GameEntity
             List<GameScriptPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
             List<GameScriptPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
 
+
             Component_Panel.Children.Clear();
 
             for (int i = 0; i < scriptNames.Count(); i++)
@@ -2158,31 +2165,68 @@ namespace GameEngine.GameEntity
                     }
                 };
 
+                //チェックボックスの値をオブジェクトの値へ代入（ローカル関数）
+                //（ローカル関数はオーバーロードがサポートされていない）
+                void SetValueBool(bool isProperty, CheckBox cb, string changedName, string changedValue)
+                {
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue);
+
+                    //Set value失敗
+                    if (result != null)
+                    {
+                        cb.IsChecked = bool.Parse(result);
+                    }
+                };
+
                 for (int j = 0; j < propInfos[i].PropAmount; j++) {
                     string propName = propInfos[i].PropNames[j];
                     if (propName == "FilePath" || propName == "Name") continue;
                     var stackPanelOneProp = new StackPanel { Orientation = Orientation.Horizontal };
                     stackPanelOneProp.Children.Add(new Label { Content = propInfos[i].PropNames[j] });
-                    TextBox propInputField = new TextBox();
-                    propInputField.Text = propInfos[i].PropValues[j];
-
-                    //ENTERを押したらSetValueを呼ぶ
-                    propInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                    switch (propInfos[i].PropTypes[j])
                     {
-                        if (e.Key != Key.Return)
-                            return;
+                        //bool型はチェックボックスで表示
+                        //（定数ではないと直接スイッチ文に入れられないのでこの書き方に）
+                        case string value when value == typeof(bool).AssemblyQualifiedName:
+                            CheckBox propInputBox = new CheckBox();
+                            propInputBox.IsChecked = bool.Parse(propInfos[i].PropValues[j]);
+                            propInputBox.Checked += (object sender, RoutedEventArgs e) =>
+                            {
+                                SetValueBool(false, propInputBox, propName, propInputBox.IsChecked.ToString());
+                            };
+                            propInputBox.Unchecked += (object sender, RoutedEventArgs e) =>
+                            {
+                                SetValueBool(false, propInputBox, propName, propInputBox.IsChecked.ToString());
+                            };
+                            propInputBox.VerticalAlignment = VerticalAlignment.Center;
+                            stackPanelOneProp.Children.Add(propInputBox);
+                            stackPanelProp.Children.Add(stackPanelOneProp);
+                            break;
 
-                        SetValue(true, propInputField, propName, propInputField.Text);
-                    };
+                        default:
+                            TextBox propInputField = new TextBox();
+                            propInputField.Text = propInfos[i].PropValues[j];
 
-                    //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
-                    propInputField.LostFocus += (object sender, RoutedEventArgs e) =>
-                    {
-                        SetValue(true, propInputField, propName, propInputField.Text);
-                    };
+                            //ENTERを押したらSetValueを呼ぶ
+                            propInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
 
-                    stackPanelOneProp.Children.Add(propInputField);
-                    stackPanelProp.Children.Add(stackPanelOneProp);
+                                SetValue(true, propInputField, propName, propInputField.Text);
+                            };
+
+                            //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                            propInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                SetValue(true, propInputField, propName, propInputField.Text);
+                            };
+
+                            stackPanelOneProp.Children.Add(propInputField);
+                            stackPanelProp.Children.Add(stackPanelOneProp);
+                            break;
+                    }
+
                 }
                 stackPanelTemp.Children.Add(stackPanelProp);
 
@@ -2190,28 +2234,56 @@ namespace GameEngine.GameEntity
                 for (int k = 0; k < fieldInfos[i].PropAmount; k++)
                 {
                     string fieldName = fieldInfos[i].PropNames[k];
-                    var stackPanelOneField = new StackPanel { Orientation = Orientation.Horizontal };
+                    var stackPanelOneField = new StackPanel {
+                        Orientation = Orientation.Horizontal
+                    };
                     stackPanelOneField.Children.Add(new Label { Content = fieldInfos[i].PropNames[k] });
-                    TextBox fieldInputField = new TextBox();
-                    fieldInputField.Text = fieldInfos[i].PropValues[k];
-
-                    //ENTERを押したらSetValueを呼ぶ
-                    fieldInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                    switch (fieldInfos[i].PropTypes[k])
                     {
-                        if (e.Key != Key.Return)
-                            return;
+                        //bool型はチェックボックスで表示
+                        //（定数ではないと直接スイッチ文に入れられないのでこの書き方に）
+                        case string value when value == typeof(bool).AssemblyQualifiedName:
+                            CheckBox fieldInputBox = new CheckBox();
+                            fieldInputBox.IsChecked = bool.Parse(fieldInfos[i].PropValues[k]);
+                            fieldInputBox.Checked += (object sender, RoutedEventArgs e) =>
+                            {
+                                SetValueBool(false, fieldInputBox, fieldName, fieldInputBox.IsChecked.ToString());
+                            };
+                            fieldInputBox.Unchecked += (object sender, RoutedEventArgs e) =>
+                            {
+                                SetValueBool(false, fieldInputBox, fieldName, fieldInputBox.IsChecked.ToString());
+                            };
+                            fieldInputBox.VerticalAlignment = VerticalAlignment.Center;
+                            stackPanelOneField.Children.Add(fieldInputBox);
+                            stackPanelField.Children.Add(stackPanelOneField);
+                            break;
 
-                        SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
-                    };
+                        //bool以外の型はテキストで表示
+                        default:
+                            TextBox fieldInputField = new TextBox();
+                            fieldInputField.Text = fieldInfos[i].PropValues[k];
+                            fieldInputField.VerticalAlignment = VerticalAlignment.Center;
 
-                    //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
-                    fieldInputField.LostFocus += (object sender, RoutedEventArgs e) =>
-                    {
-                        SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
-                    };
+                            //ENTERを押したらSetValueを呼ぶ
+                            fieldInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
 
-                    stackPanelOneField.Children.Add(fieldInputField);
-                    stackPanelField.Children.Add(stackPanelOneField);
+                                SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                            };
+
+                            //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                            fieldInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                            };
+
+                            stackPanelOneField.Children.Add(fieldInputField);
+                            stackPanelField.Children.Add(stackPanelOneField);
+                            break;
+                    }
+
                 }
                 stackPanelTemp.Children.Add(stackPanelField);
 
