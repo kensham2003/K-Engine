@@ -15,7 +15,7 @@ namespace GameEngine.GameEntity
     [Serializable]
     public class GameObject
     {
-
+        
         public SVector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
         public SVector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
         public SVector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);

@@ -45,6 +45,7 @@ namespace GameEngine.GameLoop
         public void Play()
         {
             m_simulate = true;
+            m_game.m_firstFrame = true;
         }
 
         public void Stop()

@@ -11,14 +11,18 @@ namespace GameEngine.GameLoop
 {
     public class Game
     {
-        private bool m_firstFrame = true;
+        public bool m_firstFrame = true;
 
         public List<GameObject>[] m_gameObjects = new List<GameObject>[5];
+
+        //public Debug m_debug;
 
         //private string m_jsonString
 
         public void Init() 
         {
+            Debug.ClearLog();
+
             for(int i = 0; i < Detail.Define.NUM_LAYER; i++)
             {
                 m_gameObjects[i] = new List<GameObject>();
@@ -50,7 +54,7 @@ namespace GameEngine.GameLoop
                     }
                 }
             }
-
+            
             for (int i = 0; i < Detail.Define.NUM_LAYER; i++)
             {
                 foreach (GameObject gameObject in m_gameObjects[i])
@@ -58,6 +62,9 @@ namespace GameEngine.GameLoop
                     GameEngine.MainWindow.NativeMethods.InvokeWithDllProtection(() => GameEngine.MainWindow.NativeMethods.SetObjectTransform(gameObject.Name, gameObject.Position, gameObject.Rotation, gameObject.Scale));
                 }
             }
+
+            //上手くできていない
+            MainWindow.UpdateMessageLog(Debug.m_log);
         }
 
         public void AddGameObject(GameObject gameObject, int layer)

@@ -19,7 +19,8 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition/>
 			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="250"/>
+			<RowDefinition Height="220"/>
+			<RowDefinition Height="30"/>
 		</Grid.RowDefinitions>
 
 		<!--コメント-->
@@ -238,5 +239,10 @@
 
 		</TabControl>
 
+		<Grid Grid.Row="4" Grid.ColumnSpan="5">
+			<!--<Label x:Name="MessageLog" Content="{Binding Source={x:Static local:MainWindow.m_MessageLast}}"/>-->
+			<Label x:Name="MessageLog" Content="{Binding Source={x:Static local:DebugMessage.m_instance}, Path=m_messageLast}"/>
+			<!--<Label x:Name="MessageLog" Content=""/>-->
+		</Grid>
 	</Grid>
 </Window>

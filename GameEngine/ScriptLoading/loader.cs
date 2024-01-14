@@ -233,6 +233,36 @@ namespace GameEngine.ScriptLoading
             m_game.FindGameObject(oldName).Name = newName;
         }
 
+        public SVector3 GetGameObjectPosition(string name)
+        {
+            GameObject gameObject = m_game.FindGameObject(name);
+            if(gameObject != null)
+            {
+                return gameObject.Position;
+            }
+            return new SVector3(0.0f, 0.0f, 0.0f);
+        }
+
+        public SVector3 GetGameObjectRotation(string name)
+        {
+            GameObject gameObject = m_game.FindGameObject(name);
+            if (gameObject != null)
+            {
+                return gameObject.Rotation;
+            }
+            return new SVector3(0.0f, 0.0f, 0.0f);
+        }
+
+        public SVector3 GetGameObjectScale(string name)
+        {
+            GameObject gameObject = m_game.FindGameObject(name);
+            if (gameObject != null)
+            {
+                return gameObject.Scale;
+            }
+            return new SVector3(1.0f, 1.0f, 1.0f);
+        }
+
         public void SetGameObjectPosition(string name, float x, float y, float z)
         {
             Vector3 pos = new Vector3(x, y, z);
@@ -488,6 +518,11 @@ namespace GameEngine.ScriptLoading
                 }
             }
             return false;
+        }
+
+        public List<string> GetDebugMessage()
+        {
+            return Debug.m_log;
         }
     }
 }

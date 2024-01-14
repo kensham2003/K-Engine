@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="Detail\debug.cs" />
     <Compile Include="Detail\define.cs" />
     <Compile Include="Detail\sVector3.cs" />
     <Compile Include="GameEntity\boxCollider.cs" />

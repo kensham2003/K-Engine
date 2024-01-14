@@ -62,6 +62,8 @@ namespace GameEngine
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static MainWindow m_instance { get; private set; }
+
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
@@ -106,6 +108,54 @@ namespace GameEngine
 
         bool m_slnOpening = false;
 
+        //private static List<string> _Message = new List<string>();
+
+        //public static List<string> m_Message
+        //{
+        //    get
+        //    {
+        //        return _Message;
+        //    }
+        //    set
+        //    {
+        //        if(value != _Message)
+        //        {
+        //            _Message = value;
+        //            if (_Message.Count() > 0)
+        //            {
+        //                m_MessageLast = _Message.Last();
+        //            }
+        //            NotifyPropertyChanged("m_Message");
+        //        }
+        //    }
+        //}
+
+        //private static string _MessageLast;
+
+        //public static string m_MessageLast
+        //{
+        //    get { return _MessageLast; }
+        //    set 
+        //    {
+        //        if(value != _MessageLast)
+        //        {
+        //            _MessageLast = value;
+        //            NotifyPropertyChanged("m_MessageLast");
+        //        }
+        //    }
+        //}
+
+
+        public static event PropertyChangedEventHandler PropertyChanged;
+
+        private static void NotifyPropertyChanged(string propertyName)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+
+            handler?.Invoke(null, new PropertyChangedEventArgs(propertyName));
+        }
+
+        //DebugMessageReceiver m_dmr;
 
         public class MainWindowDataContext
         {
@@ -155,6 +205,9 @@ namespace GameEngine
         public MainWindow()
         {
             this.InitializeComponent();
+            this.DataContext = DebugMessage.m_instance.m_messageLast;
+            //m_dmr = new DebugMessageReceiver(DebugMessage.m_instance, MessageLog);
+            m_instance = this;
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
 
@@ -934,20 +987,27 @@ namespace GameEngine
                         GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
                         if (inspectorObject == null) return;
 
-                        Vector3 Pos = inspectorObject.Position;
+                        //Vector3 Pos = inspectorObject.Position;
+                        Vector3 Pos = m_loader.GetGameObjectPosition(inspectorObject.Name);
                         PositionX.Text = Pos.X.ToString("F2");
                         PositionY.Text = Pos.Y.ToString("F2");
                         PositionZ.Text = Pos.Z.ToString("F2");
 
-                        Vector3 Rot = inspectorObject.Rotation;
+                        Vector3 Rot = m_loader.GetGameObjectRotation(inspectorObject.Name);
                         RotationX.Text = Rot.X.ToString("F2");
                         RotationY.Text = Rot.Y.ToString("F2");
                         RotationZ.Text = Rot.Z.ToString("F2");
 
-                        Vector3 Scl = inspectorObject.Scale;
+                        Vector3 Scl = m_loader.GetGameObjectScale(inspectorObject.Name);
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
+
+                        List<string> debugMessage = m_loader.GetDebugMessage();
+                        if (debugMessage.Count() > 0)
+                        {
+                            MessageLog.Content = debugMessage.Last();
+                        }
                     });
 
                     now = DateTime.Now;
@@ -1979,6 +2039,7 @@ using System.Text;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+using GameEngine.Detail;
 
 
 namespace GameEngine.GameEntity
@@ -1996,7 +2057,7 @@ namespace GameEngine.GameEntity
 
         public override void BeginPlay()
         {{
-
+            
         }}
 
         public override void Update(TimeSpan gameTime)
@@ -2007,6 +2068,7 @@ namespace GameEngine.GameEntity
             
             pos.X += moveAmount;
             Parent.Position = pos;
+            Debug.Log(pos);
         }}
     }}
 }}
@@ -2345,7 +2407,6 @@ namespace GameEngine.GameEntity
                     {
                         if (confirmDialog.IsConfirm)
                         {
-                            //m_loader.RemoveScriptFromGameObject(gameObjectName, name);
                             m_loader.RemoveScriptFromGameObjectByIndex(gameObjectName, index);
                             LoadComponents(gameObjectName);
                         }
@@ -2370,6 +2431,206 @@ namespace GameEngine.GameEntity
 
 
         }
+
+        //=====================================
+        //         DEBUG MESSAGE
+        //=====================================
+
+        private void MessageLog_KeyDown(object sender, KeyEventArgs e)
+        {
+
+        }
+
+        //上手くできていない
+        public static void UpdateMessageLog(List<string> message)
+        {
+            DebugMessage.m_instance.m_message = message;
+        }
+
+        //上手くできていない
+        //public class DebugMessage : INotifyPropertyChanged
+        //{
+        //    private static readonly DebugMessage _instance = new DebugMessage();
+        //    private DebugMessage() { }
+
+        //    public static DebugMessage m_instance
+        //    {
+        //        get
+        //        {
+        //            return _instance;
+        //        }
+        //    }
+
+        //    private List<string> _message = new List<string>();
+
+        //    public List<string> m_message
+        //    {
+        //        get
+        //        {
+        //            return this._message;
+        //        }
+        //        set
+        //        {
+        //            if (value != this._message)
+        //            {
+        //                this._message = value;
+        //                NotifyPropertyChanged("m_message");
+        //            }
+        //        }
+        //    }
+
+        //    public string m_messageLast
+        //    {
+        //        get
+        //        {
+        //            return this._message.Last();
+        //        }
+        //    }
+
+        //    private void NotifyPropertyChanged(string propertyName)
+        //    {
+        //        if (PropertyChanged != null)
+        //        {
+        //            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        //        }
+        //    }
+
+        //    public event PropertyChangedEventHandler PropertyChanged;
+        //}
+
+        //上手くできていない
+        //public class PropertyChangedEventListener : IDisposable
+        //{
+        //    INotifyPropertyChanged Source;
+        //    PropertyChangedEventHandler Handler;
+
+        //    public PropertyChangedEventListener(INotifyPropertyChanged source, PropertyChangedEventHandler handler)
+        //    {
+        //        Source = source;
+        //        Handler = handler;
+        //        Source.PropertyChanged += Handler;
+        //    }
+
+        //    public void Dispose()
+        //    {
+        //        if (Source != null && Handler != null)
+        //            Source.PropertyChanged -= Handler;
+        //    }
+        //}
+
+        //public class DebugMessageReceiver : IDisposable
+        //{
+        //    IDisposable m_listener;
+        //    public DebugMessageReceiver(DebugMessage dm, Label l)
+        //    {
+        //        m_listener = new PropertyChangedEventListener(dm,
+        //            (sender, e) =>
+        //            {
+        //                if (e.PropertyName == "m_messageLast")
+        //                {
+        //                    l.Content = dm.m_messageLast;
+        //                }
+        //            }
+        //        );
+        //    }
+
+        //    public void Dispose()
+        //    {
+        //        m_listener?.Dispose();
+        //    }
+        //}
+
+
     }
+
+
+    //上手くできていない
+    public class DebugMessage : INotifyPropertyChanged
+    {
+        private static readonly DebugMessage _instance = new DebugMessage();
+        private DebugMessage() { }
+
+        public static DebugMessage m_instance
+        {
+            get
+            {
+                return _instance;
+            }
+        }
+
+
+        private List<string> _message = new List<string>();
+
+        public List<string> m_message
+        {
+            get
+            {
+                return _message;
+            }
+            set
+            {
+                if (value != _message)
+                {
+                    _message = value;
+                    if (_message.Count > 0)
+                    {
+                        m_messageLast = _message.Last();
+                    }
+                    NotifyPropertyChanged("m_message");
+                }
+            }
+        }
+
+        private string _messageLast = "hi";
+
+        public string m_messageLast
+        {
+            get
+            {
+                return _messageLast;
+            }
+            set
+            {
+                if (value != _messageLast)
+                {
+                    _messageLast = value;
+                    NotifyPropertyChanged("m_messageLast");
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged(string propertyName)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+
+            handler?.Invoke(null, new PropertyChangedEventArgs(propertyName));
+        }
+
+    }
+
+    //上手くできていない
+    //public class DebugMessage : DependencyObject
+    //{
+    //    public static readonly DependencyProperty DebugMessageProperty =
+    //        DependencyProperty.Register("m_MessageLast", typeof(string),
+    //            typeof(DebugMessage), new UIPropertyMetadata(
+    //                defaultValue:"hi"
+    //                ));
+
+    //    public string m_messageLast
+    //    {
+    //        get { return (string)GetValue(DebugMessageProperty); }
+    //        set { SetValue(DebugMessageProperty, value); }
+    //    }
+
+    //    public static DebugMessage m_instance { get; private set; }
+    //    static DebugMessage()
+    //    {
+    //        m_instance = new DebugMessage();
+    //    }
+    //}
+
 
 }
