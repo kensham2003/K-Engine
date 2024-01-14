@@ -1026,6 +1026,11 @@ namespace GameEngine
             ObjectToInspector();
         }
 
+        private void MenuItem_PathSettings_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         //========================
         //       HIERARCHY
         //========================
@@ -2446,6 +2451,7 @@ namespace GameEngine.GameEntity
         {
             DebugMessage.m_instance.m_message = message;
         }
+
 
         //上手くできていない
         //public class DebugMessage : INotifyPropertyChanged

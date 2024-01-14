@@ -9,7 +9,7 @@
         xmlns:controls="clr-namespace:TsNode.Controls;assembly=TsNode"
         mc:Ignorable="d"
         xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
-        Title="MainWindow"
+        Title="K Engine"
 		Closing="MainWindow_Closing"
 		Loaded="MainWindow_Loaded">
 	<!--Height="600" Width="1000"-->
@@ -46,6 +46,10 @@
 			<MenuItem Header="シミュレート">
 				<MenuItem x:Name="MenuItem_SimulatePlay" Header="プレイ" Click="MenuItem_Simulate_Play_Click"/>
 				<MenuItem x:Name="MenuItem_SimulateStop" Header="停止" Click="MenuItem_Simulate_Stop_Click" Visibility="Collapsed"/>
+			</MenuItem>
+
+			<MenuItem Header="設定">
+				<MenuItem x:Name="MenuItem_PathSettings" Header="各種パス設定" Click="MenuItem_PathSettings_Click"/>
 			</MenuItem>
 		</Menu>
 

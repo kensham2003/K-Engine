@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameEngine"
         mc:Ignorable="d"
-        Title="userInputDialog" Height="275" Width="450">
+        Title="Add Component" Height="275" Width="450">
     <Grid>
 		<!--<StackPanel>-->
 			<TextBlock Text="クラス名を入力：" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="150,0,150,150" RenderTransformOrigin="0,0"/>

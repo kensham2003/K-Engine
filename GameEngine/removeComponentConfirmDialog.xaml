@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameEngine"
         mc:Ignorable="d"
-        Title="removeComponentConfirmDialog" Height="275" Width="400">
+        Title="Remove Component" Height="275" Width="400">
     <Grid>
 		<TextBlock x:Name="textBlock" Text="ああああああああああああああああああああああ" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 0, 100"/>
 		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
