@@ -259,6 +259,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="pathSettingWindow.xaml.cs">
+      <DependentUpon>pathSettingWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="removeComponentConfirmDialog.xaml.cs">
       <DependentUpon>removeComponentConfirmDialog.xaml</DependentUpon>
     </Compile>
@@ -283,6 +286,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="pathSettingWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="removeComponentConfirmDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

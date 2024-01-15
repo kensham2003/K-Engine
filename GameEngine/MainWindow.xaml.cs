@@ -108,6 +108,9 @@ namespace GameEngine
 
         bool m_slnOpening = false;
 
+        //string m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
+        public static string m_devenvPath = "";
+
         //private static List<string> _Message = new List<string>();
 
         //public static List<string> m_Message
@@ -207,6 +210,18 @@ namespace GameEngine
             this.InitializeComponent();
             this.DataContext = DebugMessage.m_instance.m_messageLast;
             //m_dmr = new DebugMessageReceiver(DebugMessage.m_instance, MessageLog);
+            //if (Application.Current.Resources.Contains("m_devenvPath"))
+            //{
+            //    m_devenvPath = Application.Current.Resources["m_devenvPath"].ToString();
+            //}
+            //if (App.g_devenvPath != null)
+            //{
+            //    m_devenvPath = App.g_devenvPath;
+            //}
+            if(m_devenvPath == "")
+            {
+                m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
+            }
             m_instance = this;
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
@@ -1028,7 +1043,13 @@ namespace GameEngine
 
         private void MenuItem_PathSettings_Click(object sender, RoutedEventArgs e)
         {
-
+            var dialog = new pathSettingWindow(m_devenvPath);
+            if (dialog.ShowDialog() == true)
+            {
+                m_devenvPath = dialog.m_devenvPath;
+                //Application.Current.Resources["m_devenvPath"] = m_devenvPath;
+                //App.g_devenvPath = m_devenvPath;
+            }
         }
 
         //========================
@@ -2385,7 +2406,8 @@ namespace GameEngine.GameEntity
                     }
 
                     //devenv.exeを使って対象の.csファイルをsln内に開く
-                    var devEnvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe";
+                    //var devEnvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe";
+                    string devEnvPath = m_devenvPath + @"\devenv.exe";
                     string projPath = m_scriptLibrary.FullPath;
                     var command = $"/edit \"{path}\"";
                     var cmdsi = new ProcessStartInfo
