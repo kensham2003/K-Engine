@@ -109,7 +109,7 @@ namespace GameEngine
         bool m_slnOpening = false;
 
         //string m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
-        public static string m_devenvPath = "";
+        string m_devenvPath;
 
         //private static List<string> _Message = new List<string>();
 
@@ -218,10 +218,15 @@ namespace GameEngine
             //{
             //    m_devenvPath = App.g_devenvPath;
             //}
-            if(m_devenvPath == "")
+            //if(m_devenvPath == "")
+            //{
+            //    m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
+            //}
+            if(ApplicationState.GetValue<string>("m_devenvPath") == default(string))
             {
-                m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
+                ApplicationState.SetValue("m_devenvPath", @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE");
             }
+            m_devenvPath = ApplicationState.GetValue<string>("m_devenvPath");
             m_instance = this;
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
@@ -1049,6 +1054,7 @@ namespace GameEngine
                 m_devenvPath = dialog.m_devenvPath;
                 //Application.Current.Resources["m_devenvPath"] = m_devenvPath;
                 //App.g_devenvPath = m_devenvPath;
+                ApplicationState.SetValue("m_devenvPath", m_devenvPath);
             }
         }
 
@@ -2660,5 +2666,28 @@ namespace GameEngine.GameEntity
     //    }
     //}
 
-
+    public static class ApplicationState
+    {
+        private static Dictionary<string, object> _values =
+                   new Dictionary<string, object>();
+        public static void SetValue(string key, object value)
+        {
+            if (_values.ContainsKey(key))
+            {
+                _values.Remove(key);
+            }
+            _values.Add(key, value);
+        }
+        public static T GetValue<T>(string key)
+        {
+            if (_values.ContainsKey(key))
+            {
+                return (T)_values[key];
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+    }
 }
