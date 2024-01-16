@@ -1,13 +1,14 @@
+#include "main.h"
+#include "renderer.h"
+#include "model.h"
+#include "gameObject.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
 
-#include "main.h"
-#include "renderer.h"
-#include "model.h"
-#include "gameObject.h"
+
 
 bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle, D3DXVECTOR3& outIntersectionPoint);
 

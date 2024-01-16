@@ -107,8 +107,10 @@ namespace GameEngine
         BasicFileLogger m_logger = new BasicFileLogger();
 
         bool m_slnOpening = false;
+        bool m_hostLeftButtonDown = false;
 
         //string m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
+        Settings m_settings;
         string m_devenvPath;
 
         //private static List<string> _Message = new List<string>();
@@ -208,25 +210,21 @@ namespace GameEngine
         public MainWindow()
         {
             this.InitializeComponent();
-            this.DataContext = DebugMessage.m_instance.m_messageLast;
-            //m_dmr = new DebugMessageReceiver(DebugMessage.m_instance, MessageLog);
-            //if (Application.Current.Resources.Contains("m_devenvPath"))
-            //{
-            //    m_devenvPath = Application.Current.Resources["m_devenvPath"].ToString();
-            //}
-            //if (App.g_devenvPath != null)
-            //{
-            //    m_devenvPath = App.g_devenvPath;
-            //}
-            //if(m_devenvPath == "")
-            //{
-            //    m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
-            //}
-            if(ApplicationState.GetValue<string>("m_devenvPath") == default(string))
+
+            //ユーザ設定初期化
+            m_settings = new Settings();
+            m_settings.Read();
+            //devenvのパスを設定
+            if (m_settings.Contains("m_devenvPath"))
             {
-                ApplicationState.SetValue("m_devenvPath", @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE");
+                m_devenvPath = m_settings.GetValue("m_devenvPath");
             }
-            m_devenvPath = ApplicationState.GetValue<string>("m_devenvPath");
+            else
+            {
+                //デフォルトパス
+                m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
+                m_settings.SaveString("m_devenvPath", m_devenvPath);
+            }
             m_instance = this;
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
@@ -250,15 +248,12 @@ namespace GameEngine
             DataContext = new MainWindowDataContext();
 
             //ゲームループ
-            //m_gameLoop = new GameLoopClass();
-            //m_game = new Game();
-            //m_gameLoop.Load(m_game);
-            //m_gameLoop.Start();
             m_sandbox = new Sandbox();
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
+            //ファイルウォッチャーを初期化
             m_fileSystemWatcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/asset", "*.cs");
             m_fileSystemWatcher.EnableRaisingEvents = true;
             m_fileSystemWatcher.IncludeSubdirectories = true;
@@ -735,7 +730,9 @@ namespace GameEngine
         //左クリック：レイキャストして一番近いオブジェクトを選択
         private void Host_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            m_hostLeftButtonDown = true;
             Point localMousePosition = e.GetPosition(host);
+            oldMousePosition = localMousePosition;
             double height = host.ActualHeight;
             double width = host.ActualWidth;
             localMousePosition.Y -= height / 2;
@@ -759,6 +756,12 @@ namespace GameEngine
                     }
                 }
             }
+        }
+
+        private void Host_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            m_hostLeftButtonDown = false;
+            oldMousePosition = e.GetPosition(host);
         }
 
         //右ボタン押しながら+WASD：カメラを移動
@@ -793,6 +796,12 @@ namespace GameEngine
 
         private void Host_MouseMove(object sender, MouseEventArgs e)
         {
+            //ダイアログをクリックなどで誤反応を防止するためトリガーしたかをチェック
+            //シミュレート中は動かせないように
+            if (!m_hostLeftButtonDown || m_simulating)
+            {
+                return;
+            }
             Point mousePosition = e.GetPosition(host);
             Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));
             Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));
@@ -1052,9 +1061,7 @@ namespace GameEngine
             if (dialog.ShowDialog() == true)
             {
                 m_devenvPath = dialog.m_devenvPath;
-                //Application.Current.Resources["m_devenvPath"] = m_devenvPath;
-                //App.g_devenvPath = m_devenvPath;
-                ApplicationState.SetValue("m_devenvPath", m_devenvPath);
+                m_settings.SaveString("m_devenvPath", m_devenvPath);
             }
         }
 
@@ -2010,6 +2017,7 @@ namespace GameEngine
         //               FUNCTIONAL
         //===========================================
 
+
         public static IEnumerable<T> FindChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj == null) yield return (T)Enumerable.Empty<T>();
@@ -2184,6 +2192,7 @@ namespace GameEngine.GameEntity
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             m_simulating = false;
+            m_settings.Save();
         }
 
         //「/asset」の中にあるDllファイルを全部リロード
@@ -2465,229 +2474,75 @@ namespace GameEngine.GameEntity
 
         }
 
+
+
         //=====================================
-        //         DEBUG MESSAGE
+        //         USER SETTINGS
         //=====================================
 
-        private void MessageLog_KeyDown(object sender, KeyEventArgs e)
+        public class Settings
         {
+            public Dictionary<string, string> m_settingDict = new Dictionary<string, string>();
 
-        }
-
-        //上手くできていない
-        public static void UpdateMessageLog(List<string> message)
-        {
-            DebugMessage.m_instance.m_message = message;
-        }
-
-
-        //上手くできていない
-        //public class DebugMessage : INotifyPropertyChanged
-        //{
-        //    private static readonly DebugMessage _instance = new DebugMessage();
-        //    private DebugMessage() { }
-
-        //    public static DebugMessage m_instance
-        //    {
-        //        get
-        //        {
-        //            return _instance;
-        //        }
-        //    }
-
-        //    private List<string> _message = new List<string>();
-
-        //    public List<string> m_message
-        //    {
-        //        get
-        //        {
-        //            return this._message;
-        //        }
-        //        set
-        //        {
-        //            if (value != this._message)
-        //            {
-        //                this._message = value;
-        //                NotifyPropertyChanged("m_message");
-        //            }
-        //        }
-        //    }
-
-        //    public string m_messageLast
-        //    {
-        //        get
-        //        {
-        //            return this._message.Last();
-        //        }
-        //    }
-
-        //    private void NotifyPropertyChanged(string propertyName)
-        //    {
-        //        if (PropertyChanged != null)
-        //        {
-        //            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        //        }
-        //    }
-
-        //    public event PropertyChangedEventHandler PropertyChanged;
-        //}
-
-        //上手くできていない
-        //public class PropertyChangedEventListener : IDisposable
-        //{
-        //    INotifyPropertyChanged Source;
-        //    PropertyChangedEventHandler Handler;
-
-        //    public PropertyChangedEventListener(INotifyPropertyChanged source, PropertyChangedEventHandler handler)
-        //    {
-        //        Source = source;
-        //        Handler = handler;
-        //        Source.PropertyChanged += Handler;
-        //    }
-
-        //    public void Dispose()
-        //    {
-        //        if (Source != null && Handler != null)
-        //            Source.PropertyChanged -= Handler;
-        //    }
-        //}
-
-        //public class DebugMessageReceiver : IDisposable
-        //{
-        //    IDisposable m_listener;
-        //    public DebugMessageReceiver(DebugMessage dm, Label l)
-        //    {
-        //        m_listener = new PropertyChangedEventListener(dm,
-        //            (sender, e) =>
-        //            {
-        //                if (e.PropertyName == "m_messageLast")
-        //                {
-        //                    l.Content = dm.m_messageLast;
-        //                }
-        //            }
-        //        );
-        //    }
-
-        //    public void Dispose()
-        //    {
-        //        m_listener?.Dispose();
-        //    }
-        //}
-
-
-    }
-
-
-    //上手くできていない
-    public class DebugMessage : INotifyPropertyChanged
-    {
-        private static readonly DebugMessage _instance = new DebugMessage();
-        private DebugMessage() { }
-
-        public static DebugMessage m_instance
-        {
-            get
+            JsonSerializerOptions options = new JsonSerializerOptions()
             {
-                return _instance;
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+                WriteIndented = true,
+                IncludeFields = true,
+            };
+
+            //設定をファイルに出力
+            public void Save()
+            {
+
+
+                string fileName = "Settings.json";
+                string jsonString = JsonSerializer.Serialize(m_settingDict, options);
+                File.WriteAllText(fileName, jsonString);
             }
-        }
 
-
-        private List<string> _message = new List<string>();
-
-        public List<string> m_message
-        {
-            get
+            //設定をファイルから読み込む
+            public void Read()
             {
-                return _message;
-            }
-            set
-            {
-                if (value != _message)
+                string fileName = "Settings.json";
+                string jsonString;
+
+                try
                 {
-                    _message = value;
-                    if (_message.Count > 0)
-                    {
-                        m_messageLast = _message.Last();
-                    }
-                    NotifyPropertyChanged("m_message");
+                    jsonString = File.ReadAllText(fileName);
+                    m_settingDict = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString, options);
                 }
-            }
-        }
-
-        private string _messageLast = "hi";
-
-        public string m_messageLast
-        {
-            get
-            {
-                return _messageLast;
-            }
-            set
-            {
-                if (value != _messageLast)
+                catch(Exception ex) //ファイルが存在しない場合
                 {
-                    _messageLast = value;
-                    NotifyPropertyChanged("m_messageLast");
+                    File.WriteAllText(fileName, "");
                 }
+                
+                
+            }
+
+            //key valueペアを保存
+            public void SaveString(string key, string value)
+            {
+                m_settingDict[key] = value;
+                Save();
+            }
+
+            //keyが存在しているかチェック
+            public bool Contains(string key)
+            {
+                return m_settingDict.ContainsKey(key);
+            }
+
+            //keyに対応している値を取り出す
+            public string GetValue(string key)
+            {
+                return m_settingDict[key];
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged(string propertyName)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-
-            handler?.Invoke(null, new PropertyChangedEventArgs(propertyName));
-        }
 
     }
 
-    //上手くできていない
-    //public class DebugMessage : DependencyObject
-    //{
-    //    public static readonly DependencyProperty DebugMessageProperty =
-    //        DependencyProperty.Register("m_MessageLast", typeof(string),
-    //            typeof(DebugMessage), new UIPropertyMetadata(
-    //                defaultValue:"hi"
-    //                ));
 
-    //    public string m_messageLast
-    //    {
-    //        get { return (string)GetValue(DebugMessageProperty); }
-    //        set { SetValue(DebugMessageProperty, value); }
-    //    }
 
-    //    public static DebugMessage m_instance { get; private set; }
-    //    static DebugMessage()
-    //    {
-    //        m_instance = new DebugMessage();
-    //    }
-    //}
-
-    public static class ApplicationState
-    {
-        private static Dictionary<string, object> _values =
-                   new Dictionary<string, object>();
-        public static void SetValue(string key, object value)
-        {
-            if (_values.ContainsKey(key))
-            {
-                _values.Remove(key);
-            }
-            _values.Add(key, value);
-        }
-        public static T GetValue<T>(string key)
-        {
-            if (_values.ContainsKey(key))
-            {
-                return (T)_values[key];
-            }
-            else
-            {
-                return default(T);
-            }
-        }
-    }
 }

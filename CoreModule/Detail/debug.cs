@@ -17,7 +17,7 @@ namespace GameEngine.Detail
 
         public static void Log(object message)
         {
-            m_log.Add(message.ToString());
+            m_log.Add("(" + DateTime.Now.ToString("h:mm:ss") + ")  " + message.ToString());
         }
     }
 }

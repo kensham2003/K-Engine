@@ -62,9 +62,6 @@ namespace GameEngine.GameLoop
                     GameEngine.MainWindow.NativeMethods.InvokeWithDllProtection(() => GameEngine.MainWindow.NativeMethods.SetObjectTransform(gameObject.Name, gameObject.Position, gameObject.Rotation, gameObject.Scale));
                 }
             }
-
-            //上手くできていない
-            MainWindow.UpdateMessageLog(Debug.m_log);
         }
 
         public void AddGameObject(GameObject gameObject, int layer)

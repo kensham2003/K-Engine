@@ -53,7 +53,6 @@ namespace GameEngine
 
         private void MouseDoubleClick_Dialog(object sender, MouseButtonEventArgs e)
         {
-            //int index = this.ComponentListbox.IndexFromPoint()
             string item = ComponentListbox.SelectedItem.ToString();
             InputBox.Text = item;
             DialogResult = true;

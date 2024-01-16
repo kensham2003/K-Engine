@@ -62,7 +62,7 @@
 
 		<GridSplitter Grid.Row="1" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
 
-		<Grid Grid.Row="1" Grid.Column="2" x:Name="host" AllowDrop="True" PreviewDrop="Host_PreviewDrop" MouseMove="Host_MouseMove" MouseWheel="Host_MouseWheel" MouseLeftButtonDown="Host_MouseLeftButtonDown" MouseRightButtonDown="Host_MouseRightButtonDown" MouseUp="Host_MouseUp" Focusable="True">
+		<Grid Grid.Row="1" Grid.Column="2" x:Name="host" AllowDrop="True" PreviewDrop="Host_PreviewDrop" MouseMove="Host_MouseMove" MouseWheel="Host_MouseWheel" MouseLeftButtonDown="Host_MouseLeftButtonDown" MouseLeftButtonUp="Host_MouseLeftButtonUp" MouseRightButtonDown="Host_MouseRightButtonDown" MouseUp="Host_MouseUp" Focusable="True">
 			<Image>
 				<Image.Source>
 					<DXExtensions:D3D11Image x:Name="InteropImage" />
@@ -244,9 +244,7 @@
 		</TabControl>
 
 		<Grid Grid.Row="4" Grid.ColumnSpan="5">
-			<!--<Label x:Name="MessageLog" Content="{Binding Source={x:Static local:MainWindow.m_MessageLast}}"/>-->
-			<Label x:Name="MessageLog" Content="{Binding Source={x:Static local:DebugMessage.m_instance}, Path=m_messageLast}"/>
-			<!--<Label x:Name="MessageLog" Content=""/>-->
+			<Label x:Name="MessageLog" Content=""/>
 		</Grid>
 	</Grid>
 </Window>
