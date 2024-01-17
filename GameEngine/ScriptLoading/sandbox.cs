@@ -6,10 +6,6 @@
 /// 
 ////////////////////////////////////////
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameEngine.ScriptLoading
 {
@@ -17,7 +13,10 @@ namespace GameEngine.ScriptLoading
     {
         public AppDomain m_appDomain { get; set; }
 
-        //新しいAppDomainを作成
+        
+        /// <summary>
+        /// 新しいAppDomainを作成
+        /// </summary>
         public void InitSandbox()
         {
             m_appDomain = AppDomain.CreateDomain("Sandbox");

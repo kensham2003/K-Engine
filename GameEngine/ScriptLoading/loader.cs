@@ -1,33 +1,26 @@
-﻿////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////
 ///
 ///  Loaderクラス
 ///  
-///  機能：ゲームループ管理用クラス
+///  機能：シミュレート用ゲーム環境全般を管理するクラス
 /// 
-////////////////////////////////////////
-
+/////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using GameEngine;
 using GameEngine.Detail;
 using GameEngine.GameEntity;
 using GameEngine.GameLoop;
-using System.Runtime.CompilerServices;
 
 namespace GameEngine.ScriptLoading
 {
     public class Loader : MarshalByRefObject
     {
         public List<GameObject> m_gameObjects = new List<GameObject>();
-        GameEngine.GameLoop.GameLoop m_gameLoop;
+        GameLoop.GameLoop m_gameLoop;
         Game m_game;
 
         //シーンオブジェクトをシリアライズした文字列
@@ -38,6 +31,10 @@ namespace GameEngine.ScriptLoading
 
         private Assembly m_Assembly;
 
+
+        /// <summary>
+        /// Loaderの初期化
+        /// </summary>
         public void InitDomain()
         {
             m_nameAssemblyDict = new Dictionary<string, Assembly>();
@@ -49,6 +46,11 @@ namespace GameEngine.ScriptLoading
             m_gameLoop.Start();
         }
 
+
+        /// <summary>
+        /// Loaderの終了処理
+        /// </summary>
+        /// <returns>シリアライズされたゲームオブジェクト情報</returns>
         public string UninitDomain()
         {
             m_serializeStr = Serialize();
@@ -56,7 +58,11 @@ namespace GameEngine.ScriptLoading
             return m_serializeStr;
         }
 
-        //デシリアライズして全ゲームオブジェクトを生成
+        
+        /// <summary>
+        /// デシリアライズして全ゲームオブジェクトを生成
+        /// </summary>
+        /// <param name="str">シリアライズ文字列</param>
         public void LoadGameObjects(string str)
         {
             m_gameObjects = new List<GameObject>();
@@ -166,7 +172,11 @@ namespace GameEngine.ScriptLoading
             m_game.m_gameObjects[1] = m_gameObjects;
         }
 
-        //.dllファイルをロード
+        
+        /// <summary>
+        /// .dllファイルをロード
+        /// </summary>
+        /// <param name="dll">dllファイルのパス</param>
         public void LoadAssembly(string dll)
         {
             string fileName = System.IO.Path.GetFileNameWithoutExtension(dll);
@@ -176,17 +186,25 @@ namespace GameEngine.ScriptLoading
             m_Assembly = Assembly.LoadFile(dll);
         }
 
-        //文字ストリームからアセンブリロード（.dllでロードするため使われていない）
+
+        /// <summary>
+        /// 文字ストリームからアセンブリロード（.dllでロードするため使われていない）
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="className">クラス名</param>
         public void LoadAssembly(byte[] stream, string className)
         {
             Assembly a = Assembly.Load(stream);
             m_nameAssemblyDict.Add(className, a);
         }
 
-        //シリアライズ
+        
+        /// <summary>
+        /// オブジェクトの状態をシリアライズして一時保存
+        /// </summary>
+        /// <returns>シリアライズされた文字列</returns>
         public string Serialize()
         {
-
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
@@ -197,7 +215,11 @@ namespace GameEngine.ScriptLoading
             return JsonSerializer.Serialize(m_game.m_gameObjects[1], options);
         }
 
-        //デシリアライズ
+
+        /// <summary>
+        /// オブジェクト状態をデシリアライズ
+        /// </summary>
+        /// <param name="str">シリアライズされた文字列</param>
         public void Deserialize(string str)
         {
             JsonSerializerOptions options = new JsonSerializerOptions()
@@ -209,30 +231,55 @@ namespace GameEngine.ScriptLoading
             m_gameObjects = JsonSerializer.Deserialize<List<GameObject>>(str, options);
         }
 
+
+        /// <summary>
+        /// ゲームオブジェクトを追加
+        /// </summary>
+        /// <param name="objectName">オブジェクト名</param>
+        /// <param name="modelFileName">モデルのファイル名</param>
         public void AddGameObject(string objectName, string modelFileName)
         {
             GameObject gameObject = new GameObject(objectName);
             gameObject.ModelName = modelFileName;
             gameObject.AddModel(modelFileName);
-            //gameObjects.Add(gameObject);
             m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
         }
 
+
+        /// <summary>
+        /// ゲームシミュレーションを開始
+        /// </summary>
         public void Play()
         {
             m_gameLoop.Play();
         }
 
+
+        /// <summary>
+        /// ゲームシミュレーションを停止
+        /// </summary>
         public void Stop()
         {
             m_gameLoop.Stop();
         }
 
+
+        /// <summary>
+        /// オブジェクトの名前を変える
+        /// </summary>
+        /// <param name="oldName">オブジェクトの元名前</param>
+        /// <param name="newName">オブジェクトの新しい名前</param>
         public void RenameObject(string oldName, string newName)
         {
             m_game.FindGameObject(oldName).Name = newName;
         }
 
+
+        /// <summary>
+        /// オブジェクトの位置を取得
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <returns>オブジェクトの位置ベクトル</returns>
         public SVector3 GetGameObjectPosition(string name)
         {
             GameObject gameObject = m_game.FindGameObject(name);
@@ -243,6 +290,12 @@ namespace GameEngine.ScriptLoading
             return new SVector3(0.0f, 0.0f, 0.0f);
         }
 
+
+        /// <summary>
+        /// オブジェクトの回転を取得
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <returns>オブジェクトの回転ベクトル</returns>
         public SVector3 GetGameObjectRotation(string name)
         {
             GameObject gameObject = m_game.FindGameObject(name);
@@ -253,6 +306,12 @@ namespace GameEngine.ScriptLoading
             return new SVector3(0.0f, 0.0f, 0.0f);
         }
 
+
+        /// <summary>
+        /// オブジェクトのスケールを取得
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <returns>オブジェクトのスケールベクトル</returns>
         public SVector3 GetGameObjectScale(string name)
         {
             GameObject gameObject = m_game.FindGameObject(name);
@@ -263,31 +322,61 @@ namespace GameEngine.ScriptLoading
             return new SVector3(1.0f, 1.0f, 1.0f);
         }
 
+
+        /// <summary>
+        /// オブジェクトの位置を設定
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <param name="x">position.X</param>
+        /// <param name="y">position.Y</param>
+        /// <param name="z">position.Z</param>
         public void SetGameObjectPosition(string name, float x, float y, float z)
         {
             Vector3 pos = new Vector3(x, y, z);
             m_game.FindGameObject(name).Position = pos;
         }
 
+
+        /// <summary>
+        /// オブジェクトの回転を設定
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <param name="x">rotation.X</param>
+        /// <param name="y">rotation.Y</param>
+        /// <param name="z">rotation.Z</param>
         public void SetGameObjectRotation(string name, float x, float y, float z)
         {
             Vector3 rot = new Vector3(x, y, z);
             m_game.FindGameObject(name).Rotation = rot;
         }
+
+
+        /// <summary>
+        /// オブジェクトのスケールを設定
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <param name="x">scale.X</param>
+        /// <param name="y">scale.Y</param>
+        /// <param name="z">scale.Z</param>
         public void SetGameObjectScale(string name, float x, float y, float z)
         {
             Vector3 scl = new Vector3(x, y, z);
             m_game.FindGameObject(name).Scale = scl;
         }
 
-        //スクリプトをゲームオブジェクトに追加
+
+        /// <summary>
+        /// スクリプトをゲームオブジェクトに追加
+        /// </summary>
+        /// <param name="objectName">オブジェクト名</param>
+        /// <param name="classTypeName">スクリプト名</param>
+        /// <param name="scriptPath">スクリプトのパス</param>
         public void AddScriptToGameObject(string objectName, string classTypeName, string scriptPath)
         {
             GameObject gameObject = m_game.FindGameObject(objectName);
 
 
             //対象タイプのインスタンスを生成
-            //var typeName = m_nameAssemblyDict[classTypeName].GetType("GameEngine.GameEntity." + classTypeName);
             var typeName = m_Assembly.GetType("GameEngine.GameEntity." + classTypeName);
             var instance = Activator.CreateInstance(typeName, null);
             dynamic ins = Convert.ChangeType(instance, typeName);
@@ -296,6 +385,8 @@ namespace GameEngine.ScriptLoading
             gameObject.GameScriptName.Add(classTypeName);
             FieldInfo[] fieldInfos = typeName.GetFields();
             PropertyInfo[] propInfos = typeName.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            //プロパティ情報
             GameScriptPropInfo gameScriptPropInfo = new GameScriptPropInfo();
             int propAmount = propInfos.Count();
             gameScriptPropInfo.PropAmount = propAmount;
@@ -307,6 +398,7 @@ namespace GameEngine.ScriptLoading
             }
             gameObject.GameScriptPropInfos.Add(gameScriptPropInfo);
 
+            //フィールド情報
             GameScriptPropInfo gameScriptFieldInfo = new GameScriptPropInfo();
             int fieldAmount = fieldInfos.Count();
             gameScriptFieldInfo.PropAmount = fieldAmount;
@@ -316,20 +408,18 @@ namespace GameEngine.ScriptLoading
                 gameScriptFieldInfo.PropNames.Add(fieldInfos[i].Name);
                 gameScriptFieldInfo.PropValues.Add(Convert.ToString(fieldInfos[i].GetValue(ins)));
             }
-
-            Assembly a = Assembly.GetExecutingAssembly();
-
-            Assembly gameObjAssembly = Assembly.GetAssembly(typeof(GameObject));
-
-            var internals = m_Assembly.GetCustomAttributes(typeof(InternalsVisibleToAttribute), false);
-
             gameObject.GameScriptFieldInfos.Add(gameScriptFieldInfo);
-
-
 
             gameObject.AddScript(ins, scriptPath, classTypeName);
         }
 
+
+        /// <summary>
+        /// オブジェクトから指定スクリプトを削除
+        /// ※使用先にはindexが既にあるため下の...ByIndexが代わりに使用されている
+        /// </summary>
+        /// <param name="objectName">オブジェクト名</param>
+        /// <param name="scriptName">スクリプト名</param>
         public void RemoveScriptFromGameObject(string objectName, string scriptName)
         {
             GameObject gameObject = m_game.FindGameObject(objectName);
@@ -343,6 +433,12 @@ namespace GameEngine.ScriptLoading
             gameObject.RemoveScriptAtIndex(scriptIndex);
         }
 
+
+        /// <summary>
+        /// オブジェクトのindex個目のスクリプトを（オブジェクトから）削除
+        /// </summary>
+        /// <param name="objectName">オブジェクト名</param>
+        /// <param name="index">スクリプトの何番目</param>
         public void RemoveScriptFromGameObjectByIndex(string objectName, int index)
         {
             GameObject gameObject = m_game.FindGameObject(objectName);
@@ -355,6 +451,11 @@ namespace GameEngine.ScriptLoading
             gameObject.RemoveScriptAtIndex(index);
         }
 
+        /// <summary>
+        /// 名前に対応しているオブジェクトを取得
+        /// </summary>
+        /// <param name="name">オブジェクト名</param>
+        /// <returns>指定されたオブジェクト</returns>
         public GameObject FindGameObject(string name)
         {
             foreach(GameObject gameObject in m_gameObjects)
@@ -364,29 +465,54 @@ namespace GameEngine.ScriptLoading
             return null;
         }
 
+
+        /// <summary>
+        /// オブジェクトが入っているスクリプトの名前を取得
+        /// </summary>
+        /// <param name="gameObjectName">オブジェクト名</param>
+        /// <returns>オブジェクトが入っているスクリプトのリスト</returns>
         public List<string> GetScriptsName(string gameObjectName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             return gameObject.GameScriptName;
         }
 
+
+        /// <summary>
+        /// オブジェクトが入っているスクリプトのパスを取得
+        /// </summary>
+        /// <param name="gameObjectName">オブジェクト名</param>
+        /// <returns>オブジェクトが入っているスクリプトパスのリスト</returns>
         public List<string> GetScriptsPath(string gameObjectName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             return gameObject.GameScriptPath;
         }
 
+
+        /// <summary>
+        /// オブジェクトが入っているスクリプトのプロパティ情報を取得
+        /// </summary>
+        /// <param name="gameObjectName">オブジェクト名</param>
+        /// <returns>オブジェクトが入っているスクリプトのプロパティ情報のリスト</returns>
         public List<GameScriptPropInfo> GetScriptsPropInfos(string gameObjectName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             return gameObject.GameScriptPropInfos;
         }
 
+
+        /// <summary>
+        /// オブジェクトが入っているスクリプトのフィールド情報を取得
+        /// </summary>
+        /// <param name="gameObjectName">オブジェクト名</param>
+        /// <returns>オブジェクトが入っているスクリプトのフィールド情報のリスト</returns>
         public List<GameScriptPropInfo> GetScriptsFieldInfos(string gameObjectName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             return gameObject.GameScriptFieldInfos;
         }
+
 
         /// <summary>
         /// プロパティ／フィールドの値を変更
@@ -401,7 +527,6 @@ namespace GameEngine.ScriptLoading
                 if (gameObject.GameScriptName[i] != scriptName) { continue; }
 
                 //新しいインスタンスを生成
-                //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                 var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                 var instance = Activator.CreateInstance(typeName, null);
                 dynamic ins = Convert.ChangeType(instance, typeName);
@@ -490,8 +615,14 @@ namespace GameEngine.ScriptLoading
             return null;
         }
 
+
+        /// <summary>
+        /// 追加されているスクリプト名のリストを取得
+        /// </summary>
+        /// <returns>追加されているスクリプト名のリスト</returns>
         public List<string> GetScriptsList()
         {
+            //タイプ名が「GameEngine.GameEntity.スクリプト名」になっているので前半は不要
             const string remove = "GameEngine.GameEntity.";
             Type[] type = m_Assembly.GetTypes();
             List<string> output = new List<string>();
@@ -499,6 +630,7 @@ namespace GameEngine.ScriptLoading
             {
                 string typeString = type[i].ToString();
                 int removeIndex = typeString.IndexOf(remove);
+                //アウトプット文字列の「GameEngine.GameEntity.」部分を消す
                 string classString = (removeIndex < 0)
                     ? typeString
                     : typeString.Remove(removeIndex, remove.Length);
@@ -507,6 +639,13 @@ namespace GameEngine.ScriptLoading
             return output;
         }
 
+
+        /// <summary>
+        /// オブジェクトが指定されたスクリプトを入っているがをチェック
+        /// </summary>
+        /// <param name="gameObjectName">オブジェクト名</param>
+        /// <param name="targetScriptName">対象スクリプト名</param>
+        /// <returns>入っているならTrue、ないならFalse</returns>
         public bool IsObjectContainingScript(string gameObjectName, string targetScriptName)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
@@ -520,6 +659,11 @@ namespace GameEngine.ScriptLoading
             return false;
         }
 
+
+        /// <summary>
+        /// デバッグログを取得
+        /// </summary>
+        /// <returns>デバッグログのリスト</returns>
         public List<string> GetDebugMessage()
         {
             return Debug.m_log;

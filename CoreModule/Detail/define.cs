@@ -1,8 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿////////////////////////////////////////
+///
+///  Detailクラス
+///  
+///  機能：各種定数を定義するクラス
+/// 
+////////////////////////////////////////
 
 namespace GameEngine.Detail
 {

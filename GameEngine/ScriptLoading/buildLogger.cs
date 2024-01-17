@@ -1,4 +1,13 @@
-﻿using System;
+﻿////////////////////////////////////////
+///
+///  BasicFileLoggerクラス
+///  
+///  機能：ビルドログの作成を制御するクラス
+///  
+/// ソース：https://learn.microsoft.com/ja-jp/visualstudio/msbuild/build-loggers?view=vs-2022
+/// 
+////////////////////////////////////////
+using System;
 using System.IO;
 using System.Security;
 using Microsoft.Build.Framework;

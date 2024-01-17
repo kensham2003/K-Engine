@@ -1,9 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿////////////////////////////////////////
+///
+///  Inputクラス
+///  
+///  機能：ユーザのキー入力を管理するクラス
+/// 
+////////////////////////////////////////
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GameEngine.Detail
@@ -23,6 +26,12 @@ namespace GameEngine.Detail
             [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
             private static extern short GetKeyState(int keyCode);
 
+
+            /// <summary>
+            /// キーの状態を取得
+            /// </summary>
+            /// <param name="key">キー名</param>
+            /// <returns></returns>
             private static KeyStates GetKeyState(Keys key)
             {
                 KeyStates state = KeyStates.None;
@@ -41,11 +50,23 @@ namespace GameEngine.Detail
                 return state;
             }
 
+
+            /// <summary>
+            /// キーが押されているかをチェック
+            /// </summary>
+            /// <param name="key">キー名</param>
+            /// <returns></returns>
             public static bool IsKeyDown(Keys key)
             {
                 return KeyStates.Down == (GetKeyState(key) & KeyStates.Down);
             }
 
+
+            /// <summary>
+            /// キーの今フレームの状態が変わったか
+            /// </summary>
+            /// <param name="key">キー名</param>
+            /// <returns></returns>
             public static bool IsKeyToggled(Keys key)
             {
                 return KeyStates.Toggled == (GetKeyState(key) & KeyStates.Toggled);

@@ -271,6 +271,7 @@
     <Compile Include="userInputDialog.xaml.cs">
       <DependentUpon>userInputDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserSettings\Settings.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -279,7 +280,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CodeGenerator\sourceGenerator.cs" />
     <Compile Include="GameLoop\game.cs" />
     <Compile Include="GameLoop\gameLoop.cs" />
     <Compile Include="MainWindow.xaml.cs">

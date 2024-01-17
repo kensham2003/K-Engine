@@ -1,7 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿////////////////////////////////////////
+///
+///  GameLoopクラス
+///  
+///  機能：ゲームループを制御するクラス
+/// 
+////////////////////////////////////////
+using System;
 using System.Threading.Tasks;
 
 namespace GameEngine.GameLoop
@@ -14,8 +18,17 @@ namespace GameEngine.GameLoop
 
         private bool m_simulate { get; set; }
 
+
+        /// <summary>
+        /// シミュレート用ゲーム環境をロード
+        /// </summary>
+        /// <param name="game">ゲームのインスタンス</param>
         public void Load(Game game) { m_game = game; }
 
+
+        /// <summary>
+        /// ゲームループを初期化
+        /// </summary>
         public async void Start()
         {
             if (m_game == null)
@@ -42,17 +55,29 @@ namespace GameEngine.GameLoop
             }
         }
 
+
+        /// <summary>
+        /// シミュレートを開始させる
+        /// </summary>
         public void Play()
         {
             m_simulate = true;
             m_game.m_firstFrame = true;
         }
 
+
+        /// <summary>
+        /// シミュレートを停止させる
+        /// </summary>
         public void Stop()
         {
             m_simulate = false;
         }
 
+
+        /// <summary>
+        /// ゲームループを終了
+        /// </summary>
         public void Quit()
         {
             m_running = false;
