@@ -62,8 +62,6 @@ namespace GameEngine
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static MainWindow m_instance { get; private set; }
-
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
@@ -103,7 +101,7 @@ namespace GameEngine
         Sandbox m_sandbox;
         Loader m_loader;
 
-        Microsoft.Build.Evaluation.Project m_scriptLibrary;
+        Project m_scriptLibrary;
         BasicFileLogger m_logger = new BasicFileLogger();
 
         bool m_slnOpening = false;
@@ -225,7 +223,6 @@ namespace GameEngine
                 m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
                 m_settings.SaveString("m_devenvPath", m_devenvPath);
             }
-            m_instance = this;
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
 
@@ -2079,6 +2076,7 @@ using System.Text;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+using System.Windows.Forms;
 using GameEngine.Detail;
 
 
@@ -2161,6 +2159,7 @@ namespace GameEngine.GameEntity
                 "System.Text",
                 "System.Numerics",
                 "System.Threading.Tasks",
+                "System.Windows.Forms",
                 "GameEngine.GameEntity"
             };
         //スクリプトコンパイル用
@@ -2173,6 +2172,7 @@ namespace GameEngine.GameEntity
                 MetadataReference.CreateFromFile(string.Format(runtimePath, "System")),
                 MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Core")),
                 MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Numerics")),
+                MetadataReference.CreateFromFile(string.Format(runtimePath, "System.Windows.Forms")),
                 //MetadataReference.CreateFromFile("CoreModule.dll")
                 MetadataReference.CreateFromFile(typeof(Component).Assembly.Location),
             };
