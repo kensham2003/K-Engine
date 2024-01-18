@@ -2319,14 +2319,8 @@ namespace GameEngine.GameEntity
 
         private void MessageLog_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var messageWindow = new messageLogWindow(m_messageList);
-            messageWindow.Show();
-            //var dialog = new userInputDialog();
-            //if (dialog.ShowDialog() == true)
-            //{
-            //    //className = dialog.InputText;
-            //}
-            //else { return; }
+            //var messageWindow = new messageLogWindow(m_messageList);
+            //messageWindow.Show();
         }
     }
 
