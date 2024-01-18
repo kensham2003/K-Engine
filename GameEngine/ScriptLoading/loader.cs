@@ -561,6 +561,13 @@ namespace GameEngine.ScriptLoading
                                 return propInfo.PropValues[j];
                             }
                         }
+                        //対象でない場合は元の値にする
+                        else
+                        {
+                            propValue = propInfo.PropValues[j];
+                            var prop = typeName.GetProperty(propName);
+                            prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                        }
                     }
                     else
                     {
@@ -599,6 +606,13 @@ namespace GameEngine.ScriptLoading
                             {
                                 return fieldInfo.PropValues[k];
                             }
+                        }
+                        //対象でない場合は元の値にする
+                        else
+                        {
+                            fieldValue = fieldInfo.PropValues[k];
+                            var field = typeName.GetField(fieldName);
+                            field.SetValue(ins, Convert.ChangeType(fieldValue, type));
                         }
                     }
                     else
