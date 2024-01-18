@@ -8,6 +8,7 @@
 /// 
 ////////////////////////////////////////
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security;
 using Microsoft.Build.Framework;
@@ -20,12 +21,16 @@ namespace GameEngine.ScriptLoading
     // and a default empty Shutdown() implementation.
     public class BasicFileLogger : Logger
     {
+        public List<string> m_Message = new List<string>();
+
         /// <summary>
         /// Initialize is guaranteed to be called by MSBuild at the start of the build
         /// before any events are raised.
         /// </summary>
         public override void Initialize(IEventSource eventSource)
         {
+            m_Message.Clear();
+
             // The name of the log file should be passed as the first item in the
             // "parameters" specification in the /logger switch.  It is required
             // to pass a log file to this logger. Other loggers may have zero or more than 
@@ -89,6 +94,7 @@ namespace GameEngine.ScriptLoading
         {
             // BuildErrorEventArgs adds LineNumber, ColumnNumber, File, amongst other parameters
             string line = String.Format(": ERROR {0}({1},{2}): ", e.File, e.LineNumber, e.ColumnNumber);
+            m_Message.Add(e.SenderName + line + e.Message);
             WriteLineWithSenderAndMessage(line, e);
         }
 

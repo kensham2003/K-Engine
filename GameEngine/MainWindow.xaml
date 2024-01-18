@@ -221,8 +221,8 @@
 				</WindowsFormsHost>
 			</TabItem>
 
-			<TabItem Header="Web">
-				<!--<WebBrowser Source="https://assetstore.unity.com/"/>-->
+			<!--<TabItem Header="Web">
+				--><!--<WebBrowser Source="https://assetstore.unity.com/"/>--><!--
 				<cef:ChromiumWebBrowser Address="https://youtube.com/"/>
 			</TabItem>
 
@@ -239,12 +239,12 @@
                          VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
                          AcceptsTab="True" FontFamily="MS Gothic" FontSize="16"
                          KeyUp="ScriptTextBox_KeyUp"/>
-			</TabItem>
+			</TabItem>-->
 
 		</TabControl>
 
 		<Grid Grid.Row="4" Grid.ColumnSpan="5">
-			<Label x:Name="MessageLog" Content=""/>
+			<Label x:Name="MessageLog" Content="" MouseLeftButtonDown="MessageLog_MouseLeftButtonDown"/>
 		</Grid>
 	</Grid>
 </Window>

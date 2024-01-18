@@ -82,6 +82,7 @@ namespace GameEngine
 
         Project m_scriptLibrary;
         BasicFileLogger m_logger = new BasicFileLogger();
+        bool m_isSuccessfullyBuilt = true;
 
         bool m_slnOpening = false;
         bool m_hostLeftButtonDown = false;
@@ -89,7 +90,9 @@ namespace GameEngine
         Settings m_settings;
         string m_devenvPath;
 
+        //List<string> m_messageList = new List<string>();
 
+        MessageList m_messageList;
 
         public class MainWindowDataContext
         {
@@ -154,6 +157,8 @@ namespace GameEngine
                 m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
                 m_settings.SaveString("m_devenvPath", m_devenvPath);
             }
+            m_messageList = new MessageList();
+
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
 
@@ -217,7 +222,18 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            bool success = m_scriptLibrary.Build(m_logger);
+            m_messageList.Clear();
+
+            bool m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
+
+            if (!m_isSuccessfullyBuilt)
+            {
+                SetMessages(m_logger.m_Message);
+            }
+            else
+            {
+                SetMessage("");
+            }
 
             string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
             m_loader.LoadAssembly(dllPath);
@@ -252,7 +268,18 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            bool success = m_scriptLibrary.Build(m_logger);
+            m_messageList.Clear();
+
+            m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
+
+            if (!m_isSuccessfullyBuilt)
+            {
+                SetMessages(m_logger.m_Message);
+            }
+            else
+            {
+                SetMessage("");
+            }
 
             string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
             m_loader.LoadAssembly(dllPath);
@@ -811,6 +838,11 @@ namespace GameEngine
 
         private void MenuItem_Simulate_Play_Click(object sender, RoutedEventArgs e)
         {
+            if (!m_isSuccessfullyBuilt)
+            {
+                MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
             MenuItem_SimulateStop.Visibility = Visibility.Visible;
             m_loader.Play();
@@ -855,8 +887,11 @@ namespace GameEngine
                         List<string> debugMessage = m_loader.GetDebugMessage();
                         if (debugMessage.Count() > 0)
                         {
-                            MessageLog.Content = debugMessage.Last();
+                            //MessageLog.Content = debugMessage.Last();
+                            m_loader.ClearDebugLog();
+                            SetMessages(debugMessage);
                         }
+                        
                     });
 
                     now = DateTime.Now;
@@ -991,7 +1026,7 @@ namespace GameEngine
                 m_loader.SetGameObjectScale(objectName, gameObject.Scale.X, gameObject.Scale.Y, gameObject.Scale.Z);
 
             }
-            ScriptTextBox.Text = gameObject.Script;
+            //ScriptTextBox.Text = gameObject.Script;
         }
 
         private void InspectorToObject()
@@ -1049,7 +1084,7 @@ namespace GameEngine
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
                 m_loader.SetGameObjectScale(objectName, scale.X, scale.Y, scale.Z);
             }
-            gameObject.Script = ScriptTextBox.Text;
+            //gameObject.Script = ScriptTextBox.Text;
         }
 
         //=================================
@@ -1803,6 +1838,24 @@ namespace GameEngine
         //===========================================
 
 
+        public void SetMessage(string message)
+        {
+            m_messageList.Add(message);
+            this.Dispatcher.Invoke(() =>
+            {
+                MessageLog.Content = message;
+            });
+        }
+
+        public void SetMessages(List<string> messages)
+        {
+            m_messageList.AddRange(messages);
+            this.Dispatcher.Invoke(() =>
+            {
+                MessageLog.Content = m_messageList.Last();
+            });
+        }
+
         public static IEnumerable<T> FindChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj == null) yield return (T)Enumerable.Empty<T>();
@@ -2006,11 +2059,21 @@ namespace GameEngine.GameEntity
                 m_scriptLibrary.AddItem("Compile", cs);
             }
             m_scriptLibrary.Save();
+
+            m_messageList.Clear();
             //ScriptLibraryソリューションをビルド
             //（VSでエンジンを起動してビルドすると失敗する可能性がある）
             //（→.exeを起動するのが推奨）
-            bool success = m_scriptLibrary.Build(m_logger);
+            m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
 
+            if (!m_isSuccessfullyBuilt)
+            {
+                SetMessages(m_logger.m_Message);
+            }
+            else
+            {
+                SetMessage("");
+            }
             //ビルドした.dllをロード
             string dllPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.dll";
             m_loader.LoadAssembly(dllPath);
@@ -2254,6 +2317,17 @@ namespace GameEngine.GameEntity
 
         }
 
+        private void MessageLog_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var messageWindow = new messageLogWindow(m_messageList);
+            messageWindow.Show();
+            //var dialog = new userInputDialog();
+            //if (dialog.ShowDialog() == true)
+            //{
+            //    //className = dialog.InputText;
+            //}
+            //else { return; }
+        }
     }
 
 

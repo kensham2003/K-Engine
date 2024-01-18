@@ -259,6 +259,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DebugMessage\messageList.cs" />
+    <Compile Include="messageLogWindow.xaml.cs">
+      <DependentUpon>messageLogWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="pathSettingWindow.xaml.cs">
       <DependentUpon>pathSettingWindow.xaml</DependentUpon>
     </Compile>
@@ -286,6 +290,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="messageLogWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="pathSettingWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

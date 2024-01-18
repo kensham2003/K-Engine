@@ -680,7 +680,16 @@ namespace GameEngine.ScriptLoading
         /// <returns>デバッグログのリスト</returns>
         public List<string> GetDebugMessage()
         {
+            //List<string> output = Debug.m_log;
+            //Debug.ClearLog();
+            //return output;
             return Debug.m_log;
+        }
+
+
+        public void ClearDebugLog()
+        {
+            Debug.ClearLog();
         }
     }
 }
