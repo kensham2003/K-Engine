@@ -865,6 +865,15 @@ namespace GameEngine
                 {
                     this.Dispatcher.Invoke(() =>
                     {
+                        //デバッグログを取得
+                        List<string> debugMessage = m_loader.GetDebugMessage();
+                        if (debugMessage.Count() > 0)
+                        {
+                            //MessageLog.Content = debugMessage.Last();
+                            m_loader.ClearDebugLog();
+                            SetMessages(debugMessage);
+                        }
+
                         GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
                         if (inspectorObject == null) return;
 
@@ -882,16 +891,6 @@ namespace GameEngine
                         ScaleX.Text = Scl.X.ToString("F2");
                         ScaleY.Text = Scl.Y.ToString("F2");
                         ScaleZ.Text = Scl.Z.ToString("F2");
-
-                        //デバッグログを取得
-                        List<string> debugMessage = m_loader.GetDebugMessage();
-                        if (debugMessage.Count() > 0)
-                        {
-                            //MessageLog.Content = debugMessage.Last();
-                            m_loader.ClearDebugLog();
-                            SetMessages(debugMessage);
-                        }
-                        
                     });
 
                     now = DateTime.Now;
