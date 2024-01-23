@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameEngine.MVVM.View"
         mc:Ignorable="d"
-        Title="messageWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="Message Log" Height="250" Width="600"
+		Loaded="MessageWindow_Loaded">
+	<Grid>
+		<ListView x:Name="MessageLogListView" 
+				  ItemsSource="{Binding Path=ItemsService.Items}"/>
+	</Grid>
 </Window>

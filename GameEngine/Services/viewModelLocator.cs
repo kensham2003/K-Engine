@@ -17,7 +17,6 @@ namespace GameEngine.Services
         }
 
         public MainViewModel m_mainViewModel => _provider.GetRequiredService<MainViewModel>();
-        public SettingsViewModel m_settingsViewModel => _provider.GetRequiredService<SettingsViewModel>();
         public MessageViewModel m_messageViewModel => _provider.GetRequiredService<MessageViewModel>();
     }
 }

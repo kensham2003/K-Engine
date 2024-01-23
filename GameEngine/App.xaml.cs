@@ -23,7 +23,6 @@ namespace GameEngine
         public App()
         {
             m_services.AddSingleton<MainViewModel>();
-            m_services.AddSingleton<SettingsViewModel>();
             m_services.AddSingleton<MessageViewModel>();
 
             m_services.AddSingleton<ViewModelLocator>();

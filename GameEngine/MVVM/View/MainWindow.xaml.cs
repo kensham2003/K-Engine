@@ -37,6 +37,7 @@ using GameEngine.ScriptLoading;
 
 using Component = GameEngine.GameEntity.Component;
 using System.Diagnostics;
+using GameEngine.MVVM.ViewModel;
 
 namespace GameEngine
 {
@@ -45,6 +46,8 @@ namespace GameEngine
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainViewModel m_mainViewModel;
+
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
@@ -90,58 +93,54 @@ namespace GameEngine
         Settings m_settings;
         string m_devenvPath;
 
-        //List<string> m_messageList = new List<string>();
+        //public class MainWindowDataContext
+        //{
+        //    public ObservableCollection<INodeDataContext> Nodes { get; set; }
+        //    public ObservableCollection<IConnectionDataContext> Connections { get; set; }
 
-        MessageList m_messageList;
+        //    public MainWindowDataContext()
+        //    {
+        //        Nodes = new ObservableCollection<INodeDataContext>();
+        //        Connections = new ObservableCollection<IConnectionDataContext>();
 
-        public class MainWindowDataContext
-        {
-            public ObservableCollection<INodeDataContext> Nodes { get; set; }
-            public ObservableCollection<IConnectionDataContext> Connections { get; set; }
+        //        //ノード一個目を作る
+        //        var node1 = new PresetNodeViewModel()
+        //        {
+        //            OutputPlugs = new ObservableCollection<IPlugDataContext>
+        //        {
+        //            new PresentPlugViewModel(),
+        //        }
+        //        };
 
-            public MainWindowDataContext()
-            {
-                Nodes = new ObservableCollection<INodeDataContext>();
-                Connections = new ObservableCollection<IConnectionDataContext>();
+        //        //ノード二個目を作る
+        //        var node2 = new PresetNodeViewModel()
+        //        {
+        //            X = 150,
+        //            InputPlugs = new ObservableCollection<IPlugDataContext>
+        //        {
+        //            new PresentPlugViewModel(),
+        //        },
+        //        };
 
-                //ノード一個目を作る
-                var node1 = new PresetNodeViewModel()
-                {
-                    OutputPlugs = new ObservableCollection<IPlugDataContext>
-                {
-                    new PresentPlugViewModel(),
-                }
-                };
+        //        //ノードを追加する
+        //        Nodes.Add(node1);
+        //        Nodes.Add(node2);
 
-                //ノード二個目を作る
-                var node2 = new PresetNodeViewModel()
-                {
-                    X = 150,
-                    InputPlugs = new ObservableCollection<IPlugDataContext>
-                {
-                    new PresentPlugViewModel(),
-                },
-                };
+        //        //繋ぐ線を作る
+        //        var connection = new PresetConnectionViewModel()
+        //        {
+        //            SourcePlug = node1.OutputPlugs[0],
+        //            DestPlug = node2.InputPlugs[0],
+        //        };
 
-                //ノードを追加する
-                Nodes.Add(node1);
-                Nodes.Add(node2);
-
-                //繋ぐ線を作る
-                var connection = new PresetConnectionViewModel()
-                {
-                    SourcePlug = node1.OutputPlugs[0],
-                    DestPlug = node2.InputPlugs[0],
-                };
-
-                //線を追加する
-                Connections.Add(connection);
-            }
-        }
+        //        //線を追加する
+        //        Connections.Add(connection);
+        //    }
+        //}
 
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             //ユーザ設定初期化
             m_settings = new Settings();
@@ -157,7 +156,6 @@ namespace GameEngine
                 m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
                 m_settings.SaveString("m_devenvPath", m_devenvPath);
             }
-            m_messageList = new MessageList();
 
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
@@ -177,8 +175,8 @@ namespace GameEngine
                 timer.Elapsed += new ElapsedEventHandler(TimerUpdate);
             }
 
-            //ノードエディタ
-            DataContext = new MainWindowDataContext();
+            ////ノードエディタ
+            //DataContext = new MainWindowDataContext();
 
             //ゲームループ
             m_sandbox = new Sandbox();
@@ -222,7 +220,7 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            m_messageList.Clear();
+            m_mainViewModel.ClearItem();
 
             bool m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
 
@@ -268,7 +266,7 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            m_messageList.Clear();
+            m_mainViewModel.ClearItem();
 
             m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
 
@@ -575,6 +573,8 @@ namespace GameEngine
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Application.Current.MainWindow = this;
+            m_mainViewModel = (MainViewModel)DataContext;
+            //MessageLog.MouseLeftButtonDown += 
         }
 
         //===============================
@@ -1839,19 +1839,19 @@ namespace GameEngine
 
         public void SetMessage(string message)
         {
-            m_messageList.Add(message);
             this.Dispatcher.Invoke(() =>
             {
                 MessageLog.Content = message;
             });
+            m_mainViewModel.AddItem(message);
         }
 
         public void SetMessages(List<string> messages)
         {
-            m_messageList.AddRange(messages);
+            m_mainViewModel.AddItem(messages);
             this.Dispatcher.Invoke(() =>
             {
-                MessageLog.Content = m_messageList.Last();
+                MessageLog.Content = m_mainViewModel.GetLastItem();
             });
         }
 
@@ -2059,7 +2059,7 @@ namespace GameEngine.GameEntity
             }
             m_scriptLibrary.Save();
 
-            m_messageList.Clear();
+            m_mainViewModel.ClearItem();
             //ScriptLibraryソリューションをビルド
             //（VSでエンジンを起動してビルドすると失敗する可能性がある）
             //（→.exeを起動するのが推奨）

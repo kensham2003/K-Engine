@@ -1,7 +1,8 @@
 ﻿<Application x:Class="GameEngine.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GameEngine">
+             xmlns:local="clr-namespace:GameEngine"
+			 ShutdownMode="OnMainWindowClose">
 	<!--StartupUri="MainWindow.xaml"-->
     <Application.Resources>
         <ResourceDictionary>

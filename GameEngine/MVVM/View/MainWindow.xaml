@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:GameEngine"
         xmlns:wfc="clr-namespace:Microsoft.WindowsAPICodePack.Controls.WindowsForms;assembly=Microsoft.WindowsAPICodePack.Shell"
         xmlns:controls="clr-namespace:TsNode.Controls;assembly=TsNode"
+		xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="K Engine"
 		Closing="MainWindow_Closing"
@@ -243,7 +244,16 @@
 		</TabControl>
 
 		<Grid Grid.Row="4" Grid.ColumnSpan="5">
-			<Label x:Name="MessageLog" Content="" MouseLeftButtonDown="MessageLog_MouseLeftButtonDown"/>
+			<!--<Grid.Resources>
+				<local:CollectionToLastConverter x:Key="CollectionToLastConverter"/>
+			</Grid.Resources>-->
+			<Label x:Name="MessageLog" Content="Welcome to K Engine!" >
+				<bh:Interaction.Triggers>
+					<bh:EventTrigger EventName="MouseLeftButtonDown">
+						<bh:InvokeCommandAction Command="{Binding Path=OpenMessageWindowCommand}"/>
+					</bh:EventTrigger>
+				</bh:Interaction.Triggers>
+			</Label>
 		</Grid>
 	</Grid>
 </Window>

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,5 +25,23 @@ namespace GameEngine.MVVM.View
         {
             InitializeComponent();
         }
+
+        private void MessageWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            ((INotifyCollectionChanged)MessageLogListView.ItemsSource).CollectionChanged += 
+                new NotifyCollectionChangedEventHandler(MessageLogChanged);
+        }
+
+        public void MessageLogChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (VisualTreeHelper.GetChildrenCount(MessageLogListView) > 0)
+            {
+                Border border = (Border)VisualTreeHelper.GetChild(MessageLogListView, 0);
+                ScrollViewer scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+                scrollViewer.ScrollToBottom();
+            }
+        }
+
+
     }
 }
