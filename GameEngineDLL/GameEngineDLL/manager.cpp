@@ -7,6 +7,7 @@
 #include "model.h"
 #include "player.h"
 #include "input.h"
+#include "boxCollider.h"
 
 
 std::list<std::shared_ptr<GameObject>> Manager::m_GameObject[5];
@@ -80,6 +81,20 @@ void Manager::AddModel(const char* ObjectName, const char* FileName)
 {
 	std::shared_ptr<GameObject> gameObject = AddGameObject(ObjectName, 1);
 	gameObject->AddComponent<Model>()->Load(FileName);
+}
+
+void Manager::AddBoxCollider(const char* ObjectName, const char* FileName) {
+	GetGameObject(ObjectName)->AddComponent<BoxCollider>()->Load(FileName);
+}
+
+bool Manager::GetMaterialTextureEnable(const char* ObjectName)
+{
+	return GetGameObject(ObjectName)->GetComponent<Model>()->GetMaterialTextureEnable();
+}
+
+int Manager::GetModelSubsetNum(const char* ObjectName)
+{
+	return GetGameObject(ObjectName)->GetComponent<Model>()->GetSubsetNum();
 }
 
 void Manager::RenameGameObject(const char* ObjectName, const char* newName) 

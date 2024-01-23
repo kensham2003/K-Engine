@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace GameEngine.GameEntity
 {
-    public class testComponent : Component
+    class testComponent : GameScript
     {
+        public testComponent() { }
         public testComponent(GameObject gameObject) : base(gameObject) { }
 
         public override void BeginPlay()

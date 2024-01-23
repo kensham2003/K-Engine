@@ -73,6 +73,10 @@ extern "C" {
 	__declspec(dllexport) void __cdecl FreeRaycastChar(char* p);
 
 	__declspec(dllexport) void __cdecl AddModel(const char* ObjectName, const char* FileName);
+	__declspec(dllexport) void __cdecl AddBoxCollider(const char* ObjectName, const char* FileName);
+
+	__declspec(dllexport) bool __cdecl GetMaterialTextureEnable(const char* ObjectName);
+	__declspec(dllexport) int __cdecl GetModelSubsetNum(const char* ObjectName);
 
 	__declspec(dllexport) void __cdecl SetScenePlaying(bool playing);
 }

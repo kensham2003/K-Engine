@@ -146,6 +146,21 @@ void AddModel(const char* ObjectName, const char* FileName)
 	Manager::AddModel(ObjectName, FileName);
 }
 
+void AddBoxCollider(const char* ObjectName, const char* FileName)
+{
+	Manager::AddBoxCollider(ObjectName, FileName);
+}
+
+bool GetMaterialTextureEnable(const char* ObjectName)
+{
+	return Manager::GetMaterialTextureEnable(ObjectName);
+}
+
+int GetModelSubsetNum(const char* ObjectName)
+{
+	return Manager::GetMaterialTextureEnable(ObjectName);
+}
+
 void SetScenePlaying(bool playing) {
 	Manager::SetPlaying(playing);
 }

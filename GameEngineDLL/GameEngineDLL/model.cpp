@@ -1,13 +1,14 @@
+#include "main.h"
+#include "renderer.h"
+#include "model.h"
+#include "gameObject.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
 
-#include "main.h"
-#include "renderer.h"
-#include "model.h"
-#include "gameObject.h"
+
 
 bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* triangle, D3DXVECTOR3& outIntersectionPoint);
 
@@ -78,7 +79,9 @@ void Model::Draw()
 		Renderer::SetMaterial( m_SubsetArray[i].Material.Material );
 
 		// テクスチャ設定
-		Renderer::GetDeviceContext()->PSSetShaderResources( 0, 1, &m_SubsetArray[i].Material.Texture );
+		if (m_SubsetArray[i].Material.Texture) {
+			Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_SubsetArray[i].Material.Texture);
+		}
 
 		// ポリゴン描画
 		Renderer::GetDeviceContext()->DrawIndexed( m_SubsetArray[i].IndexNum, m_SubsetArray[i].StartIndex, 0 );
@@ -153,7 +156,13 @@ void Model::Load( const char *FileName )
 				&m_SubsetArray[i].Material.Texture,
 				NULL);
 
-			assert(m_SubsetArray[i].Material.Texture);
+			//assert(m_SubsetArray[i].Material.Texture);
+			if (m_SubsetArray[i].Material.Texture) {
+				m_SubsetArray[i].Material.Material.TextureEnable = true;
+			}
+			else {
+				m_SubsetArray[i].Material.Material.TextureEnable = false;
+			}
 
 		}
 	}

@@ -21,7 +21,8 @@ struct MATERIAL
 	D3DXCOLOR	Specular;
 	D3DXCOLOR	Emission;
 	float		Shininess;
-	float		Dummy[3];
+	BOOL		TextureEnable;
+	float		Dummy[2];
 };
 
 
@@ -59,6 +60,11 @@ private:
 	static ID3D11DepthStencilState* m_DepthStateEnable;
 	static ID3D11DepthStencilState* m_DepthStateDisable;
 
+	static ID3D11RasterizerState* m_RasterizerStateDefault;
+	static ID3D11RasterizerState* m_RasterizerStateWireframe;
+
+	static bool m_IsDefaultRS;
+
 	static int						m_ScreenWidth;
 	static int						m_ScreenHeight;
 
@@ -89,5 +95,14 @@ public:
 	static void CreateVertexShader(ID3D11VertexShader** VertexShader, ID3D11InputLayout** VertexLayout, const char* FileName);
 	static void CreatePixelShader(ID3D11PixelShader** PixelShader, const char* FileName);
 
-
+	static void ChangeRasterizerState() {
+		if (m_IsDefaultRS) {
+			m_DeviceContext->RSSetState(m_RasterizerStateWireframe);
+			m_IsDefaultRS = false;
+		}
+		else {
+			m_DeviceContext->RSSetState(m_RasterizerStateDefault);
+			m_IsDefaultRS = true;
+		}
+	}
 };

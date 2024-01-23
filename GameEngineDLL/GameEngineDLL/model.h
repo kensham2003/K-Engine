@@ -41,7 +41,7 @@ struct MODEL
 
 class Model: public Component
 {
-private:
+protected:
 
 	ID3D11VertexShader*     m_VertexShader = NULL;
 	ID3D11PixelShader*      m_PixelShader = NULL;
@@ -64,14 +64,17 @@ private:
 	unsigned int m_IndexNum;
 
 public:
-	void Init();
+	virtual void Init();
 	void Uninit();
 	void Update();
-	void Draw();
+	virtual void Draw();
 
 	void Load( const char *FileName );
 	void Unload();
 
 	float IsRayCollide(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos);
 	int GetIndexNum() { return m_IndexNum; }
+
+	bool GetMaterialTextureEnable() { return m_SubsetArray[0].Material.Material.TextureEnable; }
+	int GetSubsetNum() { return m_SubsetNum; }
 };

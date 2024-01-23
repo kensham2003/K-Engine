@@ -13,5 +13,7 @@ namespace GameEngine
     /// </summary>
     public partial class App : Application
     {
+        public static string g_devenvPath;
     }
+    
 }

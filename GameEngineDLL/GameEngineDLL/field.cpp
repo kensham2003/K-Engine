@@ -121,6 +121,7 @@ void Field::Draw()
 	MATERIAL material;
 	ZeroMemory( &material, sizeof(material) );
 	material.Diffuse = D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f );
+	material.TextureEnable = true;
 	Renderer::SetMaterial( material );
 
 	// テクスチャ設定

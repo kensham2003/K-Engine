@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
 using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
 
 namespace GameEngine.GameEntity
 {
     [JsonDerivedType(typeof(Model))]
     [JsonDerivedType(typeof(testComponent))]
+    [JsonDerivedType(typeof(GameScript))]
+    [Serializable]
     public class Component
     {
         public string Name { get; set; }

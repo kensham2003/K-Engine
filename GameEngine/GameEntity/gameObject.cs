@@ -137,5 +137,17 @@ namespace GameEngine.GameEntity
 
             return false;
         }
+
+        public T GetScript<T>()
+        {
+            foreach(GameScript gameScript in GameScripts)
+            {
+                if(gameScript.GetType().AssemblyQualifiedName == typeof(T).AssemblyQualifiedName)
+                {
+                    return (T)Convert.ChangeType(gameScript, typeof(T));
+                }
+            }
+            return default(T);
+        }
     }
 }

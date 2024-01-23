@@ -24,7 +24,8 @@ struct MATERIAL
 	float4 Specular;
 	float4 Emission;
 	float Shininess;
-	float3 Dummy;
+	bool TextureEnable;
+	float2 Dummy;
 };
 
 cbuffer MaterialBuffer : register(b3)
