@@ -14,6 +14,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+using GameEngine.MVVM.ViewModel;
+
 namespace GameEngine.MVVM.View
 {
     /// <summary>
@@ -21,6 +23,9 @@ namespace GameEngine.MVVM.View
     /// </summary>
     public partial class messageWindow : Window
     {
+        MessageViewModel m_messageViewModel;
+        public MainWindow m_mainWindow;
+
         public messageWindow()
         {
             InitializeComponent();
@@ -30,6 +35,8 @@ namespace GameEngine.MVVM.View
         {
             ((INotifyCollectionChanged)MessageLogListView.ItemsSource).CollectionChanged += 
                 new NotifyCollectionChangedEventHandler(MessageLogChanged);
+
+            m_messageViewModel = (MessageViewModel)DataContext;
         }
 
         public void MessageLogChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -42,6 +49,29 @@ namespace GameEngine.MVVM.View
             }
         }
 
+        private void OnClearButtonClick(object sender, RoutedEventArgs e)
+        {
+            m_messageViewModel.ItemsService.ClearItem();
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window.GetType() == typeof(MainWindow))
+                {
+                    (window as MainWindow).MessageLog.Content = "";
+                }
+            }
+        }
 
+        private void MessageLogListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            object selected = MessageLogListView.SelectedItem;
+            if(selected != null)
+            {
+                MessageSelected.Content = selected.ToString();
+            }
+            else
+            {
+                MessageSelected.Content = "";
+            }
+        }
     }
 }

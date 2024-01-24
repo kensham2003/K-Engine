@@ -247,7 +247,7 @@
 			<!--<Grid.Resources>
 				<local:CollectionToLastConverter x:Key="CollectionToLastConverter"/>
 			</Grid.Resources>-->
-			<Label x:Name="MessageLog" Content="Welcome to K Engine!" >
+			<Label x:Name="MessageLog" Content="Welcome to K Engine!" x:FieldModifier="public">
 				<bh:Interaction.Triggers>
 					<bh:EventTrigger EventName="MouseLeftButtonDown">
 						<bh:InvokeCommandAction Command="{Binding Path=OpenMessageWindowCommand}"/>

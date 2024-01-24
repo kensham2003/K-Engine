@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using GameEngine.Services;
 using GameEngine.MVVM;
+using GameEngine.MVVM.View;
 
 namespace GameEngine.MVVM.ViewModel
 {
