@@ -26,6 +26,12 @@ namespace GameEngine.GameEntity
             Parent = gameObject;
         }
 
+        public Component(GameObject gameObject, string name)
+        {
+            Parent = gameObject;
+            Name = name;
+        }
+
         public GameObject GetParent() { return Parent; }
 
         public void SetParent(GameObject gameObject) { Parent = gameObject; }

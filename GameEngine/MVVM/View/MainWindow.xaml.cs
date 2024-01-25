@@ -34,10 +34,12 @@ using Microsoft.Build.Evaluation;
 
 using GameEngine.GameEntity;
 using GameEngine.ScriptLoading;
+using GameEngine.Detail;
 
 using Component = GameEngine.GameEntity.Component;
 using System.Diagnostics;
 using GameEngine.MVVM.ViewModel;
+using System.Text.RegularExpressions;
 
 namespace GameEngine
 {
@@ -1875,17 +1877,47 @@ namespace GameEngine
             //スクリプト名を入力するウインドウを起動
             //var dialog = new userInputDialog();
             List<string> scriptsList = m_loader.GetScriptsList();
-            var dialog = new userInputDialog(scriptsList);
+            List<string> componentsList = new List<string>();
+            componentsList.AddRange(scriptsList);
+            componentsList.AddRange(Define.preDefinedComponents);
+
+            var dialog = new userInputDialog(componentsList);
             if (dialog.ShowDialog() == true)
             {
                 className = dialog.InputText;
+                //入力文字列のスペースを無視
+                className = Regex.Replace(className, @"\s+", "");
             }
             else { return; }
 
             //テンプレート.csファイルを生成
             string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
+
+            //プリデファインドコンポーネントなら新しく作らずコンポーネントをそのまま追加する
+            foreach(string componentName in Define.preDefinedComponents)
+            {
+                if(componentName == upperClassName)
+                {
+                    //選択中のゲームオブジェクトに作成されたスクリプトを追加
+                    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                    //重複しているスクリプトの場合は追加しない
+                    if (m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
+                    {
+                        MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    m_loader.AddComponentToGameObject(inspectorObject.Name, upperClassName);
+
+                    //インスペクターへ反映
+                    LoadComponents(inspectorObject.Name);
+
+                    return;
+                }
+            }
+
             //リストにある名前なら新しく作らずコンポーネントをそのまま追加する
-            foreach(string scriptName in scriptsList)
+            foreach (string scriptName in scriptsList)
             {
                 if(scriptName == upperClassName)
                 {
@@ -1894,7 +1926,7 @@ namespace GameEngine
                     //重複しているスクリプトの場合は追加しない
                     if(m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
                     {
-                        MessageBox.Show(upperClassName + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
                     string scriptPath = System.IO.Path.GetFullPath("asset/" + className + ".cs");
@@ -2097,7 +2129,8 @@ namespace GameEngine.GameEntity
             {
                 var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
                 string scriptName = scriptNames[i];
-                stackPanelTemp.Children.Add(new Label { Content = scriptName });
+                //stackPanelTemp.Children.Add(new Label { Content = scriptName });
+                stackPanelTemp.Children.Add(new Label { Content = Define.AddSpacesToString(scriptName) });
 
                 var stackPanelProp = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -2314,12 +2347,6 @@ namespace GameEngine.GameEntity
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddBoxCollider(inspectorObject.Name, path));
 
 
-        }
-
-        private void MessageLog_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            //var messageWindow = new messageLogWindow(m_messageList);
-            //messageWindow.Show();
         }
     }
 

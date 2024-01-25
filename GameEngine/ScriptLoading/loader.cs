@@ -365,6 +365,20 @@ namespace GameEngine.ScriptLoading
         }
 
 
+        public void AddComponentToGameObject(string objectName, string componentTypeName)
+        {
+            GameObject gameObject = m_game.FindGameObject(objectName);
+
+            Assembly asm = typeof(GameObject).Assembly;
+            var typeName = asm.GetType("GameEngine.GameEntity." + componentTypeName);
+            object[] param = new object[] { gameObject, componentTypeName };
+            var instance = Activator.CreateInstance(typeName, param);
+            dynamic ins = Convert.ChangeType(instance, typeName);
+
+            gameObject.AddComponent(ins);
+        }
+
+
         /// <summary>
         /// スクリプトをゲームオブジェクトに追加
         /// </summary>
@@ -651,6 +665,26 @@ namespace GameEngine.ScriptLoading
                 output.Add(classString);
             }
             return output;
+        }
+
+
+        /// <summary>
+        /// オブジェクトが指定されたコンポーネントを入っているがをチェック
+        /// </summary>
+        /// <param name="gameObjectName">オブジェクト名</param>
+        /// <param name="targetComponentName">対象コンポーネント名</param>
+        /// <returns>入っているならTrue、ないならFalse</returns>
+        public bool IsObjectContainingComponent(string gameObjectName, string targetComponentName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            foreach(Component component in gameObject.Components)
+            {
+                if(component.Name == targetComponentName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
 
