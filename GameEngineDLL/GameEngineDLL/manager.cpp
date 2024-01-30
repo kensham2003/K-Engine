@@ -87,6 +87,18 @@ void Manager::AddBoxCollider(const char* ObjectName, const char* FileName) {
 	GetGameObject(ObjectName)->AddComponent<BoxCollider>()->Load(FileName);
 }
 
+void Manager::SetBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size) {
+	GetGameObject(ObjectName)->GetComponent<BoxCollider>()->SetSize(Size);
+}
+
+void Manager::SetBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate) {
+	GetGameObject(ObjectName)->GetComponent<BoxCollider>()->SetRotate(Rotate);
+}
+
+void Manager::SetBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
+	GetGameObject(ObjectName)->GetComponent<BoxCollider>()->SetOffset(Offset);
+}
+
 bool Manager::GetMaterialTextureEnable(const char* ObjectName)
 {
 	return GetGameObject(ObjectName)->GetComponent<Model>()->GetMaterialTextureEnable();

@@ -45,6 +45,12 @@ public:
 
 	static void AddBoxCollider(const char* ObjectName, const char* FileName);
 
+	static void SetBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size);
+
+	static void SetBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate);
+
+	static void SetBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
+
 	static bool GetMaterialTextureEnable(const char* ObjectName);
 
 	static int GetModelSubsetNum(const char* ObjectName);

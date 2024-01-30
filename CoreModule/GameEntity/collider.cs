@@ -13,6 +13,6 @@ namespace GameEngine.GameEntity
     {
         public bool IsTrigger { get; set; } = false;
 
-        SVector3 Offset { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        public SVector3 Offset { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
     }
 }

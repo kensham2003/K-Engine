@@ -28,13 +28,17 @@ namespace GameEngine.GameEntity
 
         public string Script { get; set; }
 
+        public bool HasCollider { get; set; }
+
+        public Collider Collider { get; set; }
+
         public readonly ObservableCollection<Component> Components = new ObservableCollection<Component>();
 
-        public readonly ObservableCollection<GameScript> GameScripts = new ObservableCollection<GameScript>();
+        //public readonly ObservableCollection<GameScript> GameScripts = new ObservableCollection<GameScript>();
 
-        public List<string> GameScriptName = new List<string>();
+        public List<string> ComponentName = new List<string>();
 
-        public List<string> GameScriptPath = new List<string>();
+        public List<string> ComponentPath = new List<string>();
 
         //public List<int> GameScriptPropertyAmount = new List<int>();
 
@@ -44,9 +48,9 @@ namespace GameEngine.GameEntity
 
         //public List<string> GameScriptPropertyValue = new List<string>();
 
-        public List<GameScriptPropInfo> GameScriptPropInfos = new List<GameScriptPropInfo>();
+        public List<ComponentPropInfo> ComponentPropInfos = new List<ComponentPropInfo>();
 
-        public List<GameScriptPropInfo> GameScriptFieldInfos = new List<GameScriptPropInfo>();
+        public List<ComponentPropInfo> ComponentFieldInfos = new List<ComponentPropInfo>();
 
 
 
@@ -72,10 +76,10 @@ namespace GameEngine.GameEntity
 
         public void BeginPlay()
         {
-            foreach (GameScript s in GameScripts)
-            {
-                s.BeginPlay();
-            }
+            //foreach (GameScript s in GameScripts)
+            //{
+            //    s.BeginPlay();
+            //}
             foreach (Component c in Components)
             {
                 c.BeginPlay();
@@ -84,10 +88,10 @@ namespace GameEngine.GameEntity
 
         public void Update(TimeSpan gameTime)
         {
-            foreach (GameScript s in GameScripts)
-            {
-                s.Update(gameTime);
-            }
+            //foreach (GameScript s in GameScripts)
+            //{
+            //    s.Update(gameTime);
+            //}
             foreach (Component c in Components)
             {
                 c.Update(gameTime);
@@ -100,33 +104,51 @@ namespace GameEngine.GameEntity
             component.SetParent(this);
         }
 
+        public void AddComponent(Component component, string name)
+        {
+            Components.Add(component);
+            component.SetParent(this);
+            component.Name = name;
+            ComponentPath.Add("");
+        }
+
         public void AddScript(GameScript gameScript, string filePath, string name)
         {
-            GameScripts.Add(gameScript);
+            Components.Add(gameScript);
+            //GameScripts.Add(gameScript);
             gameScript.SetParent(this);
             gameScript.Name = name;
             gameScript.FilePath = filePath;
-            GameScriptPath.Add(filePath);
+            ComponentPath.Add(filePath);
         }
 
         public void AddScript(GameScript gameScript, string name)
         {
-            GameScripts.Add(gameScript);
+            Components.Add(gameScript);
+            //GameScripts.Add(gameScript);
             gameScript.SetParent(this);
             gameScript.Name = name;
         }
 
         public void RemoveScriptAtIndex(int index)
         {
-            GameScripts.RemoveAt(index);
+            //GameScripts.RemoveAt(index);
+            Components.RemoveAt(index);
         }
 
-        public void ReplaceScript(GameScript gameScript, int index)
+        public void ReplaceComponent(Component component, int index)
         {
-            string name = GameScripts[index].Name;
-            GameScripts[index] = gameScript;
-            gameScript.SetParent(this);
-            gameScript.Name = name;
+            //string name = GameScripts[index].Name;
+            string name = Components[index].Name;
+            Components[index] = component;
+            component.SetParent(this);
+            component.Name = name;
+        }
+
+        public void ReplaceCollider(Collider collider, int index)
+        {
+            ReplaceComponent(collider, index);
+            Collider = collider;
         }
 
         public bool RemoveComponent(string name)
@@ -143,13 +165,25 @@ namespace GameEngine.GameEntity
             return false;
         }
 
-        public T GetScript<T>()
+        //public T GetScript<T>()
+        //{
+        //    foreach (GameScript gameScript in GameScripts)
+        //    {
+        //        if (gameScript.GetType().AssemblyQualifiedName == typeof(T).AssemblyQualifiedName)
+        //        {
+        //            return (T)Convert.ChangeType(gameScript, typeof(T));
+        //        }
+        //    }
+        //    return default(T);
+        //}
+
+        public T GetComponent<T>()
         {
-            foreach (GameScript gameScript in GameScripts)
+            foreach (Component component in Components)
             {
-                if (gameScript.GetType().AssemblyQualifiedName == typeof(T).AssemblyQualifiedName)
+                if (component.GetType().AssemblyQualifiedName == typeof(T).AssemblyQualifiedName)
                 {
-                    return (T)Convert.ChangeType(gameScript, typeof(T));
+                    return (T)Convert.ChangeType(component, typeof(T));
                 }
             }
             return default(T);

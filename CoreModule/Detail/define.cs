@@ -30,6 +30,14 @@ namespace GameEngine.Detail
             }
             );
 
+        public static readonly IList<string> preDefinedColliders = new ReadOnlyCollection<string>(
+            new List<string>
+            {
+                "BoxCollider",
+                "SphereCollider"
+            }
+            );
+
         public static string AddSpacesToString(string input)
         {
             return string.Concat(input.Select(x => Char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ');

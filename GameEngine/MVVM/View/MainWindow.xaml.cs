@@ -517,6 +517,15 @@ namespace GameEngine
             public static extern void AddBoxCollider(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectBoxColliderSize(string ObjectName, Vector3 Size);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectBoxColliderRotate(string ObjectName, Vector3 Rotate);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectBoxColliderOffset(string ObjectName, Vector3 Offset);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern bool GetMaterialTextureEnable(string ObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1907,7 +1916,11 @@ namespace GameEngine
                         return;
                     }
 
-                    m_loader.AddComponentToGameObject(inspectorObject.Name, upperClassName);
+                    if(m_loader.AddComponentToGameObject(inspectorObject.Name, upperClassName) == false)
+                    {
+                        MessageBox.Show(inspectorObject.Name + "は既にコライダーを持っています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
                     //インスペクターへ反映
                     LoadComponents(inspectorObject.Name);
@@ -2119,8 +2132,8 @@ namespace GameEngine.GameEntity
         {
             List<string> scriptNames = m_loader.GetScriptsName(gameObjectName);
             List<string> scriptPaths = m_loader.GetScriptsPath(gameObjectName);
-            List<GameScriptPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
-            List<GameScriptPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
+            List<ComponentPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
+            List<ComponentPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
 
 
             Component_Panel.Children.Clear();
@@ -2146,6 +2159,22 @@ namespace GameEngine.GameEntity
                     }
                 };
 
+                //テキストボックスの値をオブジェクトの値へ代入（ローカル関数）
+                void SetSVector3Value(bool isProperty, TextBox tbx, TextBox tby, TextBox tbz, string changedName)
+                {
+                    SVector3 changedValue = new SVector3(tbx.Text, tby.Text, tbz.Text);
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue.ToString());
+
+                    //Set value失敗
+                    if (result != null)
+                    {
+                        SVector3 resultVector = new SVector3(result);
+                        tbx.Text = resultVector.X.ToString();
+                        tby.Text = resultVector.Y.ToString();
+                        tbz.Text = resultVector.Z.ToString();
+                    }
+                };
+
                 //チェックボックスの値をオブジェクトの値へ代入（ローカル関数）
                 //（ローカル関数はオーバーロードがサポートされていない）
                 void SetValueBool(bool isProperty, CheckBox cb, string changedName, string changedValue)
@@ -2163,7 +2192,10 @@ namespace GameEngine.GameEntity
                     string propName = propInfos[i].PropNames[j];
                     if (propName == "FilePath" || propName == "Name") continue;
                     var stackPanelOneProp = new StackPanel { Orientation = Orientation.Horizontal };
-                    stackPanelOneProp.Children.Add(new Label { Content = propInfos[i].PropNames[j] });
+                    stackPanelOneProp.Children.Add(new Label {
+                        Content = propInfos[i].PropNames[j] ,
+                        MinWidth = 70
+                    });
                     switch (propInfos[i].PropTypes[j])
                     {
                         //bool型はチェックボックスで表示
@@ -2173,15 +2205,102 @@ namespace GameEngine.GameEntity
                             propInputBox.IsChecked = bool.Parse(propInfos[i].PropValues[j]);
                             propInputBox.Checked += (object sender, RoutedEventArgs e) =>
                             {
-                                SetValueBool(false, propInputBox, propName, propInputBox.IsChecked.ToString());
+                                SetValueBool(true, propInputBox, propName, propInputBox.IsChecked.ToString());
                             };
                             propInputBox.Unchecked += (object sender, RoutedEventArgs e) =>
                             {
-                                SetValueBool(false, propInputBox, propName, propInputBox.IsChecked.ToString());
+                                SetValueBool(true, propInputBox, propName, propInputBox.IsChecked.ToString());
                             };
                             propInputBox.VerticalAlignment = VerticalAlignment.Center;
                             stackPanelOneProp.Children.Add(propInputBox);
                             stackPanelProp.Children.Add(stackPanelOneProp);
+                            break;
+
+                        case string value when value == typeof(SVector3).AssemblyQualifiedName:
+                            StackPanel vectorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                            SVector3 propValue = new SVector3(propInfos[i].PropValues[j]);
+
+                            vectorPanel.Children.Add(new Label { Content = "X" });
+                            TextBox xInputField = new TextBox { Width = 30 };
+                            xInputField.Text = propValue.X.ToString();
+                            xInputField.Tag = false;
+                            vectorPanel.Children.Add(xInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Y" });
+                            TextBox yInputField = new TextBox { Width = 30 };
+                            yInputField.Text = propValue.Y.ToString();
+                            yInputField.Tag = false;
+                            vectorPanel.Children.Add(yInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Z" });
+                            TextBox zInputField = new TextBox { Width = 30 };
+                            zInputField.Text = propValue.Z.ToString();
+                            zInputField.Tag = false;
+                            vectorPanel.Children.Add(zInputField);
+
+                            //ENTERを押したらSetValueを呼ぶ
+                            xInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                Keyboard.ClearFocus();
+                            };
+                            yInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                Keyboard.ClearFocus();
+                            };
+                            zInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                Keyboard.ClearFocus();
+                            };
+
+                            //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                            xInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(xInputField.Tag) == false) { return; }
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                xInputField.Tag = false;
+                            };
+                            yInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(yInputField.Tag) == false) { return; }
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                yInputField.Tag = false;
+                            };
+                            zInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(zInputField.Tag) == false) { return; }
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                zInputField.Tag = false;
+                            };
+
+                            //テキストが変わらなくてもフォーカス変更だけで勝手に更新しないように
+                            xInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                xInputField.Tag = true;
+                            };
+                            yInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                yInputField.Tag = true;
+                            };
+                            zInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                zInputField.Tag = true;
+                            };
+
+                            stackPanelOneProp.Children.Add(vectorPanel);
+                            stackPanelProp.Children.Add(stackPanelOneProp);
+
                             break;
 
                         default:
@@ -2195,6 +2314,7 @@ namespace GameEngine.GameEntity
                                     return;
 
                                 SetValue(true, propInputField, propName, propInputField.Text);
+                                Keyboard.ClearFocus();
                             };
 
                             //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
@@ -2218,7 +2338,10 @@ namespace GameEngine.GameEntity
                     var stackPanelOneField = new StackPanel {
                         Orientation = Orientation.Horizontal
                     };
-                    stackPanelOneField.Children.Add(new Label { Content = fieldInfos[i].PropNames[k] });
+                    stackPanelOneField.Children.Add(new Label {
+                        Content = fieldInfos[i].PropNames[k] ,
+                        MinWidth = 70
+                    });
                     switch (fieldInfos[i].PropTypes[k])
                     {
                         //bool型はチェックボックスで表示
@@ -2239,6 +2362,93 @@ namespace GameEngine.GameEntity
                             stackPanelField.Children.Add(stackPanelOneField);
                             break;
 
+                        case string value when value == typeof(SVector3).AssemblyQualifiedName:
+                            StackPanel vectorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                            SVector3 fieldValue = new SVector3(fieldInfos[i].PropValues[k]);
+
+                            vectorPanel.Children.Add(new Label { Content = "X" });
+                            TextBox xInputField = new TextBox { Width = 30 };
+                            xInputField.Text = fieldValue.X.ToString();
+                            xInputField.Tag = false;
+                            vectorPanel.Children.Add(xInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Y" });
+                            TextBox yInputField = new TextBox { Width = 30 };
+                            yInputField.Text = fieldValue.Y.ToString();
+                            yInputField.Tag = false;
+                            vectorPanel.Children.Add(yInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Z" });
+                            TextBox zInputField = new TextBox { Width = 30 };
+                            zInputField.Text = fieldValue.Z.ToString();
+                            zInputField.Tag = false;
+                            vectorPanel.Children.Add(zInputField);
+
+                            //ENTERを押したらSetValueを呼ぶ
+                            xInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                Keyboard.ClearFocus();
+                            };
+                            yInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                Keyboard.ClearFocus();
+                            };
+                            zInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                Keyboard.ClearFocus();
+                            };
+
+                            //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                            xInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(xInputField.Tag) == false) { return; }
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                xInputField.Tag = false;
+                            };
+                            yInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(yInputField.Tag) == false) { return; }
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                yInputField.Tag = false;
+                            };
+                            zInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(zInputField.Tag) == false) { return; }
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                zInputField.Tag = false;
+                            };
+
+                            //テキストが変わらなくてもフォーカス変更だけで勝手に更新しないように
+                            xInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                xInputField.Tag = true;
+                            };
+                            yInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                yInputField.Tag = true;
+                            };
+                            zInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                zInputField.Tag = true;
+                            };
+
+                            stackPanelOneField.Children.Add(vectorPanel);
+                            stackPanelField.Children.Add(stackPanelOneField);
+
+                            break;
+
                         //bool以外の型はテキストで表示
                         default:
                             TextBox fieldInputField = new TextBox();
@@ -2252,6 +2462,7 @@ namespace GameEngine.GameEntity
                                     return;
 
                                 SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                                Keyboard.ClearFocus();
                             };
 
                             //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
