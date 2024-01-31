@@ -824,7 +824,7 @@ namespace GameEngine.ScriptLoading
                         return null;
                     }
                 }
-                gameObject.ReplaceComponent(ins, scriptCount);
+                gameObject.ReplaceScript(ins, scriptCount-1);
             }
             return null;
         }
