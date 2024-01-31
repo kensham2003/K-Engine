@@ -76,10 +76,10 @@ namespace GameEngine.GameEntity
 
         public void BeginPlay()
         {
-            //foreach (GameScript s in GameScripts)
-            //{
-            //    s.BeginPlay();
-            //}
+            foreach (GameScript s in GameScripts)
+            {
+                s.BeginPlay();
+            }
             foreach (Component c in Components)
             {
                 c.BeginPlay();
@@ -88,10 +88,10 @@ namespace GameEngine.GameEntity
 
         public void Update(TimeSpan gameTime)
         {
-            //foreach (GameScript s in GameScripts)
-            //{
-            //    s.Update(gameTime);
-            //}
+            foreach (GameScript s in GameScripts)
+            {
+                s.Update(gameTime);
+            }
             foreach (Component c in Components)
             {
                 c.Update(gameTime);
@@ -156,20 +156,31 @@ namespace GameEngine.GameEntity
 
         public void ReplaceCollider(Collider collider)
         {
+            int index = FindColliderIndex();
+            ReplaceComponent(collider, index);
+            Collider = collider;
+        }
+
+        private int FindColliderIndex()
+        {
             int index = 0;
-            foreach(Component c in Components)
+            foreach (Component c in Components)
             {
-                foreach(string s in Define.preDefinedColliders)
+                if (c.Name == null)
                 {
-                    if(s == c.Name)
+                    index++;
+                    continue;
+                }
+                foreach (string s in Define.preDefinedColliders)
+                {
+                    if (s == c.Name.Replace("GameEngine.GameEntity.", ""))
                     {
-                        break;
+                        return index;
                     }
                 }
                 index++;
             }
-            ReplaceComponent(collider, index);
-            Collider = collider;
+            return -1;
         }
 
         public bool RemoveComponent(string name)
