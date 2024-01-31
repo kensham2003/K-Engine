@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:GameEngine.MVVM.View"
         mc:Ignorable="d"
         Title="Message Log" Height="300" Width="600"
-		Loaded="MessageWindow_Loaded">
+		Loaded="MessageWindow_Loaded"
+		WindowStartupLocation="CenterScreen">
 	<Grid>
 		<StackPanel Orientation="Vertical">
 			<StackPanel Orientation="Horizontal">

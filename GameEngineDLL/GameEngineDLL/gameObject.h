@@ -176,6 +176,17 @@ public:
 		return nullptr;
 	}
 
+	//コンポーネントを削除
+	template <typename T>
+	void RemoveComponent() {
+		for (auto it = m_Component.begin(); it != m_Component.end(); ++it) {
+			if (typeid(**it) == typeid(T)) {
+				it = m_Component.erase(it);
+				--it;
+			}
+		}
+	}
+
 	template<class Archive>
 	void serialize(Archive& archive)
 	{

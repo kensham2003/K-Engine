@@ -510,6 +510,17 @@ namespace GameEngine.ScriptLoading
         {
             GameObject gameObject = m_game.FindGameObject(objectName);
 
+            //削除対象がコライダーの場合
+            foreach(string s in Define.preDefinedColliders)
+            {
+                if(s == gameObject.ComponentName[index])
+                {
+                    gameObject.Collider = null;
+                    gameObject.HasCollider = false;
+                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveBoxCollider(objectName));
+                }
+            }
+
             gameObject.ComponentName.RemoveAt(index);
             gameObject.ComponentPath.RemoveAt(index);
             gameObject.ComponentPropInfos.RemoveAt(index);

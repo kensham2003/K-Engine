@@ -163,6 +163,11 @@ void SetObjectBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
 	Manager::SetBoxColliderOffset(ObjectName, Offset);
 }
 
+void RemoveBoxCollider(const char* ObjectName)
+{
+	Manager::RemoveBoxCollider(ObjectName);
+}
+
 bool GetMaterialTextureEnable(const char* ObjectName)
 {
 	return Manager::GetMaterialTextureEnable(ObjectName);

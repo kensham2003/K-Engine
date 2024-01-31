@@ -526,6 +526,9 @@ namespace GameEngine
             public static extern void SetObjectBoxColliderOffset(string ObjectName, Vector3 Offset);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void RemoveBoxCollider(string ObjectName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern bool GetMaterialTextureEnable(string ObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -851,7 +854,8 @@ namespace GameEngine
         {
             if (!m_isSuccessfullyBuilt)
             {
-                MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                CenterMessageBox.Show(new WindowWrapper(this), "ビルドエラーを修正してからシミュレートしてください。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
@@ -922,6 +926,7 @@ namespace GameEngine
         {
             //パス設定のダイアログを表示
             var dialog = new pathSettingWindow(m_devenvPath);
+            dialog.Owner = GetWindow(this);
             if (dialog.ShowDialog() == true)
             {
                 m_devenvPath = dialog.m_devenvPath;
@@ -1891,6 +1896,7 @@ namespace GameEngine
             componentsList.AddRange(Define.preDefinedComponents);
 
             var dialog = new userInputDialog(componentsList);
+            dialog.Owner = GetWindow(this);
             if (dialog.ShowDialog() == true)
             {
                 className = dialog.InputText;
@@ -1912,13 +1918,18 @@ namespace GameEngine
                     //重複しているスクリプトの場合は追加しない
                     if (m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
                     {
-                        MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        CenterMessageBox.Show(new WindowWrapper(this), Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                         return;
                     }
 
                     if(m_loader.AddComponentToGameObject(inspectorObject.Name, upperClassName) == false)
                     {
-                        MessageBox.Show(inspectorObject.Name + "は既にコライダーを持っています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBox.Show(inspectorObject.Name + "は既にコライダーを持っています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBoxEx.Show(inspectorObject.Name + "は既にコライダーを持っています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBoxEx.Show(this, inspectorObject.Name + "は既にコライダーを持っています。",)
+                        CenterMessageBox.Show(new WindowWrapper(this), inspectorObject.Name + "は既にコライダーを持っています。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+
                         return;
                     }
 
@@ -1939,7 +1950,8 @@ namespace GameEngine
                     //重複しているスクリプトの場合は追加しない
                     if(m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
                     {
-                        MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        CenterMessageBox.Show(new WindowWrapper(this), Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                         return;
                     }
                     string scriptPath = System.IO.Path.GetFullPath("asset/" + className + ".cs");
@@ -2531,6 +2543,7 @@ namespace GameEngine.GameEntity
                 RemoveComponentButton.Click += (object ss, RoutedEventArgs ee) =>
                 {
                     var confirmDialog = new removeComponentConfirmDialog(name, gameObjectName);
+                    confirmDialog.Owner = GetWindow(this);
                     if (confirmDialog.ShowDialog() == true)
                     {
                         if (confirmDialog.IsConfirm)

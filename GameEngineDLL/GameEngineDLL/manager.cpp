@@ -99,6 +99,10 @@ void Manager::SetBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
 	GetGameObject(ObjectName)->GetComponent<BoxCollider>()->SetOffset(Offset);
 }
 
+void Manager::RemoveBoxCollider(const char* ObjectName) {
+	GetGameObject(ObjectName)->RemoveComponent<BoxCollider>();
+}
+
 bool Manager::GetMaterialTextureEnable(const char* ObjectName)
 {
 	return GetGameObject(ObjectName)->GetComponent<Model>()->GetMaterialTextureEnable();

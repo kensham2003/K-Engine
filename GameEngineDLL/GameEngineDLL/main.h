@@ -79,6 +79,8 @@ extern "C" {
 	__declspec(dllexport) void __cdecl SetObjectBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate);
 	__declspec(dllexport) void __cdecl SetObjectBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
 
+	__declspec(dllexport) void __cdecl RemoveBoxCollider(const char* ObjectName);
+
 	__declspec(dllexport) bool __cdecl GetMaterialTextureEnable(const char* ObjectName);
 	__declspec(dllexport) int __cdecl GetModelSubsetNum(const char* ObjectName);
 
