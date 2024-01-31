@@ -2147,11 +2147,16 @@ namespace GameEngine.GameEntity
             List<ComponentPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
             List<ComponentPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
 
+            int scriptCount = 0;
 
             Component_Panel.Children.Clear();
 
             for (int i = 0; i < scriptNames.Count(); i++)
             {
+                if(scriptPaths[i] != "")
+                {
+                    scriptCount++;
+                }
                 var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
                 string scriptName = scriptNames[i];
                 //stackPanelTemp.Children.Add(new Label { Content = scriptName });

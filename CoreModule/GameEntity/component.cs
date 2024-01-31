@@ -12,6 +12,7 @@ namespace GameEngine.GameEntity
     [JsonDerivedType(typeof(Model))]
     [JsonDerivedType(typeof(testComponent))]
     [JsonDerivedType(typeof(GameScript))]
+    [JsonDerivedType(typeof(Collider))]
     [Serializable]
     public class Component
     {

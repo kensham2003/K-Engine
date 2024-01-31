@@ -34,7 +34,7 @@ namespace GameEngine.GameEntity
 
         public readonly ObservableCollection<Component> Components = new ObservableCollection<Component>();
 
-        //public readonly ObservableCollection<GameScript> GameScripts = new ObservableCollection<GameScript>();
+        public readonly ObservableCollection<GameScript> GameScripts = new ObservableCollection<GameScript>();
 
         public List<string> ComponentName = new List<string>();
 
@@ -114,8 +114,8 @@ namespace GameEngine.GameEntity
 
         public void AddScript(GameScript gameScript, string filePath, string name)
         {
-            Components.Add(gameScript);
-            //GameScripts.Add(gameScript);
+            //Components.Add(gameScript);
+            GameScripts.Add(gameScript);
             gameScript.SetParent(this);
             gameScript.Name = name;
             gameScript.FilePath = filePath;
@@ -124,16 +124,16 @@ namespace GameEngine.GameEntity
 
         public void AddScript(GameScript gameScript, string name)
         {
-            Components.Add(gameScript);
-            //GameScripts.Add(gameScript);
+            //Components.Add(gameScript);
+            GameScripts.Add(gameScript);
             gameScript.SetParent(this);
             gameScript.Name = name;
         }
 
         public void RemoveScriptAtIndex(int index)
         {
-            //GameScripts.RemoveAt(index);
-            Components.RemoveAt(index);
+            GameScripts.RemoveAt(index);
+            //Components.RemoveAt(index);
         }
 
         public void ReplaceComponent(Component component, int index)
@@ -145,8 +145,29 @@ namespace GameEngine.GameEntity
             component.Name = name;
         }
 
-        public void ReplaceCollider(Collider collider, int index)
+        public void ReplaceScript(GameScript gameScript, int index)
         {
+            string name = GameScripts[index].Name;
+            //string name = Components[index].Name;
+            GameScripts[index] = gameScript;
+            gameScript.SetParent(this);
+            gameScript.Name = name;
+        }
+
+        public void ReplaceCollider(Collider collider)
+        {
+            int index = 0;
+            foreach(Component c in Components)
+            {
+                foreach(string s in Define.preDefinedColliders)
+                {
+                    if(s == c.Name)
+                    {
+                        break;
+                    }
+                }
+                index++;
+            }
             ReplaceComponent(collider, index);
             Collider = collider;
         }

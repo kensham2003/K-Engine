@@ -520,11 +520,20 @@ namespace GameEngine.ScriptLoading
                     MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveBoxCollider(objectName));
                 }
             }
-
+            string removedComponentName = gameObject.ComponentName[index];
             gameObject.ComponentName.RemoveAt(index);
             gameObject.ComponentPath.RemoveAt(index);
             gameObject.ComponentPropInfos.RemoveAt(index);
             gameObject.ComponentFieldInfos.RemoveAt(index);
+
+            foreach(string s in Define.preDefinedComponents)
+            {
+                if(s == removedComponentName)
+                {
+                    gameObject.RemoveComponent(s);
+                    return;
+                }
+            }
 
             gameObject.RemoveScriptAtIndex(index);
         }
@@ -599,8 +608,11 @@ namespace GameEngine.ScriptLoading
         public string SetPropertyOrFieldValue(bool isProperty, string gameObjectName, string scriptName, string changedName, string changedValue)
         {
             GameObject gameObject = FindGameObject(gameObjectName);
+            int scriptCount = 0;
             for (int i = 0; i < gameObject.ComponentName.Count; i++)
             {
+                if(gameObject.ComponentPath[i] != "") { scriptCount++; }
+
                 //対象のスクリプトを探す
                 if (gameObject.ComponentName[i] != scriptName) { continue; }
 
@@ -800,7 +812,7 @@ namespace GameEngine.ScriptLoading
                 {
                     if(s == gameObject.ComponentName[i])
                     {
-                        gameObject.ReplaceCollider(ins, i + 1);
+                        gameObject.ReplaceCollider(ins);
                         if (s == "BoxCollider")
                         {
                             BoxCollider bc = gameObject.Collider as BoxCollider;
@@ -812,7 +824,7 @@ namespace GameEngine.ScriptLoading
                         return null;
                     }
                 }
-                gameObject.ReplaceComponent(ins, i + 1);
+                gameObject.ReplaceComponent(ins, scriptCount);
             }
             return null;
         }
