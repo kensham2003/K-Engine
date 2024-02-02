@@ -535,6 +535,12 @@ namespace GameEngine
             public static extern int GetModelSubsetNum(string ObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetModelVS(string ObjectName, string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetModelPS(string ObjectName, string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetScenePlaying(bool playing);
 
             /// <summary>
@@ -1121,6 +1127,7 @@ namespace GameEngine
 
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Inspector_Name.Text = gameObject.ToString();
+            Model_Lighting.IsChecked = gameObject.HasLighting;
 
             Component_Panel.Children.Clear();
             LoadComponents(gameObject.Name);
@@ -2576,6 +2583,22 @@ namespace GameEngine.GameEntity
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddBoxCollider(inspectorObject.Name, path));
 
 
+        }
+
+        private void Model_Lighting_Checked(object sender, RoutedEventArgs e)
+        {
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if(inspectorObject == null) { return; }
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/vertexLightingVS.cso"));
+            inspectorObject.HasLighting = true;
+        }
+
+        private void Model_Lighting_Unchecked(object sender, RoutedEventArgs e)
+        {
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if (inspectorObject == null) { return; }
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/unlitTextureVS.cso"));
+            inspectorObject.HasLighting = false;
         }
     }
 

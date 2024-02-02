@@ -178,6 +178,14 @@ int GetModelSubsetNum(const char* ObjectName)
 	return Manager::GetMaterialTextureEnable(ObjectName);
 }
 
+void SetModelVS(const char* ObjectName, const char* FileName) {
+	Manager::SetModelVS(ObjectName, FileName);
+}
+
+void SetModelPS(const char* ObjectName, const char* FileName) {
+	Manager::SetModelPS(ObjectName, FileName);
+}
+
 void SetScenePlaying(bool playing) {
 	Manager::SetPlaying(playing);
 }

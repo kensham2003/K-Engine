@@ -84,5 +84,8 @@ extern "C" {
 	__declspec(dllexport) bool __cdecl GetMaterialTextureEnable(const char* ObjectName);
 	__declspec(dllexport) int __cdecl GetModelSubsetNum(const char* ObjectName);
 
+	__declspec(dllexport) void __cdecl SetModelVS(const char* ObjectName, const char* FileName);
+	__declspec(dllexport) void __cdecl SetModelPS(const char* ObjectName, const char* FileName);
+
 	__declspec(dllexport) void __cdecl SetScenePlaying(bool playing);
 }

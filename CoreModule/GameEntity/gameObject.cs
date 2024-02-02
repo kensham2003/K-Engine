@@ -24,6 +24,8 @@ namespace GameEngine.GameEntity
 
         public string ModelName { get; set; }
 
+        public bool HasLighting { get; set; } = true;
+
         public string Name { get; set; }
 
         public string Script { get; set; }

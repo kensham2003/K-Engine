@@ -166,3 +166,11 @@ void Manager::SetPlaying(bool playing)
 		}
 	}
 }
+
+void Manager::SetModelVS(const char* ObjectName, const char* FileName) {
+	GetGameObject(ObjectName)->GetComponent<Model>()->SetVertexShader(FileName);
+}
+
+void Manager::SetModelPS(const char* ObjectName, const char* FileName) {
+	GetGameObject(ObjectName)->GetComponent<Model>()->SetPixelShader(FileName);
+}

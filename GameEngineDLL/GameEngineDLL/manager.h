@@ -108,6 +108,10 @@ public:
 	static void FreeRaycastChar(char* p) { delete[] p; }
 
 	static void SetPlaying(bool playing);
+
+	static void SetModelVS(const char* ObjectName, const char* FileName);
+
+	static void SetModelPS(const char* ObjectName, const char* FileName);
 };
 
 template<class Archive>

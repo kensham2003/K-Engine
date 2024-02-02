@@ -76,7 +76,19 @@
 			<TabItem Header="Inspector">
 				<StackPanel Orientation="Vertical" Name="Inspector_StackPanel" Loaded="Inspector_Panel_Loaded">
 
-					<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown"/>
+					<DockPanel FlowDirection="RightToLeft" LastChildFill="True">
+						<CheckBox x:Name="Model_Lighting"  FlowDirection="RightToLeft" DockPanel.Dock="Left" IsChecked="True" Checked="Model_Lighting_Checked" Unchecked="Model_Lighting_Unchecked">
+							<!--チェックボックスのアイコンがミラーになることを防止-->
+							<CheckBox.Resources>
+								<Style TargetType="{x:Type Path}">
+									<Setter Property="FlowDirection" Value="LeftToRight"/>
+								</Style>
+							</CheckBox.Resources>
+							<TextBlock FlowDirection="LeftToRight" Text=" Light"/>
+						</CheckBox>
+						<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown" FlowDirection="LeftToRight"/>
+					</DockPanel>
+					
 
 					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Position_Show">
 						<Label Content="Position" Width="70"/>
