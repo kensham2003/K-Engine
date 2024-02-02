@@ -24,8 +24,43 @@ namespace GameEngine.Detail
             this.Z = z;
         }
 
+        public SVector3(string s)
+        {
+            string[] xyz = s.Split(new string[] { ", " }, StringSplitOptions.None);
+            if (!float.TryParse(xyz[0], out X))
+            {
+                X = 0;
+            }
+            if (!float.TryParse(xyz[1], out Y))
+            {
+                Y = 0;
+            }
+            if (!float.TryParse(xyz[2], out Z))
+            {
+                Z = 0;
+            }
+        }
+
+        public SVector3(string x, string y, string z)
+        {
+            if (!float.TryParse(x, out X))
+            {
+                X = 0;
+            }
+            if (!float.TryParse(y, out Y))
+            {
+                Y = 0;
+            }
+            if (!float.TryParse(z, out Z))
+            {
+                Z = 0;
+            }
+        }
+
+        //public override string ToString()
+        //    => $"[x, y, z]";
         public override string ToString()
-            => $"[x, y, z]";
+            => X.ToString() + ", " + Y.ToString() + ", " + Z.ToString();
 
         public static implicit operator Vector3(SVector3 s)
             => new Vector3(s.X, s.Y, s.Z);

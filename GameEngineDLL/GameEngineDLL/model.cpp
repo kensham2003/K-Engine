@@ -15,6 +15,7 @@ bool RayTriangleCollision(D3DXVECTOR3 ray, D3DXVECTOR3 cameraPos, D3DXVECTOR3* t
 void Model::Init()
 {
 	Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, "asset/shader/vertexLightingVS.cso");
+	//Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, "asset/shader/unlitTextureVS.cso");
 
 	Renderer::CreatePixelShader(&m_PixelShader, "asset/shader/vertexLightingPS.cso");
 }

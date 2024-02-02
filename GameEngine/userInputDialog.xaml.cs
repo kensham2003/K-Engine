@@ -13,6 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Forms;
 
+using GameEngine.Detail;
+
 namespace GameEngine
 {
     /// <summary>
@@ -29,7 +31,13 @@ namespace GameEngine
         public userInputDialog(List<string> componentList)
         {
             InitializeComponent();
-            ComponentListbox.ItemsSource = componentList;
+            List<string> displayItems = new List<string>();
+            foreach(string component in componentList)
+            {
+                //displayItems.Add(string.Concat(component.Select(x => Char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' '));
+                displayItems.Add(Define.AddSpacesToString(component));
+            }
+            ComponentListbox.ItemsSource = displayItems;
         }
 
         public string InputText

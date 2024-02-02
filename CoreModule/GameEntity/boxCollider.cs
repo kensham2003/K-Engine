@@ -11,6 +11,8 @@ namespace GameEngine.GameEntity
 {
     public class BoxCollider : Collider
     {
-        SVector3 Size { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+        public SVector3 Size { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+
+        public SVector3 Rotate { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
     }
 }

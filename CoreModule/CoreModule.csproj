@@ -78,7 +78,7 @@
     <Compile Include="GameEntity\collider.cs" />
     <Compile Include="GameEntity\component.cs" />
     <Compile Include="GameEntity\gameObject.cs" />
-    <Compile Include="GameEntity\GameScriptPropInfo.cs" />
+    <Compile Include="GameEntity\ComponentPropInfo.cs" />
     <Compile Include="GameEntity\model.cs" />
     <Compile Include="GameEntity\GameScript.cs" />
     <Compile Include="GameEntity\testComponent.cs" />

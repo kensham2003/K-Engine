@@ -5,6 +5,11 @@
 ///  機能：各種定数を定義するクラス
 /// 
 ////////////////////////////////////////
+using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System;
 
 namespace GameEngine.Detail
 {
@@ -17,5 +22,25 @@ namespace GameEngine.Detail
         public const int LAYER_EFFECT = 2;
         public const int LAYER_2D_OBJECT = 3;
         public const int LAYER_FADE = 4;
+
+        public static readonly IList<string> preDefinedComponents = new ReadOnlyCollection<string>(
+            new List<string> {
+                "BoxCollider",
+                "SphereCollider"
+            }
+            );
+
+        public static readonly IList<string> preDefinedColliders = new ReadOnlyCollection<string>(
+            new List<string>
+            {
+                "BoxCollider",
+                "SphereCollider"
+            }
+            );
+
+        public static string AddSpacesToString(string input)
+        {
+            return string.Concat(input.Select(x => Char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ');
+        }
     }
 }

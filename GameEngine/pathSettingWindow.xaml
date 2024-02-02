@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameEngine"
         mc:Ignorable="d"
-        Title="Path Setting" Height="275" Width="550">
+        Title="Path Setting" Height="275" Width="550"
+		WindowStartupLocation="CenterOwner">
 	<Grid>
 		<TextBlock VerticalAlignment="Top"  Margin="10,10,10,170">
 			devenv.exeのパス：<LineBreak/>

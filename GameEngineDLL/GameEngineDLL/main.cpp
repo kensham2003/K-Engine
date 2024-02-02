@@ -151,6 +151,23 @@ void AddBoxCollider(const char* ObjectName, const char* FileName)
 	Manager::AddBoxCollider(ObjectName, FileName);
 }
 
+void SetObjectBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size) {
+	Manager::SetBoxColliderSize(ObjectName, Size);
+}
+
+void SetObjectBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate) {
+	Manager::SetBoxColliderRotate(ObjectName, Rotate);
+}
+
+void SetObjectBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
+	Manager::SetBoxColliderOffset(ObjectName, Offset);
+}
+
+void RemoveBoxCollider(const char* ObjectName)
+{
+	Manager::RemoveBoxCollider(ObjectName);
+}
+
 bool GetMaterialTextureEnable(const char* ObjectName)
 {
 	return Manager::GetMaterialTextureEnable(ObjectName);
@@ -159,6 +176,14 @@ bool GetMaterialTextureEnable(const char* ObjectName)
 int GetModelSubsetNum(const char* ObjectName)
 {
 	return Manager::GetMaterialTextureEnable(ObjectName);
+}
+
+void SetModelVS(const char* ObjectName, const char* FileName) {
+	Manager::SetModelVS(ObjectName, FileName);
+}
+
+void SetModelPS(const char* ObjectName, const char* FileName) {
+	Manager::SetModelPS(ObjectName, FileName);
 }
 
 void SetScenePlaying(bool playing) {

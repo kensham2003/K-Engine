@@ -1,0 +1,27 @@
+﻿<Window x:Class="GameEngine.MVVM.View.messageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GameEngine.MVVM.View"
+        mc:Ignorable="d"
+        Title="Message Log" Height="300" Width="600"
+		Loaded="MessageWindow_Loaded"
+		WindowStartupLocation="CenterScreen">
+	<Grid>
+		<StackPanel Orientation="Vertical">
+			<StackPanel Orientation="Horizontal">
+				<Button Content="Clear"
+						Width="100"
+						Height="25"
+						Click="OnClearButtonClick"/>
+			</StackPanel>
+			<ListView x:Name="MessageLogListView" 
+					  ItemsSource="{Binding Path=ItemsService.Items}"
+					  Height="180"
+					  SelectionChanged="MessageLogListView_SelectionChanged"/>
+			<Label x:Name="MessageSelected" Height="60"
+				   Content=""/>
+		</StackPanel>
+	</Grid>
+</Window>

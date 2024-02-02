@@ -45,6 +45,14 @@ public:
 
 	static void AddBoxCollider(const char* ObjectName, const char* FileName);
 
+	static void SetBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size);
+
+	static void SetBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate);
+
+	static void SetBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
+
+	static void RemoveBoxCollider(const char* ObjectName);
+
 	static bool GetMaterialTextureEnable(const char* ObjectName);
 
 	static int GetModelSubsetNum(const char* ObjectName);
@@ -100,6 +108,10 @@ public:
 	static void FreeRaycastChar(char* p) { delete[] p; }
 
 	static void SetPlaying(bool playing);
+
+	static void SetModelVS(const char* ObjectName, const char* FileName);
+
+	static void SetModelPS(const char* ObjectName, const char* FileName);
 };
 
 template<class Archive>

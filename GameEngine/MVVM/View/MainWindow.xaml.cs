@@ -34,9 +34,12 @@ using Microsoft.Build.Evaluation;
 
 using GameEngine.GameEntity;
 using GameEngine.ScriptLoading;
+using GameEngine.Detail;
 
 using Component = GameEngine.GameEntity.Component;
 using System.Diagnostics;
+using GameEngine.MVVM.ViewModel;
+using System.Text.RegularExpressions;
 
 namespace GameEngine
 {
@@ -45,6 +48,8 @@ namespace GameEngine
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainViewModel m_mainViewModel;
+
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
@@ -90,58 +95,54 @@ namespace GameEngine
         Settings m_settings;
         string m_devenvPath;
 
-        //List<string> m_messageList = new List<string>();
+        //public class MainWindowDataContext
+        //{
+        //    public ObservableCollection<INodeDataContext> Nodes { get; set; }
+        //    public ObservableCollection<IConnectionDataContext> Connections { get; set; }
 
-        MessageList m_messageList;
+        //    public MainWindowDataContext()
+        //    {
+        //        Nodes = new ObservableCollection<INodeDataContext>();
+        //        Connections = new ObservableCollection<IConnectionDataContext>();
 
-        public class MainWindowDataContext
-        {
-            public ObservableCollection<INodeDataContext> Nodes { get; set; }
-            public ObservableCollection<IConnectionDataContext> Connections { get; set; }
+        //        //ノード一個目を作る
+        //        var node1 = new PresetNodeViewModel()
+        //        {
+        //            OutputPlugs = new ObservableCollection<IPlugDataContext>
+        //        {
+        //            new PresentPlugViewModel(),
+        //        }
+        //        };
 
-            public MainWindowDataContext()
-            {
-                Nodes = new ObservableCollection<INodeDataContext>();
-                Connections = new ObservableCollection<IConnectionDataContext>();
+        //        //ノード二個目を作る
+        //        var node2 = new PresetNodeViewModel()
+        //        {
+        //            X = 150,
+        //            InputPlugs = new ObservableCollection<IPlugDataContext>
+        //        {
+        //            new PresentPlugViewModel(),
+        //        },
+        //        };
 
-                //ノード一個目を作る
-                var node1 = new PresetNodeViewModel()
-                {
-                    OutputPlugs = new ObservableCollection<IPlugDataContext>
-                {
-                    new PresentPlugViewModel(),
-                }
-                };
+        //        //ノードを追加する
+        //        Nodes.Add(node1);
+        //        Nodes.Add(node2);
 
-                //ノード二個目を作る
-                var node2 = new PresetNodeViewModel()
-                {
-                    X = 150,
-                    InputPlugs = new ObservableCollection<IPlugDataContext>
-                {
-                    new PresentPlugViewModel(),
-                },
-                };
+        //        //繋ぐ線を作る
+        //        var connection = new PresetConnectionViewModel()
+        //        {
+        //            SourcePlug = node1.OutputPlugs[0],
+        //            DestPlug = node2.InputPlugs[0],
+        //        };
 
-                //ノードを追加する
-                Nodes.Add(node1);
-                Nodes.Add(node2);
-
-                //繋ぐ線を作る
-                var connection = new PresetConnectionViewModel()
-                {
-                    SourcePlug = node1.OutputPlugs[0],
-                    DestPlug = node2.InputPlugs[0],
-                };
-
-                //線を追加する
-                Connections.Add(connection);
-            }
-        }
+        //        //線を追加する
+        //        Connections.Add(connection);
+        //    }
+        //}
 
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             //ユーザ設定初期化
             m_settings = new Settings();
@@ -157,7 +158,6 @@ namespace GameEngine
                 m_devenvPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE";
                 m_settings.SaveString("m_devenvPath", m_devenvPath);
             }
-            m_messageList = new MessageList();
 
             this.host.Loaded += new RoutedEventHandler(this.Host_Loaded);
             this.host.SizeChanged += new SizeChangedEventHandler(this.Host_SizeChanged);
@@ -177,8 +177,8 @@ namespace GameEngine
                 timer.Elapsed += new ElapsedEventHandler(TimerUpdate);
             }
 
-            //ノードエディタ
-            DataContext = new MainWindowDataContext();
+            ////ノードエディタ
+            //DataContext = new MainWindowDataContext();
 
             //ゲームループ
             m_sandbox = new Sandbox();
@@ -222,7 +222,7 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            m_messageList.Clear();
+            m_mainViewModel.ClearItem();
 
             bool m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
 
@@ -268,7 +268,7 @@ namespace GameEngine
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
             m_loader.InitDomain();
 
-            m_messageList.Clear();
+            m_mainViewModel.ClearItem();
 
             m_isSuccessfullyBuilt = m_scriptLibrary.Build(m_logger);
 
@@ -517,10 +517,28 @@ namespace GameEngine
             public static extern void AddBoxCollider(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectBoxColliderSize(string ObjectName, Vector3 Size);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectBoxColliderRotate(string ObjectName, Vector3 Rotate);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectBoxColliderOffset(string ObjectName, Vector3 Offset);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void RemoveBoxCollider(string ObjectName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern bool GetMaterialTextureEnable(string ObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern int GetModelSubsetNum(string ObjectName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetModelVS(string ObjectName, string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetModelPS(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetScenePlaying(bool playing);
@@ -575,6 +593,8 @@ namespace GameEngine
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Application.Current.MainWindow = this;
+            m_mainViewModel = (MainViewModel)DataContext;
+            //MessageLog.MouseLeftButtonDown += 
         }
 
         //===============================
@@ -840,7 +860,8 @@ namespace GameEngine
         {
             if (!m_isSuccessfullyBuilt)
             {
-                MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                CenterMessageBox.Show(new WindowWrapper(this), "ビルドエラーを修正してからシミュレートしてください。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
             MenuItem_SimulatePlay.Visibility = Visibility.Collapsed;
@@ -904,6 +925,10 @@ namespace GameEngine
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
             m_simulating = false;
             m_loader.Stop();
+            foreach(GameObject gameObject in HierarchyListBox.Items)
+            {
+                ObjectToInterop(gameObject);
+            }
             ObjectToInspector();
         }
 
@@ -911,6 +936,7 @@ namespace GameEngine
         {
             //パス設定のダイアログを表示
             var dialog = new pathSettingWindow(m_devenvPath);
+            dialog.Owner = GetWindow(this);
             if (dialog.ShowDialog() == true)
             {
                 m_devenvPath = dialog.m_devenvPath;
@@ -1025,7 +1051,34 @@ namespace GameEngine
                 m_loader.SetGameObjectScale(objectName, gameObject.Scale.X, gameObject.Scale.Y, gameObject.Scale.Z);
 
             }
-            //ScriptTextBox.Text = gameObject.Script;
+        }
+
+
+        /// <summary>
+        /// オブジェクトの位置情報を描画や処理サイドに送る
+        /// </summary>
+        /// <param name="gameObject">対象ゲームオブジェクト</param>
+        private void ObjectToInterop(GameObject gameObject)
+        {
+            if (gameObject == null)
+                return;
+
+            string objectName = gameObject.ToString();
+            {
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
+                m_loader.SetGameObjectPosition(objectName, gameObject.Position.X, gameObject.Position.Y, gameObject.Position.Z);
+            }
+            {
+                Vector3 rotation = gameObject.Rotation / (float)Math.PI * 180.0f; //Radian->Degree
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
+                m_loader.SetGameObjectRotation(objectName, gameObject.Rotation.X, gameObject.Rotation.Y, gameObject.Rotation.Z);
+            }
+            {
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
+                m_loader.SetGameObjectScale(objectName, gameObject.Scale.X, gameObject.Scale.Y, gameObject.Scale.Z);
+
+            }
         }
 
         private void InspectorToObject()
@@ -1090,11 +1143,18 @@ namespace GameEngine
         //      INSPECTOR VISIBILITY
         //=================================
 
+        /// <summary>
+        /// インスペクター情報を非表示
+        /// </summary>
         private void HideInspector()
         {
             Inspector_StackPanel.Visibility = Visibility.Collapsed;
         }
 
+
+        /// <summary>
+        /// インスペクター情報を表示
+        /// </summary>
         private void ShowInspector()
         {
             Inspector_StackPanel.Visibility = Visibility.Visible;
@@ -1105,6 +1165,7 @@ namespace GameEngine
 
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Inspector_Name.Text = gameObject.ToString();
+            Model_Lighting.IsChecked = gameObject.HasLighting;
 
             Component_Panel.Children.Clear();
             LoadComponents(gameObject.Name);
@@ -1839,19 +1900,19 @@ namespace GameEngine
 
         public void SetMessage(string message)
         {
-            m_messageList.Add(message);
             this.Dispatcher.Invoke(() =>
             {
                 MessageLog.Content = message;
             });
+            m_mainViewModel.AddItem(message);
         }
 
         public void SetMessages(List<string> messages)
         {
-            m_messageList.AddRange(messages);
+            m_mainViewModel.AddItem(messages);
             this.Dispatcher.Invoke(() =>
             {
-                MessageLog.Content = m_messageList.Last();
+                MessageLog.Content = m_mainViewModel.GetLastItem();
             });
         }
 
@@ -1875,17 +1936,57 @@ namespace GameEngine
             //スクリプト名を入力するウインドウを起動
             //var dialog = new userInputDialog();
             List<string> scriptsList = m_loader.GetScriptsList();
-            var dialog = new userInputDialog(scriptsList);
+            List<string> componentsList = new List<string>();
+            componentsList.AddRange(scriptsList);
+            componentsList.AddRange(Define.preDefinedComponents);
+
+            var dialog = new userInputDialog(componentsList);
+            dialog.Owner = GetWindow(this);
             if (dialog.ShowDialog() == true)
             {
                 className = dialog.InputText;
+                //入力文字列のスペースを無視
+                className = Regex.Replace(className, @"\s+", "");
             }
             else { return; }
 
             //テンプレート.csファイルを生成
             string upperClassName = className[0].ToString().ToUpper() + className.Substring(1);
+
+            //プリデファインドコンポーネントなら新しく作らずコンポーネントをそのまま追加する
+            foreach(string componentName in Define.preDefinedComponents)
+            {
+                if(componentName == upperClassName)
+                {
+                    //選択中のゲームオブジェクトに作成されたスクリプトを追加
+                    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+                    //重複しているスクリプトの場合は追加しない
+                    if (m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
+                    {
+                        //MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        CenterMessageBox.Show(new WindowWrapper(this), Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    if(m_loader.AddComponentToGameObject(inspectorObject.Name, upperClassName) == false)
+                    {
+                        //MessageBox.Show(inspectorObject.Name + "は既にコライダーを持っています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBoxEx.Show(inspectorObject.Name + "は既にコライダーを持っています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBoxEx.Show(this, inspectorObject.Name + "は既にコライダーを持っています。",)
+                        CenterMessageBox.Show(new WindowWrapper(this), inspectorObject.Name + "は既にコライダーを持っています。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+
+                        return;
+                    }
+
+                    //インスペクターへ反映
+                    LoadComponents(inspectorObject.Name);
+
+                    return;
+                }
+            }
+
             //リストにある名前なら新しく作らずコンポーネントをそのまま追加する
-            foreach(string scriptName in scriptsList)
+            foreach (string scriptName in scriptsList)
             {
                 if(scriptName == upperClassName)
                 {
@@ -1894,7 +1995,8 @@ namespace GameEngine
                     //重複しているスクリプトの場合は追加しない
                     if(m_loader.IsObjectContainingScript(inspectorObject.Name, upperClassName))
                     {
-                        MessageBox.Show(upperClassName + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //MessageBox.Show(Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                        CenterMessageBox.Show(new WindowWrapper(this), Define.AddSpacesToString(upperClassName) + "は既に" + inspectorObject.Name + "に存在しています。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                         return;
                     }
                     string scriptPath = System.IO.Path.GetFullPath("asset/" + className + ".cs");
@@ -2059,7 +2161,7 @@ namespace GameEngine.GameEntity
             }
             m_scriptLibrary.Save();
 
-            m_messageList.Clear();
+            m_mainViewModel.ClearItem();
             //ScriptLibraryソリューションをビルド
             //（VSでエンジンを起動してビルドすると失敗する可能性がある）
             //（→.exeを起動するのが推奨）
@@ -2087,17 +2189,23 @@ namespace GameEngine.GameEntity
         {
             List<string> scriptNames = m_loader.GetScriptsName(gameObjectName);
             List<string> scriptPaths = m_loader.GetScriptsPath(gameObjectName);
-            List<GameScriptPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
-            List<GameScriptPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
+            List<ComponentPropInfo> propInfos = m_loader.GetScriptsPropInfos(gameObjectName);
+            List<ComponentPropInfo> fieldInfos = m_loader.GetScriptsFieldInfos(gameObjectName);
 
+            int scriptCount = 0;
 
             Component_Panel.Children.Clear();
 
             for (int i = 0; i < scriptNames.Count(); i++)
             {
+                if(scriptPaths[i] != "")
+                {
+                    scriptCount++;
+                }
                 var stackPanelTemp = new StackPanel { Orientation = Orientation.Vertical };
                 string scriptName = scriptNames[i];
-                stackPanelTemp.Children.Add(new Label { Content = scriptName });
+                //stackPanelTemp.Children.Add(new Label { Content = scriptName });
+                stackPanelTemp.Children.Add(new Label { Content = Define.AddSpacesToString(scriptName) });
 
                 var stackPanelProp = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -2110,6 +2218,22 @@ namespace GameEngine.GameEntity
                     if (result != null)
                     {
                         tb.Text = result;
+                    }
+                };
+
+                //テキストボックスの値をオブジェクトの値へ代入（ローカル関数）
+                void SetSVector3Value(bool isProperty, TextBox tbx, TextBox tby, TextBox tbz, string changedName)
+                {
+                    SVector3 changedValue = new SVector3(tbx.Text, tby.Text, tbz.Text);
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue.ToString());
+
+                    //Set value失敗
+                    if (result != null)
+                    {
+                        SVector3 resultVector = new SVector3(result);
+                        tbx.Text = resultVector.X.ToString();
+                        tby.Text = resultVector.Y.ToString();
+                        tbz.Text = resultVector.Z.ToString();
                     }
                 };
 
@@ -2130,7 +2254,10 @@ namespace GameEngine.GameEntity
                     string propName = propInfos[i].PropNames[j];
                     if (propName == "FilePath" || propName == "Name") continue;
                     var stackPanelOneProp = new StackPanel { Orientation = Orientation.Horizontal };
-                    stackPanelOneProp.Children.Add(new Label { Content = propInfos[i].PropNames[j] });
+                    stackPanelOneProp.Children.Add(new Label {
+                        Content = propInfos[i].PropNames[j] ,
+                        MinWidth = 70
+                    });
                     switch (propInfos[i].PropTypes[j])
                     {
                         //bool型はチェックボックスで表示
@@ -2140,15 +2267,102 @@ namespace GameEngine.GameEntity
                             propInputBox.IsChecked = bool.Parse(propInfos[i].PropValues[j]);
                             propInputBox.Checked += (object sender, RoutedEventArgs e) =>
                             {
-                                SetValueBool(false, propInputBox, propName, propInputBox.IsChecked.ToString());
+                                SetValueBool(true, propInputBox, propName, propInputBox.IsChecked.ToString());
                             };
                             propInputBox.Unchecked += (object sender, RoutedEventArgs e) =>
                             {
-                                SetValueBool(false, propInputBox, propName, propInputBox.IsChecked.ToString());
+                                SetValueBool(true, propInputBox, propName, propInputBox.IsChecked.ToString());
                             };
                             propInputBox.VerticalAlignment = VerticalAlignment.Center;
                             stackPanelOneProp.Children.Add(propInputBox);
                             stackPanelProp.Children.Add(stackPanelOneProp);
+                            break;
+
+                        case string value when value == typeof(SVector3).AssemblyQualifiedName:
+                            StackPanel vectorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                            SVector3 propValue = new SVector3(propInfos[i].PropValues[j]);
+
+                            vectorPanel.Children.Add(new Label { Content = "X" });
+                            TextBox xInputField = new TextBox { Width = 30 };
+                            xInputField.Text = propValue.X.ToString();
+                            xInputField.Tag = false;
+                            vectorPanel.Children.Add(xInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Y" });
+                            TextBox yInputField = new TextBox { Width = 30 };
+                            yInputField.Text = propValue.Y.ToString();
+                            yInputField.Tag = false;
+                            vectorPanel.Children.Add(yInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Z" });
+                            TextBox zInputField = new TextBox { Width = 30 };
+                            zInputField.Text = propValue.Z.ToString();
+                            zInputField.Tag = false;
+                            vectorPanel.Children.Add(zInputField);
+
+                            //ENTERを押したらSetValueを呼ぶ
+                            xInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                Keyboard.ClearFocus();
+                            };
+                            yInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                Keyboard.ClearFocus();
+                            };
+                            zInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                Keyboard.ClearFocus();
+                            };
+
+                            //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                            xInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(xInputField.Tag) == false) { return; }
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                xInputField.Tag = false;
+                            };
+                            yInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(yInputField.Tag) == false) { return; }
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                yInputField.Tag = false;
+                            };
+                            zInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(zInputField.Tag) == false) { return; }
+                                SetSVector3Value(true, xInputField, yInputField, zInputField, propName);
+                                zInputField.Tag = false;
+                            };
+
+                            //テキストが変わらなくてもフォーカス変更だけで勝手に更新しないように
+                            xInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                xInputField.Tag = true;
+                            };
+                            yInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                yInputField.Tag = true;
+                            };
+                            zInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                zInputField.Tag = true;
+                            };
+
+                            stackPanelOneProp.Children.Add(vectorPanel);
+                            stackPanelProp.Children.Add(stackPanelOneProp);
+
                             break;
 
                         default:
@@ -2162,6 +2376,7 @@ namespace GameEngine.GameEntity
                                     return;
 
                                 SetValue(true, propInputField, propName, propInputField.Text);
+                                Keyboard.ClearFocus();
                             };
 
                             //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
@@ -2185,7 +2400,10 @@ namespace GameEngine.GameEntity
                     var stackPanelOneField = new StackPanel {
                         Orientation = Orientation.Horizontal
                     };
-                    stackPanelOneField.Children.Add(new Label { Content = fieldInfos[i].PropNames[k] });
+                    stackPanelOneField.Children.Add(new Label {
+                        Content = fieldInfos[i].PropNames[k] ,
+                        MinWidth = 70
+                    });
                     switch (fieldInfos[i].PropTypes[k])
                     {
                         //bool型はチェックボックスで表示
@@ -2206,6 +2424,93 @@ namespace GameEngine.GameEntity
                             stackPanelField.Children.Add(stackPanelOneField);
                             break;
 
+                        case string value when value == typeof(SVector3).AssemblyQualifiedName:
+                            StackPanel vectorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                            SVector3 fieldValue = new SVector3(fieldInfos[i].PropValues[k]);
+
+                            vectorPanel.Children.Add(new Label { Content = "X" });
+                            TextBox xInputField = new TextBox { Width = 30 };
+                            xInputField.Text = fieldValue.X.ToString();
+                            xInputField.Tag = false;
+                            vectorPanel.Children.Add(xInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Y" });
+                            TextBox yInputField = new TextBox { Width = 30 };
+                            yInputField.Text = fieldValue.Y.ToString();
+                            yInputField.Tag = false;
+                            vectorPanel.Children.Add(yInputField);
+
+                            vectorPanel.Children.Add(new Label { Content = "Z" });
+                            TextBox zInputField = new TextBox { Width = 30 };
+                            zInputField.Text = fieldValue.Z.ToString();
+                            zInputField.Tag = false;
+                            vectorPanel.Children.Add(zInputField);
+
+                            //ENTERを押したらSetValueを呼ぶ
+                            xInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                Keyboard.ClearFocus();
+                            };
+                            yInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                Keyboard.ClearFocus();
+                            };
+                            zInputField.KeyDown += (object sender, KeyEventArgs e) =>
+                            {
+                                if (e.Key != Key.Return)
+                                    return;
+
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                Keyboard.ClearFocus();
+                            };
+
+                            //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
+                            xInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(xInputField.Tag) == false) { return; }
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                xInputField.Tag = false;
+                            };
+                            yInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(yInputField.Tag) == false) { return; }
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                yInputField.Tag = false;
+                            };
+                            zInputField.LostFocus += (object sender, RoutedEventArgs e) =>
+                            {
+                                if (Convert.ToBoolean(zInputField.Tag) == false) { return; }
+                                SetSVector3Value(false, xInputField, yInputField, zInputField, fieldName);
+                                zInputField.Tag = false;
+                            };
+
+                            //テキストが変わらなくてもフォーカス変更だけで勝手に更新しないように
+                            xInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                xInputField.Tag = true;
+                            };
+                            yInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                yInputField.Tag = true;
+                            };
+                            zInputField.TextChanged += (object sender, TextChangedEventArgs e) =>
+                            {
+                                zInputField.Tag = true;
+                            };
+
+                            stackPanelOneField.Children.Add(vectorPanel);
+                            stackPanelField.Children.Add(stackPanelOneField);
+
+                            break;
+
                         //bool以外の型はテキストで表示
                         default:
                             TextBox fieldInputField = new TextBox();
@@ -2219,6 +2524,7 @@ namespace GameEngine.GameEntity
                                     return;
 
                                 SetValue(false, fieldInputField, fieldName, fieldInputField.Text);
+                                Keyboard.ClearFocus();
                             };
 
                             //テキストボックスのフォーカスが失ってもSetValueを呼ぶ
@@ -2287,6 +2593,7 @@ namespace GameEngine.GameEntity
                 RemoveComponentButton.Click += (object ss, RoutedEventArgs ee) =>
                 {
                     var confirmDialog = new removeComponentConfirmDialog(name, gameObjectName);
+                    confirmDialog.Owner = GetWindow(this);
                     if (confirmDialog.ShowDialog() == true)
                     {
                         if (confirmDialog.IsConfirm)
@@ -2316,10 +2623,20 @@ namespace GameEngine.GameEntity
 
         }
 
-        private void MessageLog_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Model_Lighting_Checked(object sender, RoutedEventArgs e)
         {
-            //var messageWindow = new messageLogWindow(m_messageList);
-            //messageWindow.Show();
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if(inspectorObject == null) { return; }
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/vertexLightingVS.cso"));
+            inspectorObject.HasLighting = true;
+        }
+
+        private void Model_Lighting_Unchecked(object sender, RoutedEventArgs e)
+        {
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if (inspectorObject == null) { return; }
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/unlitTextureVS.cso"));
+            inspectorObject.HasLighting = false;
         }
     }
 

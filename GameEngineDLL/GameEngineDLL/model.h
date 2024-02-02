@@ -77,4 +77,7 @@ public:
 
 	bool GetMaterialTextureEnable() { return m_SubsetArray[0].Material.Material.TextureEnable; }
 	int GetSubsetNum() { return m_SubsetNum; }
+
+	void SetVertexShader(const char* FileName){ Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, FileName); }
+	void SetPixelShader(const char* FileName) { Renderer::CreatePixelShader(&m_PixelShader, FileName); }
 };

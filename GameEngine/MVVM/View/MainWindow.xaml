@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:GameEngine"
         xmlns:wfc="clr-namespace:Microsoft.WindowsAPICodePack.Controls.WindowsForms;assembly=Microsoft.WindowsAPICodePack.Shell"
         xmlns:controls="clr-namespace:TsNode.Controls;assembly=TsNode"
+		xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="K Engine"
 		Closing="MainWindow_Closing"
@@ -75,7 +76,19 @@
 			<TabItem Header="Inspector">
 				<StackPanel Orientation="Vertical" Name="Inspector_StackPanel" Loaded="Inspector_Panel_Loaded">
 
-					<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown"/>
+					<DockPanel FlowDirection="RightToLeft" LastChildFill="True">
+						<CheckBox x:Name="Model_Lighting"  FlowDirection="RightToLeft" DockPanel.Dock="Left" IsChecked="True" Checked="Model_Lighting_Checked" Unchecked="Model_Lighting_Unchecked">
+							<!--チェックボックスのアイコンがミラーになることを防止-->
+							<CheckBox.Resources>
+								<Style TargetType="{x:Type Path}">
+									<Setter Property="FlowDirection" Value="LeftToRight"/>
+								</Style>
+							</CheckBox.Resources>
+							<TextBlock FlowDirection="LeftToRight" Text=" Light"/>
+						</CheckBox>
+						<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown" FlowDirection="LeftToRight"/>
+					</DockPanel>
+					
 
 					<StackPanel Orientation="Horizontal" Focusable="True" GotFocus="Inspector_Position_Show">
 						<Label Content="Position" Width="70"/>
@@ -199,7 +212,7 @@
 					<DockPanel >
 						<StackPanel Orientation="Vertical" >
 							<Button x:Name="Add_Component_Button" Content="Add Component" Click="Add_Component" Width="180"/>
-							<Button x:Name="Add_Box_Collider_Button" Content="Add Box Collider" Click="Add_BoxCollider" Width="180"/>
+							<!--<Button x:Name="Add_Box_Collider_Button" Content="Add Box Collider" Click="Add_BoxCollider" Width="180"/>-->
 						</StackPanel>
 					</DockPanel>
 
@@ -243,7 +256,16 @@
 		</TabControl>
 
 		<Grid Grid.Row="4" Grid.ColumnSpan="5">
-			<Label x:Name="MessageLog" Content="" MouseLeftButtonDown="MessageLog_MouseLeftButtonDown"/>
+			<!--<Grid.Resources>
+				<local:CollectionToLastConverter x:Key="CollectionToLastConverter"/>
+			</Grid.Resources>-->
+			<Label x:Name="MessageLog" Content="Welcome to K Engine!" x:FieldModifier="public">
+				<bh:Interaction.Triggers>
+					<bh:EventTrigger EventName="MouseLeftButtonDown">
+						<bh:InvokeCommandAction Command="{Binding Path=OpenMessageWindowCommand}"/>
+					</bh:EventTrigger>
+				</bh:Interaction.Triggers>
+			</Label>
 		</Grid>
 	</Grid>
 </Window>

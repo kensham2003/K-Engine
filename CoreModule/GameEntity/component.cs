@@ -12,6 +12,7 @@ namespace GameEngine.GameEntity
     [JsonDerivedType(typeof(Model))]
     [JsonDerivedType(typeof(testComponent))]
     [JsonDerivedType(typeof(GameScript))]
+    [JsonDerivedType(typeof(Collider))]
     [Serializable]
     public class Component
     {
@@ -24,6 +25,12 @@ namespace GameEngine.GameEntity
         public Component(GameObject gameObject)
         {
             Parent = gameObject;
+        }
+
+        public Component(GameObject gameObject, string name)
+        {
+            Parent = gameObject;
+            Name = name;
         }
 
         public GameObject GetParent() { return Parent; }
