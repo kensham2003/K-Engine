@@ -70,6 +70,9 @@ namespace GameEngine.GameLoop
                     }
                 }
             }
+
+            //当たり判定の処理
+
             
             //更新が終わったオブジェクトの位置情報などを描画側（C++）に送る
             for (int i = 0; i < Define.NUM_LAYER; i++)

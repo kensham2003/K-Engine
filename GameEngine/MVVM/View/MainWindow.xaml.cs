@@ -925,6 +925,10 @@ namespace GameEngine
             MenuItem_SimulatePlay.Visibility = Visibility.Visible;
             m_simulating = false;
             m_loader.Stop();
+            foreach(GameObject gameObject in HierarchyListBox.Items)
+            {
+                ObjectToInterop(gameObject);
+            }
             ObjectToInspector();
         }
 
@@ -1047,7 +1051,34 @@ namespace GameEngine
                 m_loader.SetGameObjectScale(objectName, gameObject.Scale.X, gameObject.Scale.Y, gameObject.Scale.Z);
 
             }
-            //ScriptTextBox.Text = gameObject.Script;
+        }
+
+
+        /// <summary>
+        /// オブジェクトの位置情報を描画や処理サイドに送る
+        /// </summary>
+        /// <param name="gameObject">対象ゲームオブジェクト</param>
+        private void ObjectToInterop(GameObject gameObject)
+        {
+            if (gameObject == null)
+                return;
+
+            string objectName = gameObject.ToString();
+            {
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
+                m_loader.SetGameObjectPosition(objectName, gameObject.Position.X, gameObject.Position.Y, gameObject.Position.Z);
+            }
+            {
+                Vector3 rotation = gameObject.Rotation / (float)Math.PI * 180.0f; //Radian->Degree
+
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(objectName, gameObject.Rotation));
+                m_loader.SetGameObjectRotation(objectName, gameObject.Rotation.X, gameObject.Rotation.Y, gameObject.Rotation.Z);
+            }
+            {
+                NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
+                m_loader.SetGameObjectScale(objectName, gameObject.Scale.X, gameObject.Scale.Y, gameObject.Scale.Z);
+
+            }
         }
 
         private void InspectorToObject()
@@ -1112,11 +1143,18 @@ namespace GameEngine
         //      INSPECTOR VISIBILITY
         //=================================
 
+        /// <summary>
+        /// インスペクター情報を非表示
+        /// </summary>
         private void HideInspector()
         {
             Inspector_StackPanel.Visibility = Visibility.Collapsed;
         }
 
+
+        /// <summary>
+        /// インスペクター情報を表示
+        /// </summary>
         private void ShowInspector()
         {
             Inspector_StackPanel.Visibility = Visibility.Visible;
