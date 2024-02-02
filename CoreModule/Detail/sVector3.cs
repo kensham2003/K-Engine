@@ -86,5 +86,53 @@ namespace GameEngine.Detail
 
         public static SVector3 operator /(SVector3 a, float d)
             => new SVector3(a.X / d, a.Y / d, a.Z / d);
+
+        /// <summary>
+        /// ゼロベクトル
+        /// </summary>
+        /// <returns></returns>
+        public static SVector3 Zero() { return new SVector3(0.0f, 0.0f, 0.0f); }
+
+        /// <summary>
+        /// SVector3の長さ
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        public static float Length(SVector3 v)
+        {
+            return MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+        }
+
+        /// <summary>
+        /// 二つのSVector3の間の距離
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        /// <returns></returns>
+        public static float Distance(SVector3 v1, SVector3 v2)
+        {
+            return Length(v1 - v2);
+        }
+
+        public static SVector3 GetRight(SVector3 rot)
+        {
+            Matrix4x4 rotMat = Matrix4x4.CreateFromYawPitchRoll(rot.Y, rot.X, rot.Z);
+
+            return new SVector3(rotMat.M11, rotMat.M12, rotMat.M13);
+        }
+
+        public static SVector3 GetTop(SVector3 rot)
+        {
+            Matrix4x4 rotMat = Matrix4x4.CreateFromYawPitchRoll(rot.Y, rot.X, rot.Z);
+
+            return new SVector3(rotMat.M21, rotMat.M22, rotMat.M23);
+        }
+
+        public static SVector3 GetForward(SVector3 rot)
+        {
+            Matrix4x4 rotMat = Matrix4x4.CreateFromYawPitchRoll(rot.Y, rot.X, rot.Z);
+
+            return new SVector3(rotMat.M31, rotMat.M32, rotMat.M33);
+        }
     }
 }
