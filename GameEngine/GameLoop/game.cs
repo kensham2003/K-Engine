@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using GameEngine.GameEntity;
 using GameEngine.Detail;
+using GameEngine.Physics;
 
 namespace GameEngine.GameLoop
 {
@@ -72,8 +73,35 @@ namespace GameEngine.GameLoop
             }
 
             //当たり判定の処理
+            for (int i = 0; i < Define.NUM_LAYER; i++)
+            {
+                foreach (GameObject gameObjectA in m_gameObjects[i])
+                {
+                    //コライダーを持ってない場合は飛ばす
+                    if (!gameObjectA.HasCollider) { continue; }
 
-            
+                    for (int j = 0; j < Define.NUM_LAYER; j++)
+                    {
+                        foreach (GameObject gameObjectB in m_gameObjects[j])
+                        {
+                            if(gameObjectA == gameObjectB) { continue; }
+
+                            //コライダーを持ってない場合は飛ばす
+                            if (!gameObjectB.HasCollider) { continue; }
+
+                            //当たっている
+                            if(Collision.CheckCollision(gameObjectA, gameObjectB))
+                            {
+                                foreach(GameScript script in gameObjectA.GameScripts)
+                                {
+                                    script.OnCollision(gameObjectB.Collider);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             //更新が終わったオブジェクトの位置情報などを描画側（C++）に送る
             for (int i = 0; i < Define.NUM_LAYER; i++)
             {

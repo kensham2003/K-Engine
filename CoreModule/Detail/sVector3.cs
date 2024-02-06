@@ -17,6 +17,7 @@ namespace GameEngine.Detail
         public float Y;
         public float Z;
 
+
         public SVector3(float x, float y, float z)
         {
             this.X = x;
@@ -87,6 +88,22 @@ namespace GameEngine.Detail
         public static SVector3 operator /(SVector3 a, float d)
             => new SVector3(a.X / d, a.Y / d, a.Z / d);
 
+        public static bool operator ==(SVector3 a, SVector3 b)
+        {
+            if (a.X != b.X) return false;
+            if (a.Y != b.Y) return false;
+            if (a.Z != b.Z) return false;
+            return true;
+        }
+
+        public static bool operator !=(SVector3 a, SVector3 b)
+        {
+            if (a.X != b.X) return true;
+            if (a.Y != b.Y) return true;
+            if (a.Z != b.Z) return true;
+            return false;
+        }
+
         /// <summary>
         /// ゼロベクトル
         /// </summary>
@@ -133,6 +150,21 @@ namespace GameEngine.Detail
             Matrix4x4 rotMat = Matrix4x4.CreateFromYawPitchRoll(rot.Y, rot.X, rot.Z);
 
             return new SVector3(rotMat.M31, rotMat.M32, rotMat.M33);
+        }
+
+        public static float Dot(SVector3 v1, SVector3 v2)
+        {
+            return Vector3.Dot(v1, v2);
+        }
+
+        public static SVector3 Cross(SVector3 v1, SVector3 v2)
+        {
+            return Vector3.Cross(v1, v2);
+        }
+
+        public static SVector3 Normalize(SVector3 v)
+        {
+            return Vector3.Normalize(v);
         }
     }
 }

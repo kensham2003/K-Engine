@@ -75,6 +75,11 @@ namespace GameEngine.ScriptLoading
                     //インスタンス生成
                     //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                     var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
+                    if(typeName == null)
+                    {
+                        Assembly asm = typeof(GameObject).Assembly;
+                        typeName = asm.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
+                    }
                     var instance = Activator.CreateInstance(typeName, null);
                     dynamic ins = Convert.ChangeType(instance, typeName);
 
@@ -101,7 +106,16 @@ namespace GameEngine.ScriptLoading
                                 Type type = Type.GetType(propTypeName);
                                 string propValue = oldGameScriptPropInfo.PropValues[m];
                                 var prop = typeName.GetProperty(propName);
-                                prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                                object newValue;
+                                if(type == typeof(SVector3))
+                                {
+                                    newValue = new SVector3(propValue);
+                                }
+                                else
+                                {
+                                    newValue = Convert.ChangeType(propValue, type);
+                                }
+                                prop.SetValue(ins, newValue);
 
                                 newGameScriptPropInfo.PropNames.Add(propName);
                                 newGameScriptPropInfo.PropTypes.Add(propTypeName);
@@ -145,7 +159,16 @@ namespace GameEngine.ScriptLoading
                                 Type type = Type.GetType(fieldTypeName);
                                 string propValue = oldGameScriptFieldInfo.PropValues[m];
                                 var field = typeName.GetField(fieldName);
-                                field.SetValue(ins, Convert.ChangeType(propValue, type));
+                                object newValue;
+                                if (type == typeof(SVector3))
+                                {
+                                    newValue = new SVector3(propValue);
+                                }
+                                else
+                                {
+                                    newValue = Convert.ChangeType(propValue, type);
+                                }
+                                field.SetValue(ins, newValue);
 
                                 newGameScriptFieldInfo.PropNames.Add(fieldName);
                                 newGameScriptFieldInfo.PropTypes.Add(fieldTypeName);
@@ -166,7 +189,20 @@ namespace GameEngine.ScriptLoading
                     }
                     gameObject.ComponentFieldInfos[i] = newGameScriptFieldInfo;
 
-                    gameObject.AddScript(ins, gameObject.ComponentName[i]);
+                    bool addedInstance = false;
+                    foreach(string s in Define.preDefinedComponents)
+                    {
+                        if(s == gameObject.ComponentName[i])
+                        {
+                            gameObject.AddComponent(ins, gameObject.ComponentName[i]);
+                            addedInstance = true;
+                            break;
+                        }
+                    }
+                    if (!addedInstance)
+                    {
+                        gameObject.AddScript(ins, gameObject.ComponentName[i]);
+                    }
                 }
             }
             m_game.m_gameObjects[1] = m_gameObjects;
