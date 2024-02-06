@@ -14,5 +14,7 @@ namespace GameEngine.GameEntity
         public GameScript() { }
 
         public GameScript(GameObject gameObject) : base(gameObject) { }
+
+        public virtual void OnCollision(Collider c) { }
     }
 }

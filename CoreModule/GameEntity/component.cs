@@ -44,6 +44,5 @@ namespace GameEngine.GameEntity
 
         public virtual void Update(TimeSpan gameTime) { }
 
-        public virtual void OnCollision(Collider c) { }
     }
 }
