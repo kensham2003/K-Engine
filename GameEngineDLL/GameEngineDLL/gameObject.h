@@ -14,6 +14,8 @@ protected://継承先のクラスからアクセスできる
 
 	bool m_Destroy = false; //このゲームオブジェクトを削除するか
 
+	bool m_DrawFlag = true;
+
 	std::string m_Name;
 
 	D3DXVECTOR3	m_Position{};
@@ -47,6 +49,7 @@ public:
 		}
 	}
 	virtual void Draw() {
+		if (!m_DrawFlag) { return; }
 		for (Component* component : m_Component) {
 			component->Draw();
 		}
@@ -65,6 +68,8 @@ public:
 			return false;
 		}
 	}
+
+	void SetDrawFlag(bool Flag) { m_DrawFlag = Flag; }
 
 	void SetPosition(D3DXVECTOR3 Position) { m_Position = Position; }
 	void SetRotation(D3DXVECTOR3 Rotation) { m_Rotation = Rotation; }

@@ -199,6 +199,15 @@ namespace GameEngine.ScriptLoading
                             break;
                         }
                     }
+                    foreach (string s in Define.preDefinedColliders)
+                    {
+                        if (s == gameObject.ComponentName[i])
+                        {
+                            gameObject.HasCollider = true;
+                            gameObject.Collider = ins;
+                            break;
+                        }
+                    }
                     if (!addedInstance)
                     {
                         gameObject.AddScript(ins, gameObject.ComponentName[i]);
@@ -458,9 +467,20 @@ namespace GameEngine.ScriptLoading
                 {
                     gameObject.HasCollider = true;
                     gameObject.Collider = ins;
-                    //string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\asset\\model\\cube.obj";
-                    string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\asset\\model\\cube.obj";
-                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.AddBoxCollider(objectName, path));
+                    string objFileName = "";
+                    if(s == "BoxCollider")
+                    {
+                        objFileName = "\\EngineAssets\\model\\cube.obj";
+                        string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + objFileName;
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.AddBoxCollider(objectName, path));
+                    }
+                    else if(s == "SphereCollider")
+                    {
+                        objFileName = "\\EngineAssets\\model\\sphere.obj";
+                        string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + objFileName;
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.AddSphereCollider(objectName, path));
+                    }
+
                     return true;
                 }
             }
@@ -553,7 +573,14 @@ namespace GameEngine.ScriptLoading
                 {
                     gameObject.Collider = null;
                     gameObject.HasCollider = false;
-                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveBoxCollider(objectName));
+                    if (s == "BoxCollider")
+                    {
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveBoxCollider(objectName));
+                    }
+                    else if(s == "SphereCollider")
+                    {
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveSphereCollider(objectName));
+                    }
                 }
             }
             string removedComponentName = gameObject.ComponentName[index];
@@ -854,8 +881,14 @@ namespace GameEngine.ScriptLoading
                             BoxCollider bc = gameObject.Collider as BoxCollider;
                             MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderSize(gameObjectName, bc.Size));
                             MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderRotate(gameObjectName, bc.Rotate));
+                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, bc.Offset));
                         }
-                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, gameObject.Collider.Offset));
+                        else if(s == "SphereCollider")
+                        {
+                            SphereCollider sc = gameObject.Collider as SphereCollider;
+                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderSize(gameObjectName, sc.Size));
+                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderOffset(gameObjectName, sc.Offset));
+                        }
 
                         return null;
                     }

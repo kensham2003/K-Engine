@@ -74,12 +74,20 @@ extern "C" {
 
 	__declspec(dllexport) void __cdecl AddModel(const char* ObjectName, const char* FileName);
 	__declspec(dllexport) void __cdecl AddBoxCollider(const char* ObjectName, const char* FileName);
+	__declspec(dllexport) void __cdecl AddSphereCollider(const char* ObjectName, const char* FileName);
 
 	__declspec(dllexport) void __cdecl SetObjectBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size);
 	__declspec(dllexport) void __cdecl SetObjectBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate);
 	__declspec(dllexport) void __cdecl SetObjectBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
 
+	__declspec(dllexport) void __cdecl SetObjectSphereColliderSize(const char* ObjectName, float Size);
+	__declspec(dllexport) void __cdecl SetObjectSphereColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
+
+	__declspec(dllexport) void __cdecl SetObjectDrawFlag(const char* ObjectName, bool Flag);
+
+	__declspec(dllexport) void __cdecl RemoveObject(const char* ObjectName);
 	__declspec(dllexport) void __cdecl RemoveBoxCollider(const char* ObjectName);
+	__declspec(dllexport) void __cdecl RemoveSphereCollider(const char* ObjectName);
 
 	__declspec(dllexport) bool __cdecl GetMaterialTextureEnable(const char* ObjectName);
 	__declspec(dllexport) int __cdecl GetModelSubsetNum(const char* ObjectName);

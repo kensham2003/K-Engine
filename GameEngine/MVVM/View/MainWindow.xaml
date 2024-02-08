@@ -38,11 +38,6 @@
 				<MenuItem x:Name="MenuItem_Save" Header="保存" Click="MenuItem_Save_Click"/>
 			</MenuItem>
 
-			<MenuItem Header="スクリプト">
-				<MenuItem x:Name="MenuItem_ScriptRun" Header="実行" Click="MenuItem_Run_Click"/>
-				<MenuItem x:Name="MenuItem_ScriptStop" Header="停止" Click="MenuItem_Stop_Click"/>
-			</MenuItem>
-
 			<MenuItem Header="シミュレート">
 				<MenuItem x:Name="MenuItem_SimulatePlay" Header="プレイ" Click="MenuItem_Simulate_Play_Click"/>
 				<MenuItem x:Name="MenuItem_SimulateStop" Header="停止" Click="MenuItem_Simulate_Stop_Click" Visibility="Collapsed"/>

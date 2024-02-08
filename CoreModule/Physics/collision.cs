@@ -24,18 +24,30 @@ namespace GameEngine.Physics
             Type aT = aC.GetType();
             Type bT = bC.GetType();
 
+            //OBB_OBB collision
             if(aT == typeof(BoxCollider) && bT == typeof(BoxCollider))
             {
-                return OBBCheck(aC as BoxCollider, bC as BoxCollider);
+                return OBB_OBB_Check(aC as BoxCollider, bC as BoxCollider);
             }
 
-            //sphere + sphere collision
+            //Sphere_Sphere collision
+            if(aT == typeof(SphereCollider) && bT == typeof(SphereCollider))
+            {
+                return Sphere_Sphere_Check(aC as SphereCollider, bC as SphereCollider);
+            }
 
-            //box + sphere collision
-            return false;
+            //OBB_Sphere collision
+            if(aT == typeof(BoxCollider))
+            {
+                return OBB_Sphere_Check(aC as BoxCollider, bC as SphereCollider);
+            }
+            else
+            {
+                return OBB_Sphere_Check(bC as BoxCollider, aC as SphereCollider);
+            }
         }
 
-        private static bool OBBCheck(BoxCollider aC, BoxCollider bC)
+        private static bool OBB_OBB_Check(BoxCollider aC, BoxCollider bC)
         {
             SVector3 aR = aC.GetParent().Rotation + aC.Rotate;
             SVector3 bR = bC.GetParent().Rotation + bC.Rotate;
@@ -186,10 +198,83 @@ namespace GameEngine.Physics
             return true;
         }
 
+
+        private static bool OBB_Sphere_Check(BoxCollider aC, SphereCollider bC)
+        {
+            SVector3 bCenter = bC.GetCenterPosition();
+            SVector3 aCenter = aC.GetParent().Position + aC.Offset;
+
+            SVector3 aR = aC.GetParent().Rotation + aC.Rotate;
+            SVector3 aS = aC.GetAbsoluteSize();
+
+            SVector3 distance = SVector3.Zero();
+
+            float L = 0;
+            float mul = 0;
+
+            //スフィア中心とOBBの最短距離を求める
+            //Forwardベクトル(Z)
+            L = aS.Z;
+            if (L > 0) //長さが0以上
+            {
+                mul = SVector3.Dot(bCenter - aCenter, SVector3.GetForward(aR)) / L;
+                mul = MathF.Abs(mul);
+                if (mul > 1) //はみ出している場合
+                {
+                    distance += (1 - mul) * L * SVector3.GetForward(aR);
+                }
+            }
+
+            //Topベクトル(Y)
+            L = aS.Y;
+            if(L > 0) //長さが0以上
+            {
+                mul = SVector3.Dot(bCenter - aCenter, SVector3.GetTop(aR)) / L;
+                mul = MathF.Abs(mul);
+                if(mul > 1) //はみ出している場合
+                {
+                    distance += (1 - mul) * L * SVector3.GetTop(aR);
+                }
+            }
+
+            //Rightベクトル(X)
+            L = aS.X;
+            if (L > 0) //長さが0以上
+            {
+                mul = SVector3.Dot(bCenter - aCenter, SVector3.GetRight(aR)) / L;
+                mul = MathF.Abs(mul);
+                if (mul > 1) //はみ出している場合
+                {
+                    distance += (1 - mul) * L * SVector3.GetRight(aR);
+                }
+            }
+
+            //スフィア中心とOBBの最短距離がスフィアの半径より短い場合は当たっていると判断
+            if(SVector3.Length(distance) < bC.Size) { return true; }
+            else { return false; }
+        }
+
+
+        private static bool Sphere_Sphere_Check(SphereCollider aC, SphereCollider bC)
+        {
+            //スフィアの中心
+            SVector3 aCenter = aC.GetCenterPosition();
+            SVector3 bCenter = bC.GetCenterPosition();
+
+            //スフィアの半径（RがRotateと混ざるのでSizeのSで表示）
+            float aS = aC.Size;
+            float bS = bC.Size;
+
+            //二つスフィアの距離を計算
+            SVector3 distance = bCenter - aCenter;
+            if(SVector3.Length(distance) < (aS + bS)) { return true; }
+            else { return false; }
+        }
+
         private static SVector3 GetDirectLength(Collider a, Collider b)
         {
-            SVector3 aPPos = a.GetParent().Position;
-            SVector3 bPPos = b.GetParent().Position;
+            //SVector3 aPPos = a.GetParent().Position;
+            //SVector3 bPPos = b.GetParent().Position;
             SVector3 aPos = a.GetParent().Position + a.Offset;
             SVector3 bPos = b.GetParent().Position + b.Offset;
             return bPos - aPos;

@@ -8,6 +8,7 @@
 #include "player.h"
 #include "input.h"
 #include "boxCollider.h"
+#include "sphereCollider.h"
 
 
 std::list<std::shared_ptr<GameObject>> Manager::m_GameObject[5];
@@ -87,6 +88,10 @@ void Manager::AddBoxCollider(const char* ObjectName, const char* FileName) {
 	GetGameObject(ObjectName)->AddComponent<BoxCollider>()->Load(FileName);
 }
 
+void Manager::AddSphereCollider(const char* ObjectName, const char* FileName) {
+	GetGameObject(ObjectName)->AddComponent<SphereCollider>()->Load(FileName);
+}
+
 void Manager::SetBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size) {
 	GetGameObject(ObjectName)->GetComponent<BoxCollider>()->SetSize(Size);
 }
@@ -99,8 +104,20 @@ void Manager::SetBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
 	GetGameObject(ObjectName)->GetComponent<BoxCollider>()->SetOffset(Offset);
 }
 
+void Manager::SetSphereColliderSize(const char* ObjectName, float Size) {
+	GetGameObject(ObjectName)->GetComponent<SphereCollider>()->SetSize(Size);
+}
+
+void Manager::SetSphereColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
+	GetGameObject(ObjectName)->GetComponent<SphereCollider>()->SetOffset(Offset);
+}
+
 void Manager::RemoveBoxCollider(const char* ObjectName) {
 	GetGameObject(ObjectName)->RemoveComponent<BoxCollider>();
+}
+
+void Manager::RemoveSphereCollider(const char* ObjectName) {
+	GetGameObject(ObjectName)->RemoveComponent<SphereCollider>();
 }
 
 bool Manager::GetMaterialTextureEnable(const char* ObjectName)

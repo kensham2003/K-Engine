@@ -16,6 +16,7 @@ namespace GameEngine.GameEntity
     [JsonDerivedType(typeof(GameScript))]
     [JsonDerivedType(typeof(Collider))]
     [JsonDerivedType(typeof(BoxCollider))]
+    [JsonDerivedType(typeof(SphereCollider))]
     [Serializable]
     public class Component
     {

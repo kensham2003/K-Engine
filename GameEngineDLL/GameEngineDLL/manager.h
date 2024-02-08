@@ -45,13 +45,21 @@ public:
 
 	static void AddBoxCollider(const char* ObjectName, const char* FileName);
 
+	static void AddSphereCollider(const char* ObjectName, const char* FileName);
+
 	static void SetBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size);
 
 	static void SetBoxColliderRotate(const char* ObjectName, D3DXVECTOR3 Rotate);
 
 	static void SetBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
 
+	static void SetSphereColliderSize(const char* ObjectName, float Size);
+
+	static void SetSphereColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
+
 	static void RemoveBoxCollider(const char* ObjectName);
+
+	static void RemoveSphereCollider(const char* ObjectName);
 
 	static bool GetMaterialTextureEnable(const char* ObjectName);
 

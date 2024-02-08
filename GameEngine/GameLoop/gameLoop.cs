@@ -72,6 +72,7 @@ namespace GameEngine.GameLoop
         public void Stop()
         {
             m_simulate = false;
+            m_game.RedrawGameObjects();
         }
 
 

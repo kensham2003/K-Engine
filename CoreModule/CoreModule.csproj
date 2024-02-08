@@ -81,10 +81,12 @@
     <Compile Include="GameEntity\boxCollider.cs" />
     <Compile Include="GameEntity\collider.cs" />
     <Compile Include="GameEntity\component.cs" />
+    <Compile Include="GameEntity\destroyList.cs" />
     <Compile Include="GameEntity\gameObject.cs" />
     <Compile Include="GameEntity\ComponentPropInfo.cs" />
     <Compile Include="GameEntity\model.cs" />
     <Compile Include="GameEntity\GameScript.cs" />
+    <Compile Include="GameEntity\sphereCollider.cs" />
     <Compile Include="GameEntity\testComponent.cs" />
     <Compile Include="Physics\collision.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

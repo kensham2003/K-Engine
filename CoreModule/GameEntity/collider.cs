@@ -11,6 +11,7 @@ using GameEngine.Detail;
 namespace GameEngine.GameEntity
 {
     [JsonDerivedType(typeof(BoxCollider))]
+    [JsonDerivedType(typeof(SphereCollider))]
     public class Collider : Component
     {
         public bool IsTrigger { get; set; } = false;
