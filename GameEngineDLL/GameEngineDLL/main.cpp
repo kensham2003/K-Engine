@@ -151,6 +151,11 @@ void AddBoxCollider(const char* ObjectName, const char* FileName)
 	Manager::AddBoxCollider(ObjectName, FileName);
 }
 
+void AddSphereCollider(const char* ObjectName, const char* FileName)
+{
+	Manager::AddSphereCollider(ObjectName, FileName);
+}
+
 void SetObjectBoxColliderSize(const char* ObjectName, D3DXVECTOR3 Size) {
 	Manager::SetBoxColliderSize(ObjectName, Size);
 }
@@ -163,9 +168,32 @@ void SetObjectBoxColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
 	Manager::SetBoxColliderOffset(ObjectName, Offset);
 }
 
+void SetObjectSphereColliderSize(const char* ObjectName, float Size) {
+	Manager::SetSphereColliderSize(ObjectName, Size);
+}
+
+void SetObjectSphereColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset) {
+	Manager::SetSphereColliderOffset(ObjectName, Offset);
+}
+
+void SetObjectDrawFlag(const char* ObjectName, bool Flag)
+{
+	Manager::GetGameObject(ObjectName)->SetDrawFlag(Flag);
+}
+
+void RemoveObject(const char* ObjectName)
+{
+	Manager::GetGameObject(ObjectName)->SetDestroy();
+}
+
 void RemoveBoxCollider(const char* ObjectName)
 {
 	Manager::RemoveBoxCollider(ObjectName);
+}
+
+void RemoveSphereCollider(const char* ObjectName)
+{
+	Manager::RemoveSphereCollider(ObjectName);
 }
 
 bool GetMaterialTextureEnable(const char* ObjectName)

@@ -34,6 +34,9 @@
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Bcl.Numerics, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.Numerics.8.0.0\lib\net462\Microsoft.Bcl.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -73,15 +76,19 @@
     <Compile Include="Detail\debug.cs" />
     <Compile Include="Detail\define.cs" />
     <Compile Include="Detail\input.cs" />
+    <Compile Include="Detail\SMatrix3x3.cs" />
     <Compile Include="Detail\sVector3.cs" />
     <Compile Include="GameEntity\boxCollider.cs" />
     <Compile Include="GameEntity\collider.cs" />
     <Compile Include="GameEntity\component.cs" />
+    <Compile Include="GameEntity\destroyList.cs" />
     <Compile Include="GameEntity\gameObject.cs" />
     <Compile Include="GameEntity\ComponentPropInfo.cs" />
     <Compile Include="GameEntity\model.cs" />
     <Compile Include="GameEntity\GameScript.cs" />
+    <Compile Include="GameEntity\sphereCollider.cs" />
     <Compile Include="GameEntity\testComponent.cs" />
+    <Compile Include="Physics\collision.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

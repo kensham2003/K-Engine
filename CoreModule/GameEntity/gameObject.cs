@@ -15,10 +15,15 @@ namespace GameEngine.GameEntity
     [Serializable]
     public class GameObject
     {
+        public bool Active { get; set; } = true;
         
         public SVector3 Position { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
         public SVector3 Rotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
         public SVector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+
+        public SVector3 OldPosition { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        public SVector3 OldRotation { get; set; } = new Vector3(0.0f, 0.0f, 0.0f);
+        public SVector3 OldScale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
 
         public int Layer { get; set; }
 
@@ -33,6 +38,8 @@ namespace GameEngine.GameEntity
         public bool HasCollider { get; set; }
 
         public Collider Collider { get; set; }
+
+        public List<string> ObjectsColliding = new List<string>();
 
         public readonly ObservableCollection<Component> Components = new ObservableCollection<Component>();
 
@@ -90,6 +97,7 @@ namespace GameEngine.GameEntity
 
         public void Update(TimeSpan gameTime)
         {
+            SaveTransform();
             foreach (GameScript s in GameScripts)
             {
                 s.Update(gameTime);
@@ -98,6 +106,26 @@ namespace GameEngine.GameEntity
             {
                 c.Update(gameTime);
             }
+        }
+
+        public void Destroy()
+        {
+            Active = false;
+            DestroyList.Add(this);
+        }
+
+        public void SaveTransform()
+        {
+            OldPosition = Position;
+            OldRotation = Rotation;
+            OldScale = Scale;
+        }
+
+        public void RevertTransform()
+        {
+            Position = OldPosition;
+            Rotation = OldRotation;
+            Scale = OldScale;
         }
 
         public void AddComponent(Component component)

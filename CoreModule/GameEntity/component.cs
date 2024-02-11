@@ -7,12 +7,16 @@ using System.Numerics;
 using System.Text.Json.Serialization;
 using System.Runtime.Serialization;
 
+using GameEngine.Detail;
+
 namespace GameEngine.GameEntity
 {
     [JsonDerivedType(typeof(Model))]
     [JsonDerivedType(typeof(testComponent))]
     [JsonDerivedType(typeof(GameScript))]
     [JsonDerivedType(typeof(Collider))]
+    [JsonDerivedType(typeof(BoxCollider))]
+    [JsonDerivedType(typeof(SphereCollider))]
     [Serializable]
     public class Component
     {
@@ -40,5 +44,6 @@ namespace GameEngine.GameEntity
         public virtual void BeginPlay() { }
 
         public virtual void Update(TimeSpan gameTime) { }
+
     }
 }

@@ -517,6 +517,9 @@ namespace GameEngine
             public static extern void AddBoxCollider(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void AddSphereCollider(string ObjectName, string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetObjectBoxColliderSize(string ObjectName, Vector3 Size);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -526,7 +529,22 @@ namespace GameEngine
             public static extern void SetObjectBoxColliderOffset(string ObjectName, Vector3 Offset);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectSphereColliderSize(string ObjectName, float Size);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectSphereColliderOffset(string ObjectName, Vector3 Offset);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectDrawFlag(string ObjectName, bool Flag);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void RemoveObject(string ObjectName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void RemoveBoxCollider(string ObjectName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void RemoveSphereCollider(string ObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern bool GetMaterialTextureEnable(string ObjectName);
@@ -845,16 +863,16 @@ namespace GameEngine
             File.WriteAllText(fileName, jsonString);
         }
 
-        private void MenuItem_Run_Click(object sender, RoutedEventArgs e)
-        {
-            InspectorToObject();
-            timer.Start();
-        }
+        //private void MenuItem_Run_Click(object sender, RoutedEventArgs e)
+        //{
+        //    InspectorToObject();
+        //    timer.Start();
+        //}
 
-        private void MenuItem_Stop_Click(object sender, RoutedEventArgs e)
-        {
-            timer.Stop();
-        }
+        //private void MenuItem_Stop_Click(object sender, RoutedEventArgs e)
+        //{
+        //    timer.Stop();
+        //}
 
         private void MenuItem_Simulate_Play_Click(object sender, RoutedEventArgs e)
         {
@@ -2366,7 +2384,7 @@ namespace GameEngine.GameEntity
                             break;
 
                         default:
-                            TextBox propInputField = new TextBox();
+                            TextBox propInputField = new TextBox() { MinWidth = 30 };
                             propInputField.Text = propInfos[i].PropValues[j];
 
                             //ENTERを押したらSetValueを呼ぶ
@@ -2513,7 +2531,7 @@ namespace GameEngine.GameEntity
 
                         //bool以外の型はテキストで表示
                         default:
-                            TextBox fieldInputField = new TextBox();
+                            TextBox fieldInputField = new TextBox() { MinWidth = 30 };
                             fieldInputField.Text = fieldInfos[i].PropValues[k];
                             fieldInputField.VerticalAlignment = VerticalAlignment.Center;
 

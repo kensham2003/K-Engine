@@ -75,6 +75,11 @@ namespace GameEngine.ScriptLoading
                     //インスタンス生成
                     //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                     var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
+                    if(typeName == null)
+                    {
+                        Assembly asm = typeof(GameObject).Assembly;
+                        typeName = asm.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
+                    }
                     var instance = Activator.CreateInstance(typeName, null);
                     dynamic ins = Convert.ChangeType(instance, typeName);
 
@@ -101,7 +106,16 @@ namespace GameEngine.ScriptLoading
                                 Type type = Type.GetType(propTypeName);
                                 string propValue = oldGameScriptPropInfo.PropValues[m];
                                 var prop = typeName.GetProperty(propName);
-                                prop.SetValue(ins, Convert.ChangeType(propValue, type));
+                                object newValue;
+                                if(type == typeof(SVector3))
+                                {
+                                    newValue = new SVector3(propValue);
+                                }
+                                else
+                                {
+                                    newValue = Convert.ChangeType(propValue, type);
+                                }
+                                prop.SetValue(ins, newValue);
 
                                 newGameScriptPropInfo.PropNames.Add(propName);
                                 newGameScriptPropInfo.PropTypes.Add(propTypeName);
@@ -145,7 +159,16 @@ namespace GameEngine.ScriptLoading
                                 Type type = Type.GetType(fieldTypeName);
                                 string propValue = oldGameScriptFieldInfo.PropValues[m];
                                 var field = typeName.GetField(fieldName);
-                                field.SetValue(ins, Convert.ChangeType(propValue, type));
+                                object newValue;
+                                if (type == typeof(SVector3))
+                                {
+                                    newValue = new SVector3(propValue);
+                                }
+                                else
+                                {
+                                    newValue = Convert.ChangeType(propValue, type);
+                                }
+                                field.SetValue(ins, newValue);
 
                                 newGameScriptFieldInfo.PropNames.Add(fieldName);
                                 newGameScriptFieldInfo.PropTypes.Add(fieldTypeName);
@@ -166,7 +189,29 @@ namespace GameEngine.ScriptLoading
                     }
                     gameObject.ComponentFieldInfos[i] = newGameScriptFieldInfo;
 
-                    gameObject.AddScript(ins, gameObject.ComponentName[i]);
+                    bool addedInstance = false;
+                    foreach(string s in Define.preDefinedComponents)
+                    {
+                        if(s == gameObject.ComponentName[i])
+                        {
+                            gameObject.AddComponent(ins, gameObject.ComponentName[i]);
+                            addedInstance = true;
+                            break;
+                        }
+                    }
+                    foreach (string s in Define.preDefinedColliders)
+                    {
+                        if (s == gameObject.ComponentName[i])
+                        {
+                            gameObject.HasCollider = true;
+                            gameObject.Collider = ins;
+                            break;
+                        }
+                    }
+                    if (!addedInstance)
+                    {
+                        gameObject.AddScript(ins, gameObject.ComponentName[i]);
+                    }
                 }
             }
             m_game.m_gameObjects[1] = m_gameObjects;
@@ -422,9 +467,20 @@ namespace GameEngine.ScriptLoading
                 {
                     gameObject.HasCollider = true;
                     gameObject.Collider = ins;
-                    //string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\asset\\model\\cube.obj";
-                    string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\asset\\model\\cube.obj";
-                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.AddBoxCollider(objectName, path));
+                    string objFileName = "";
+                    if(s == "BoxCollider")
+                    {
+                        objFileName = "\\EngineAssets\\model\\cube.obj";
+                        string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + objFileName;
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.AddBoxCollider(objectName, path));
+                    }
+                    else if(s == "SphereCollider")
+                    {
+                        objFileName = "\\EngineAssets\\model\\sphere.obj";
+                        string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + objFileName;
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.AddSphereCollider(objectName, path));
+                    }
+
                     return true;
                 }
             }
@@ -517,7 +573,14 @@ namespace GameEngine.ScriptLoading
                 {
                     gameObject.Collider = null;
                     gameObject.HasCollider = false;
-                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveBoxCollider(objectName));
+                    if (s == "BoxCollider")
+                    {
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveBoxCollider(objectName));
+                    }
+                    else if(s == "SphereCollider")
+                    {
+                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveSphereCollider(objectName));
+                    }
                 }
             }
             string removedComponentName = gameObject.ComponentName[index];
@@ -818,8 +881,14 @@ namespace GameEngine.ScriptLoading
                             BoxCollider bc = gameObject.Collider as BoxCollider;
                             MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderSize(gameObjectName, bc.Size));
                             MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderRotate(gameObjectName, bc.Rotate));
+                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, bc.Offset));
                         }
-                        MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, gameObject.Collider.Offset));
+                        else if(s == "SphereCollider")
+                        {
+                            SphereCollider sc = gameObject.Collider as SphereCollider;
+                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderSize(gameObjectName, sc.Size));
+                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderOffset(gameObjectName, sc.Offset));
+                        }
 
                         return null;
                     }
