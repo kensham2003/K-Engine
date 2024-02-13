@@ -445,6 +445,9 @@ namespace GameEngine
             public static extern int Render(IntPtr resourcePointer, bool isNewSurface);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern int GetObjectCount(int layer);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetObjectPosition(string ObjectName, Vector3 Position);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -2681,6 +2684,17 @@ namespace GameEngine.GameEntity
             if (inspectorObject == null) { return; }
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit(inspectorObject.Name, false));
             inspectorObject.CanRayHit = false;
+        }
+
+        private void Hierarchy_RemoveObject(object sender, RoutedEventArgs e)
+        {
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if (inspectorObject == null) { return; }
+            int before = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectCount(1));
+            m_loader.RemoveGameObject(inspectorObject.Name);
+            int after = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectCount(1));
+            HierarchyListBox.Items.Remove(inspectorObject);
+            HideInspector();
         }
     }
 

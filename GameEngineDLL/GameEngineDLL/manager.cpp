@@ -45,7 +45,12 @@ void Manager::Update()
 {
 	Input::Update();
 
-	if (!m_IsPlaying) { return; }
+	if (!m_IsPlaying) {
+		for (int i = 0; i < 5; i++) {
+			m_GameObject[i].remove_if([](std::shared_ptr<GameObject> object) {return object->Destroy(); }); //ƒ‰ƒ€ƒ_Ž®
+		}
+		return; 
+	}
 
 	for (int i = 0; i < 5; i++) {
 		for (auto& gameObject : m_GameObject[i]) {
@@ -77,6 +82,11 @@ std::shared_ptr<GameObject> Manager::AddGameObject(const char * ObjectName, int 
 	return gameObject;
 }
 
+
+int Manager::GetObjectCount(int layer)
+{
+	return m_GameObject[layer].size();
+}
 
 void Manager::AddModel(const char* ObjectName, const char* FileName)
 {

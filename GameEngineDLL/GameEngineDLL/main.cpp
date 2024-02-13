@@ -33,6 +33,10 @@ void Render(void * Resource, bool NewSurface)
 }
 
 
+int GetObjectCount(int layer) {
+	return Manager::GetObjectCount(layer);
+}
+
 
 void SetObjectPosition(const char* ObjectName, D3DXVECTOR3 Position)
 {
@@ -189,6 +193,7 @@ void SetObjectCanRayHit(const char* ObjectName, bool hit)
 void RemoveObject(const char* ObjectName)
 {
 	Manager::GetGameObject(ObjectName)->SetDestroy();
+	Manager::Update();
 }
 
 void RemoveBoxCollider(const char* ObjectName)

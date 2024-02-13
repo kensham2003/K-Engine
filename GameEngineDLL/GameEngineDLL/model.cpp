@@ -185,7 +185,9 @@ void Model::Unload()
 
 	for (unsigned int i = 0; i < m_SubsetNum; i++)
 	{
-		m_SubsetArray[i].Material.Texture->Release();
+		if (m_SubsetArray[i].Material.Texture) {
+			m_SubsetArray[i].Material.Texture->Release();
+		}
 	}
 
 	delete[] m_SubsetArray;

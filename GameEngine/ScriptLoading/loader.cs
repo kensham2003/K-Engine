@@ -980,5 +980,12 @@ namespace GameEngine.ScriptLoading
         {
             Debug.ClearLog();
         }
+
+
+        public void RemoveGameObject(string gameObjectName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            m_game.RemoveGameObject(gameObject);
+        }
     }
 }

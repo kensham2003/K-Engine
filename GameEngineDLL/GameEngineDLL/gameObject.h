@@ -63,7 +63,7 @@ public:
 	bool Destroy() {
 		if (m_Destroy) {
 			Uninit();
-			delete this;
+			//delete this;
 			return true;
 		}
 		else {

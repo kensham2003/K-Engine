@@ -51,6 +51,21 @@
 		<TabControl Grid.Row="1" Grid.Column="0" AllowDrop="True" PreviewDrop="Host_PreviewDrop">
 			<TabItem Header="Hierarchy">
 				<ListBox x:Name="HierarchyListBox" SelectionChanged="HierarchyListBox_SelectionChanged" MouseLeftButtonDown="HierarchyListBox_MouseLeftButtonDown" Focusable="True">
+					<ListBox.Resources>
+						<ContextMenu x:Key="listBoxItemContextMenu">
+							<MenuItem Header="Remove" Click="Hierarchy_RemoveObject"/>
+						</ContextMenu>
+					</ListBox.Resources>
+					<ListBox.ItemContainerStyle>
+						<Style TargetType="ListBoxItem">
+							<Setter Property="ContextMenu" Value="{StaticResource listBoxItemContextMenu}"/>
+						</Style>
+					</ListBox.ItemContainerStyle>
+					<ListBox.ContextMenu>
+						<ContextMenu>
+							<MenuItem Header="Add Empty GameObject"/>
+						</ContextMenu>
+					</ListBox.ContextMenu>
 				</ListBox>
 			</TabItem>
 		</TabControl>
