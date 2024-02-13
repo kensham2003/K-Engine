@@ -788,6 +788,12 @@ namespace GameEngine
             string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
             string filename = paths[0];
+            //.obj以外のファイルドロップは禁止
+            if(System.IO.Path.GetExtension(filename) != ".obj")
+            {
+                CenterMessageBox.Show(new WindowWrapper(this), ".objのみドロップできます！", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
             string objectName = System.IO.Path.GetFileNameWithoutExtension(filename);
 
             //同じモデルを入れる場合は名前を「モデル_2」のようにする
