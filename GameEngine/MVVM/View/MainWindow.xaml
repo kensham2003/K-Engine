@@ -81,6 +81,15 @@
 							</CheckBox.Resources>
 							<TextBlock FlowDirection="LeftToRight" Text=" Light"/>
 						</CheckBox>
+						<CheckBox x:Name="Model_Ray"  FlowDirection="RightToLeft" DockPanel.Dock="Left" IsChecked="True" Checked="Model_Ray_Checked" Unchecked="Model_Ray_Unchecked">
+							<!--チェックボックスのアイコンがミラーになることを防止-->
+							<CheckBox.Resources>
+								<Style TargetType="{x:Type Path}">
+									<Setter Property="FlowDirection" Value="LeftToRight"/>
+								</Style>
+							</CheckBox.Resources>
+							<TextBlock FlowDirection="LeftToRight" Text=" Ray"/>
+						</CheckBox>
 						<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown" FlowDirection="LeftToRight"/>
 					</DockPanel>
 					

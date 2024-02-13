@@ -143,6 +143,7 @@ char* Manager::RaycastObject(float x, float y, float screenHeight, float screenW
 	std::string temp = "";
 	float raycastLimit = 100.0f;
 	for (auto player : players) {
+		if (!player->GetCanRayHit()) { continue; }
 		float dist = player->GetComponent<Model>()->IsRayCollide(ray, camObj->GetPosition());
 		//if (player->GetComponent<Model>()->IsRayCollide(ray, camObj->GetPosition())) {
 		//	temp = player->GetName();

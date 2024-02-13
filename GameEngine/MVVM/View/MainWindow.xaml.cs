@@ -538,6 +538,9 @@ namespace GameEngine
             public static extern void SetObjectDrawFlag(string ObjectName, bool Flag);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetObjectCanRayHit(string ObjectName, bool hit);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void RemoveObject(string ObjectName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1184,6 +1187,7 @@ namespace GameEngine
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Inspector_Name.Text = gameObject.ToString();
             Model_Lighting.IsChecked = gameObject.HasLighting;
+            Model_Ray.IsChecked = gameObject.CanRayHit;
 
             Component_Panel.Children.Clear();
             LoadComponents(gameObject.Name);
@@ -2655,6 +2659,22 @@ namespace GameEngine.GameEntity
             if (inspectorObject == null) { return; }
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/unlitTextureVS.cso"));
             inspectorObject.HasLighting = false;
+        }
+
+        private void Model_Ray_Checked(object sender, RoutedEventArgs e)
+        {
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if (inspectorObject == null) { return; }
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit(inspectorObject.Name, true));
+            inspectorObject.CanRayHit = true;
+        }
+
+        private void Model_Ray_Unchecked(object sender, RoutedEventArgs e)
+        {
+            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
+            if (inspectorObject == null) { return; }
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit(inspectorObject.Name, false));
+            inspectorObject.CanRayHit = false;
         }
     }
 

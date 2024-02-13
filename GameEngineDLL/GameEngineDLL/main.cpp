@@ -181,6 +181,11 @@ void SetObjectDrawFlag(const char* ObjectName, bool Flag)
 	Manager::GetGameObject(ObjectName)->SetDrawFlag(Flag);
 }
 
+void SetObjectCanRayHit(const char* ObjectName, bool hit)
+{
+	Manager::GetGameObject(ObjectName)->SetCanRayHit(hit);
+}
+
 void RemoveObject(const char* ObjectName)
 {
 	Manager::GetGameObject(ObjectName)->SetDestroy();

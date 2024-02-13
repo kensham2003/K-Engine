@@ -31,6 +31,8 @@ namespace GameEngine.GameEntity
 
         public bool HasLighting { get; set; } = true;
 
+        public bool CanRayHit { get; set; } = true;
+
         public string Name { get; set; }
 
         public string Script { get; set; }

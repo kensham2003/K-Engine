@@ -84,6 +84,7 @@ extern "C" {
 	__declspec(dllexport) void __cdecl SetObjectSphereColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
 
 	__declspec(dllexport) void __cdecl SetObjectDrawFlag(const char* ObjectName, bool Flag);
+	__declspec(dllexport) void __cdecl SetObjectCanRayHit(const char* ObjectName, bool hit);
 
 	__declspec(dllexport) void __cdecl RemoveObject(const char* ObjectName);
 	__declspec(dllexport) void __cdecl RemoveBoxCollider(const char* ObjectName);
