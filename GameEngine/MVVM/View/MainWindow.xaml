@@ -247,39 +247,21 @@
 
 
 		<TabControl Grid.Row="3" Grid.ColumnSpan="3">
-
 			<TabItem Header="Project">
-				<WindowsFormsHost>
-					<wfc:ExplorerBrowser x:Name="ProjectBrowser"/>
-				</WindowsFormsHost>
+				<DockPanel>
+					<Button x:Name="Button_ToDefaultPath" Content="To Project Top"
+							Click="ExplorerBrowser_ToDefaultPath"
+							Width="150"
+							HorizontalAlignment="Left"
+							DockPanel.Dock="Top"/>
+					<WindowsFormsHost>
+						<wfc:ExplorerBrowser x:Name="ProjectBrowser"/>
+					</WindowsFormsHost>
+				</DockPanel>
 			</TabItem>
-
-			<!--<TabItem Header="Web">
-				--><!--<WebBrowser Source="https://assetstore.unity.com/"/>--><!--
-				<cef:ChromiumWebBrowser Address="https://youtube.com/"/>
-			</TabItem>
-
-			<TabItem Header="Node">
-				<controls:NetworkView
-                    ClipToBounds="True"
-                    Background="LightGray"
-                    Connections="{Binding Connections}"
-                    Nodes="{Binding Nodes}"/>
-			</TabItem>
-
-			<TabItem Header="Script">
-				<TextBox x:Name="ScriptTextBox" Text=""
-                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
-                         AcceptsTab="True" FontFamily="MS Gothic" FontSize="16"
-                         KeyUp="ScriptTextBox_KeyUp"/>
-			</TabItem>-->
-
 		</TabControl>
 
 		<Grid Grid.Row="4" Grid.ColumnSpan="5">
-			<!--<Grid.Resources>
-				<local:CollectionToLastConverter x:Key="CollectionToLastConverter"/>
-			</Grid.Resources>-->
 			<Label x:Name="MessageLog" Content="Welcome to K Engine!" x:FieldModifier="public">
 				<bh:Interaction.Triggers>
 					<bh:EventTrigger EventName="MouseLeftButtonDown">

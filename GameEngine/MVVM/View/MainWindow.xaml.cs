@@ -2696,6 +2696,11 @@ namespace GameEngine.GameEntity
             HierarchyListBox.Items.Remove(inspectorObject);
             HideInspector();
         }
+
+        private void ExplorerBrowser_ToDefaultPath(object sender, RoutedEventArgs e)
+        {
+            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+        }
     }
 
 
