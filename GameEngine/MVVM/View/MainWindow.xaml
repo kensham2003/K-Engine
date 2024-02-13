@@ -249,13 +249,32 @@
 		<TabControl Grid.Row="3" Grid.ColumnSpan="3">
 			<TabItem Header="Project">
 				<DockPanel>
-					<Button x:Name="Button_ToDefaultPath" Content="To Project Top"
-							Click="ExplorerBrowser_ToDefaultPath"
-							Width="150"
-							HorizontalAlignment="Left"
-							DockPanel.Dock="Top"/>
+					<DockPanel DockPanel.Dock="Top">
+						<Button x:Name="Button_ToDefaultPath" Content="To Project Top"
+								Click="ExplorerBrowser_ToDefaultPath"
+								Width="120"/>
+						<Button x:Name="Button_PreviousPage" Content=" ← "
+								Click="ExplorerBrowser_ToPreviousPage"
+								Width="30"
+								IsEnabled="False"/>
+						<Button x:Name="Button_NextPage" Content=" → "
+								Click="ExplorerBrowser_ToNextPage"
+								Width="30"
+								IsEnabled="False"/>
+						<Label Content="  "/>
+						<Button x:Name="Button_OuterDir" Content=" ↑ "
+								Click="ExplorerBrowser_ToOuterDir"
+								Width="30"/>
+						<TextBox x:Name="ProjectBrowser_Path" Text="" Width="Auto"
+								 Height="{Binding ElementName=Button_OuterDir, Path=ActualHeight}"
+								 VerticalAlignment="Center"
+								 VerticalContentAlignment="Center"
+								 KeyDown="ProjectBrowser_Path_KeyDown"/>
+					</DockPanel>
 					<WindowsFormsHost>
-						<wfc:ExplorerBrowser x:Name="ProjectBrowser"/>
+						<wfc:ExplorerBrowser x:Name="ProjectBrowser"
+											 Load="ProjectBrowser_Load"
+											 NavigationComplete="ProjectBrowser_NavigationComplete"/>
 					</WindowsFormsHost>
 				</DockPanel>
 			</TabItem>

@@ -1,4 +1,11 @@
-﻿using System;
+﻿///////////////////////////////////////
+///
+///  ViewModelLocatorクラス
+///  
+///  機能：ビューモデルを取得する
+/// 
+///////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

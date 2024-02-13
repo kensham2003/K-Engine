@@ -1,4 +1,11 @@
-﻿using System;
+﻿///////////////////////////////////////////////
+///
+///  WindowManagerクラス
+///  
+///  機能：現在開いているウインドウを管理する
+/// 
+///////////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

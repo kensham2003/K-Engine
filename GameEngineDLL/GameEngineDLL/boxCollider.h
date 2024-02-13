@@ -1,6 +1,11 @@
 #pragma once
-
-
+/////////////////////////////////////
+///
+///  BoxColliderクラス
+///  
+///  機能：OBBコライダーを描画する
+/// 
+/////////////////////////////////////
 class BoxCollider : public Model {
 protected:
 

@@ -1,4 +1,11 @@
-﻿using System;
+﻿////////////////////////////////////////
+///
+///  GameObjectクラス
+///  
+///  機能：ゲームオブジェクトクラス
+/// 
+////////////////////////////////////////
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

@@ -95,6 +95,12 @@ namespace GameEngine
         Settings m_settings;
         string m_devenvPath;
 
+        bool m_pressedPageButton = false;
+        bool m_projectBrowserLoading = true;
+        string m_currentPath;
+        Stack<string> m_traversedPath = new Stack<string>();
+        Stack<string> m_nextPath = new Stack<string>();
+
         //public class MainWindowDataContext
         //{
         //    public ObservableCollection<INodeDataContext> Nodes { get; set; }
@@ -2168,7 +2174,9 @@ namespace GameEngine.GameEntity
             m_settings.Save();
         }
 
-        //「/asset」の中にあるDllファイルを全部リロード
+        /// <summary>
+        /// 「/asset」の中にあるDllファイルを全部リロード
+        /// </summary>
         public void ReloadDll()
         {
             //m_loaderを再作成（AppDomain内のアセンブリ（dll情報）を更新するため）
@@ -2642,65 +2650,228 @@ namespace GameEngine.GameEntity
 
         }
 
-        private void Add_BoxCollider(object sender, RoutedEventArgs e)
-        {
-            GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
 
-            //BoxCollider boxCollider = new BoxCollider();
+        //private void Add_BoxCollider(object sender, RoutedEventArgs e)
+        //{
+        //    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
 
-            string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\asset\\model\\cube.obj";
-            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddBoxCollider(inspectorObject.Name, path));
+        //    //BoxCollider boxCollider = new BoxCollider();
 
+        //    string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\asset\\model\\cube.obj";
+        //    NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddBoxCollider(inspectorObject.Name, path));
 
-        }
+        //}
+
 
         private void Model_Lighting_Checked(object sender, RoutedEventArgs e)
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if(inspectorObject == null) { return; }
+
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/vertexLightingVS.cso"));
             inspectorObject.HasLighting = true;
         }
+
 
         private void Model_Lighting_Unchecked(object sender, RoutedEventArgs e)
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if (inspectorObject == null) { return; }
+
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetModelVS(inspectorObject.Name, "asset/shader/unlitTextureVS.cso"));
             inspectorObject.HasLighting = false;
         }
+
 
         private void Model_Ray_Checked(object sender, RoutedEventArgs e)
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if (inspectorObject == null) { return; }
+
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit(inspectorObject.Name, true));
             inspectorObject.CanRayHit = true;
         }
+
 
         private void Model_Ray_Unchecked(object sender, RoutedEventArgs e)
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if (inspectorObject == null) { return; }
+
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit(inspectorObject.Name, false));
             inspectorObject.CanRayHit = false;
         }
+
 
         private void Hierarchy_RemoveObject(object sender, RoutedEventArgs e)
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if (inspectorObject == null) { return; }
-            int before = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectCount(1));
+
+            //ゲーム側、描画側のオブジェクトを削除
             m_loader.RemoveGameObject(inspectorObject.Name);
-            int after = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectCount(1));
+
+            //エンジン側のオブジェクトを削除
             HierarchyListBox.Items.Remove(inspectorObject);
+
+            //インスペクターを非表示にする
             HideInspector();
         }
 
+        //========================
+        //    PROJECT BROWSER
+        //========================
+
+        /// <summary>
+        /// ブラウザをプロジェクトのディレクトリに移動
+        /// </summary>
         private void ExplorerBrowser_ToDefaultPath(object sender, RoutedEventArgs e)
         {
             ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
         }
+
+        /// <summary>
+        /// 前のページに移動
+        /// </summary>
+        private void ExplorerBrowser_ToPreviousPage(object sender, RoutedEventArgs e)
+        {
+            m_pressedPageButton = true;
+
+            //前のパスを取得
+            string prevPath = m_traversedPath.Pop();
+            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(prevPath));
+
+            //次のパスを追加
+            m_nextPath.Push(m_currentPath);
+
+            //現在のパスを更新
+            m_currentPath = prevPath;
+
+            //次のページが押せるように
+            Button_NextPage.IsEnabled = true;
+
+            //一番古いパスにたどった場合前のページを押せないように
+            if(m_traversedPath.Count <= 0)
+            {
+                Button_PreviousPage.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// 次のページに移動
+        /// </summary>
+        private void ExplorerBrowser_ToNextPage(object sender, RoutedEventArgs e)
+        {
+            m_pressedPageButton = true;
+
+            //次のパスを取得
+            string nextPath = m_nextPath.Pop();
+            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(nextPath));
+
+            //前のパスを記録
+            m_traversedPath.Push(m_currentPath);
+
+            //現在のパスを更新
+            m_currentPath = nextPath;
+
+            //前のページが押せるように
+            Button_PreviousPage.IsEnabled = true;
+
+            //最新のパスにたどった場合次のページを押せないように
+            if(m_nextPath.Count <= 0)
+            {
+                Button_NextPage.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// 現在のパスの親ディレクトリに移動
+        /// </summary>
+        private void ExplorerBrowser_ToOuterDir(object sender, RoutedEventArgs e)
+        {
+            //親パスを取得し、移動させる
+            DirectoryInfo parentInfo = new System.IO.DirectoryInfo(m_currentPath).Parent;
+            if (parentInfo != null)
+            {
+                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(parentInfo.FullName));
+            }
+            //既に一番上のパスにいる場合は元のパスに戻す
+            else
+            {
+                ProjectBrowser_Path.Text = m_currentPath;
+            }
+        }
+
+        /// <summary>
+        /// ENTERを押した時、TextBoxのパスに移動
+        /// </summary>
+        private void ProjectBrowser_Path_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key != Key.Enter)
+            {
+                return;
+            }
+            //有効なパスの場合
+            if (System.IO.Directory.Exists(ProjectBrowser_Path.Text))
+            {
+                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(ProjectBrowser_Path.Text));
+            }
+            //無効パスの場合は元のパスに戻す
+            else
+            {
+                ProjectBrowser_Path.Text = m_currentPath;
+            }
+        }
+
+        /// <summary>
+        /// ブラウザ最初ロードする時
+        /// </summary>
+        private void ProjectBrowser_Load(object sender, EventArgs e)
+        {
+            m_projectBrowserLoading = true;
+            //各種初期化
+            string currentPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            Button_PreviousPage.IsEnabled = false;
+            Button_NextPage.IsEnabled = false;
+            ProjectBrowser_Path.Text = currentPath;
+            m_currentPath = currentPath;
+        }
+
+        /// <summary>
+        /// 次のパスに移動した時
+        /// </summary>
+        private void ProjectBrowser_NavigationComplete(object sender, Microsoft.WindowsAPICodePack.Controls.NavigationCompleteEventArgs e)
+        {
+            //前のページ・次のページを押した場合
+            if (m_pressedPageButton)
+            {
+                m_pressedPageButton = false;
+                ProjectBrowser_Path.Text = e.NewLocation.ParsingName;
+                return;
+            }
+            //最初ロードした場合
+            if (m_projectBrowserLoading)
+            {
+                m_projectBrowserLoading = false;
+                ProjectBrowser_Path.Text = e.NewLocation.ParsingName;
+                return;
+            }
+
+            //前のパスを記録
+            m_traversedPath.Push(m_currentPath);
+            Button_PreviousPage.IsEnabled = true;
+
+            //テキストを表示
+            ProjectBrowser_Path.Text = e.NewLocation.ParsingName;
+
+            //次のパスをクリア
+            m_nextPath.Clear();
+            Button_NextPage.IsEnabled = false;
+
+            //現在のパスを更新
+            m_currentPath = e.NewLocation.ParsingName;
+        }
+
     }
 
 

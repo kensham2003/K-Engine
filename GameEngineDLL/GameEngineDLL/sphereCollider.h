@@ -1,6 +1,11 @@
 #pragma once
-
-
+/////////////////////////////////////
+///
+///  SphereColliderクラス
+///  
+///  機能：スフィアコライダーを描画する
+/// 
+/////////////////////////////////////
 class SphereCollider : public Model {
 protected:
 

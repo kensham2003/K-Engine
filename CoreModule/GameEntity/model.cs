@@ -1,4 +1,11 @@
-﻿using System;
+﻿////////////////////////////////////////
+///
+///  Modelクラス
+///  
+///  機能：モデルを管理するクラス
+/// 
+////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
