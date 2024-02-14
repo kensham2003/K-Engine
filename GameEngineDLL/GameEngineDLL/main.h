@@ -40,6 +40,8 @@ extern "C" {
 	__declspec(dllexport) void __cdecl Cleanup();
 	__declspec(dllexport) void __cdecl Render(void * Resource, bool NewSurface);
 
+	__declspec(dllexport) int __cdecl GetObjectCount(int layer);
+
 	__declspec(dllexport) void __cdecl SetObjectPosition(const char* ObjectName, D3DXVECTOR3 Position);
 	__declspec(dllexport) void __cdecl SetObjectRotation(const char* ObjectName, D3DXVECTOR3 Rotation);
 	__declspec(dllexport) void __cdecl SetObjectScale(const char* ObjectName, D3DXVECTOR3 Scale);
@@ -84,6 +86,7 @@ extern "C" {
 	__declspec(dllexport) void __cdecl SetObjectSphereColliderOffset(const char* ObjectName, D3DXVECTOR3 Offset);
 
 	__declspec(dllexport) void __cdecl SetObjectDrawFlag(const char* ObjectName, bool Flag);
+	__declspec(dllexport) void __cdecl SetObjectCanRayHit(const char* ObjectName, bool hit);
 
 	__declspec(dllexport) void __cdecl RemoveObject(const char* ObjectName);
 	__declspec(dllexport) void __cdecl RemoveBoxCollider(const char* ObjectName);

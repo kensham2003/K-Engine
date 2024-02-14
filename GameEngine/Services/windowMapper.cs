@@ -16,7 +16,6 @@ namespace GameEngine.Services
         public WindowMapper()
         {
             RegisterMapping<MainViewModel, MainWindow>();
-            //RegisterMapping<Setting>
             RegisterMapping<MessageViewModel, messageWindow>();
         }
 

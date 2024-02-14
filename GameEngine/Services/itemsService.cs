@@ -1,4 +1,11 @@
-﻿using System;
+﻿////////////////////////////////////////////////////
+///
+///  ItemsServiceクラス
+///  
+///  機能：ウインドウの間に共有できるアイテムを提供
+/// 
+////////////////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -33,8 +40,6 @@ namespace GameEngine.Services
                 return "";
             }
         }
-
-        //public ObservableCollection<string> LastItem { get; set; } = new ObservableCollection<string>();
 
 
         public void AddItem()

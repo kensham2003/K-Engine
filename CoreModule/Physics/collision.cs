@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿////////////////////////////////////////
+///
+///  Collisionクラス
+///  
+///  機能：当たり判定機能を提供するクラス
+/// 
+////////////////////////////////////////
+using System;
 
 using GameEngine.GameEntity;
 using GameEngine.Detail;
@@ -12,13 +15,18 @@ namespace GameEngine.Physics
 {
     public static class Collision
     {
+        /// <summary>
+        /// オブジェクトの当たり判定を行う
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
         public static bool CheckCollision(GameObject a, GameObject b)
         {
             //どれかがコライダーを持っていない場合はすぐfalseを返す
             if(!a.HasCollider || !b.HasCollider) { return false; }
 
             Collider aC = a.Collider;
-
             Collider bC = b.Collider;
 
             Type aT = aC.GetType();
@@ -47,6 +55,13 @@ namespace GameEngine.Physics
             }
         }
 
+
+        /// <summary>
+        /// OBBとOBBの当たり判定
+        /// </summary>
+        /// <param name="aC"></param>
+        /// <param name="bC"></param>
+        /// <returns></returns>
         private static bool OBB_OBB_Check(BoxCollider aC, BoxCollider bC)
         {
             SVector3 aR = aC.GetParent().Rotation + aC.Rotate;
@@ -199,6 +214,12 @@ namespace GameEngine.Physics
         }
 
 
+        /// <summary>
+        /// OBBとスフィアの当たり判定
+        /// </summary>
+        /// <param name="aC">OBB</param>
+        /// <param name="bC">スフィア</param>
+        /// <returns></returns>
         private static bool OBB_Sphere_Check(BoxCollider aC, SphereCollider bC)
         {
             SVector3 bCenter = bC.GetCenterPosition();
@@ -255,6 +276,9 @@ namespace GameEngine.Physics
         }
 
 
+        /// <summary>
+        /// スフィアとスフィアの当たり判定
+        /// </summary>
         private static bool Sphere_Sphere_Check(SphereCollider aC, SphereCollider bC)
         {
             //スフィアの中心

@@ -65,7 +65,7 @@ protected:
 
 public:
 	virtual void Init();
-	void Uninit();
+	void Uninit() override;
 	void Update();
 	virtual void Draw();
 

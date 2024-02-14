@@ -45,7 +45,12 @@ void Manager::Update()
 {
 	Input::Update();
 
-	if (!m_IsPlaying) { return; }
+	if (!m_IsPlaying) {
+		for (int i = 0; i < 5; i++) {
+			m_GameObject[i].remove_if([](std::shared_ptr<GameObject> object) {return object->Destroy(); }); //ラムダ式
+		}
+		return; 
+	}
 
 	for (int i = 0; i < 5; i++) {
 		for (auto& gameObject : m_GameObject[i]) {
@@ -77,6 +82,11 @@ std::shared_ptr<GameObject> Manager::AddGameObject(const char * ObjectName, int 
 	return gameObject;
 }
 
+
+int Manager::GetObjectCount(int layer)
+{
+	return m_GameObject[layer].size();
+}
 
 void Manager::AddModel(const char* ObjectName, const char* FileName)
 {
@@ -135,31 +145,50 @@ void Manager::RenameGameObject(const char* ObjectName, const char* newName)
 	GetGameObject(ObjectName)->SetName(newName);
 }
 
+
+/// <summary>
+/// カメラの座標から指定された方向のレイがオブジェクトの当たり判定を行う
+/// </summary>
+/// <param name="x">X座標</param>
+/// <param name="y">Y座標</param>
+/// <param name="screenHeight">画面高さ</param>
+/// <param name="screenWidth">画面横幅</param>
+/// <returns>当たったオブジェクトの名前</returns>
 char* Manager::RaycastObject(float x, float y, float screenHeight, float screenWidth) {
 	std::shared_ptr<GameObject> camObj = GetGameObject("Camera");
 	Camera* camera = camObj->GetComponent<Camera>();
+
+	//レイベクトルを計算
 	D3DXVECTOR3 ray = camera->GetRayFromScreen(x, y, screenHeight, screenWidth);
+
 	std::vector<std::shared_ptr<GameObject>> players = GetGameObjects<Model>();
 	std::string temp = "";
 	float raycastLimit = 100.0f;
 	for (auto player : players) {
+		if (!player->GetCanRayHit()) { continue; }
+		//レイがモデルに当たるまでの距離を計算（当たらない時は-1）
 		float dist = player->GetComponent<Model>()->IsRayCollide(ray, camObj->GetPosition());
-		//if (player->GetComponent<Model>()->IsRayCollide(ray, camObj->GetPosition())) {
-		//	temp = player->GetName();
-		//}
+
+		//当たった場合
 		if (dist > 0) {
+			//距離が今まで一番短い場合
 			if (dist < raycastLimit) {
 				raycastLimit = dist;
 				temp = player->GetName();
 			}
 		}
 	}
+	//取得した名前をstringからchar*に変換
 	int len = strlen(temp.c_str());
 	char* data = new char[len + 1];
 	memcpy(data, temp.c_str(), len + 1);
 	return data;
 }
 
+
+/// <summary>
+/// プレイ状態に切り替わる（現在は使われていない）
+/// </summary>
 void Manager::SetPlaying(bool playing)
 {
 	m_IsPlaying = playing;

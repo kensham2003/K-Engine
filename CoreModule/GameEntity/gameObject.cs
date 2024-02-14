@@ -1,4 +1,11 @@
-﻿using System;
+﻿////////////////////////////////////////
+///
+///  GameObjectクラス
+///  
+///  機能：ゲームオブジェクトクラス
+/// 
+////////////////////////////////////////
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,6 +37,8 @@ namespace GameEngine.GameEntity
         public string ModelName { get; set; }
 
         public bool HasLighting { get; set; } = true;
+
+        public bool CanRayHit { get; set; } = true;
 
         public string Name { get; set; }
 

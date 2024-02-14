@@ -16,6 +16,8 @@ protected://継承先のクラスからアクセスできる
 
 	bool m_DrawFlag = true;
 
+	bool m_CanRayHit = true;
+
 	std::string m_Name;
 
 	D3DXVECTOR3	m_Position{};
@@ -61,7 +63,7 @@ public:
 	bool Destroy() {
 		if (m_Destroy) {
 			Uninit();
-			delete this;
+			//delete this;
 			return true;
 		}
 		else {
@@ -70,6 +72,8 @@ public:
 	}
 
 	void SetDrawFlag(bool Flag) { m_DrawFlag = Flag; }
+	bool GetCanRayHit() { return m_CanRayHit; }
+	void SetCanRayHit(bool hit) { m_CanRayHit = hit; }
 
 	void SetPosition(D3DXVECTOR3 Position) { m_Position = Position; }
 	void SetRotation(D3DXVECTOR3 Rotation) { m_Rotation = Rotation; }

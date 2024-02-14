@@ -976,9 +976,23 @@ namespace GameEngine.ScriptLoading
         }
 
 
+        /// <summary>
+        /// デバッグログをクリア
+        /// </summary>
         public void ClearDebugLog()
         {
             Debug.ClearLog();
+        }
+
+
+        /// <summary>
+        /// ゲームオブジェクトを削除
+        /// </summary>
+        /// <param name="gameObjectName">ゲームオブジェクト名</param>
+        public void RemoveGameObject(string gameObjectName)
+        {
+            GameObject gameObject = FindGameObject(gameObjectName);
+            m_game.RemoveGameObject(gameObject);
         }
     }
 }

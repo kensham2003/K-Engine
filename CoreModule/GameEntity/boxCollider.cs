@@ -1,4 +1,11 @@
-﻿using System;
+﻿////////////////////////////////////////
+///
+///  BoxColliderクラス
+///  
+///  機能：ボックスコライダー（OBB）クラス
+/// 
+////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;

@@ -40,6 +40,7 @@ public:
 
 	//	return gameObject;
 	//}
+	static int GetObjectCount(int layer);
 
 	static void AddModel(const char* ObjectName, const char* FileName);
 
