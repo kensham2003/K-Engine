@@ -677,6 +677,11 @@ namespace GameEngine
         //右ボタン押しながら+WASD：カメラを移動
         private void Host_MouseRightButtonDown(object sender, MouseEventArgs e)
         {
+            //シミュレート中は動かせないように
+            if (m_simulating)
+            {
+                return;
+            }
             host.Focus();
             mouseRightButtonPressed = true;
             task = new Task(MoveCameraTask);
@@ -779,6 +784,11 @@ namespace GameEngine
 
         private void Host_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            //シミュレート中は動かせないように
+            if (m_simulating)
+            {
+                return;
+            }
             int wheel = e.Delta;
             Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));
             Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));
