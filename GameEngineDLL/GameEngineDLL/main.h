@@ -75,6 +75,7 @@ extern "C" {
 	__declspec(dllexport) void __cdecl FreeRaycastChar(char* p);
 
 	__declspec(dllexport) void __cdecl AddModel(const char* ObjectName, const char* FileName);
+	__declspec(dllexport) void __cdecl AddMainCamera(const char* FileName);
 	__declspec(dllexport) void __cdecl AddBoxCollider(const char* ObjectName, const char* FileName);
 	__declspec(dllexport) void __cdecl AddSphereCollider(const char* ObjectName, const char* FileName);
 
@@ -99,4 +100,6 @@ extern "C" {
 	__declspec(dllexport) void __cdecl SetModelPS(const char* ObjectName, const char* FileName);
 
 	__declspec(dllexport) void __cdecl SetScenePlaying(bool playing);
+
+	__declspec(dllexport) void __cdecl ChangeActiveCamera();
 }

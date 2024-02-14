@@ -4,6 +4,7 @@
 #include "polygon2D.h"
 #include "field.h"
 #include "camera.h"
+#include "mainCamera.h"
 #include "model.h"
 #include "player.h"
 #include "input.h"
@@ -13,6 +14,10 @@
 
 std::list<std::shared_ptr<GameObject>> Manager::m_GameObject[5];
 std::stringstream Manager::m_GameObjectCache[5];
+
+std::shared_ptr<GameObject> Manager::m_Camera;
+std::shared_ptr<GameObject> Manager::m_MainCamera;
+
 bool Manager::m_IsPlaying;
 
 
@@ -21,7 +26,11 @@ void Manager::Init()
 	Renderer::Init();
 	Input::Init();
 
-	AddGameObject("Camera", LAYER_CAMERA)->AddComponent<Camera>();
+	m_Camera = AddGameObject("Camera", LAYER_CAMERA);
+	m_Camera->AddComponent<Camera>();
+
+	//m_MainCamera = AddGameObject("MainCamera", LAYER_CAMERA);
+	//m_MainCamera->AddComponent<MainCamera>();
 
 	AddGameObject("Field", LAYER_3D_OBJECT)->AddComponent<Field>();
 
@@ -92,6 +101,14 @@ void Manager::AddModel(const char* ObjectName, const char* FileName)
 {
 	std::shared_ptr<GameObject> gameObject = AddGameObject(ObjectName, 1);
 	gameObject->AddComponent<Model>()->Load(FileName);
+}
+
+void Manager::AddMainCamera(const char* FileName)
+{
+	std::shared_ptr<GameObject> gameObject = AddGameObject("MainCamera", LAYER_CAMERA);
+	gameObject->AddComponent<Model>()->Load(FileName);
+	gameObject->AddComponent<MainCamera>();
+	m_MainCamera = gameObject;
 }
 
 void Manager::AddBoxCollider(const char* ObjectName, const char* FileName) {
@@ -219,4 +236,10 @@ void Manager::SetModelVS(const char* ObjectName, const char* FileName) {
 
 void Manager::SetModelPS(const char* ObjectName, const char* FileName) {
 	GetGameObject(ObjectName)->GetComponent<Model>()->SetPixelShader(FileName);
+}
+
+void Manager::ChangeActiveCamera()
+{
+	m_Camera->GetComponent<Camera>()->SetActive(!m_Camera->GetComponent<Camera>()->IsActive());
+	m_MainCamera->GetComponent<MainCamera>()->SetActive(!m_MainCamera->GetComponent<MainCamera>()->IsActive());
 }

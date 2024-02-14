@@ -351,6 +351,14 @@ namespace GameEngine
             m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
             m_logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
             ReloadDll();
+
+            //メインカメラを追加
+            GameObject gameObject = new GameObject("MainCamera");
+            HierarchyListBox.Items.Add(gameObject);
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddMainCamera(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\EngineAssets\\model\\camera.obj"));
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit("MainCamera", false));
+            m_loader.AddGameObject("MainCamera", Define.LAYER_CAMERA);
+            m_loader.AddComponentToGameObject("MainCamera", "Camera");
         }
 
         private void Host_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -523,6 +531,9 @@ namespace GameEngine
             public static extern void AddModel(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void AddMainCamera(string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void AddBoxCollider(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -572,6 +583,9 @@ namespace GameEngine
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetScenePlaying(bool playing);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void ChangeActiveCamera();
 
             /// <summary>
             /// Method used to invoke an Action that will catch DllNotFoundExceptions and display a warning dialog.
@@ -2590,49 +2604,61 @@ namespace GameEngine.GameEntity
                 }
                 stackPanelTemp.Children.Add(stackPanelField);
 
-                Button ComponentButton = new Button();
-                ComponentButton.Content = "Open Script";
-                ComponentButton.Width = 180;
-                string path = scriptPaths[i];
-                string slnPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.sln";
-                
-                ComponentButton.Click += (object ss, RoutedEventArgs ee) => {
-                    //slnが開いていない場合は新規slnを開く
-                    if (!m_slnOpening)
+                bool predefined = false;
+                foreach(string s in Define.preDefinedComponents)
+                {
+                    if(scriptName == s)
                     {
-                        Process p = new Process();
-                        p.StartInfo.FileName = slnPath;
-                        p.StartInfo.UseShellExecute = true;
-                        p.EnableRaisingEvents = true;
-                        //slnが閉じるとフラグが元に戻す
-                        p.Exited += (object s, EventArgs e) => {
-                            m_slnOpening = false; 
-                        };
-                        p.Disposed += (object s, EventArgs e) => {
-                            m_slnOpening = false; 
-                        };
-                        m_slnOpening = true;
-                        p.Start();
-                        //VSが完全に開いたまで待たないと（約10秒、それでもミスする可能性がある）
-                        //下のdevenv.exeが新規VSを開いてしまうので10秒間強制中断
-                        Thread.Sleep(10000);
+                        predefined = true;
+                        break;
                     }
+                }
+                if (!predefined)
+                {
+                    Button ComponentButton = new Button();
+                    ComponentButton.Content = "Open Script";
+                    ComponentButton.Width = 180;
+                    string path = scriptPaths[i];
+                    string slnPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.sln";
 
-                    //devenv.exeを使って対象の.csファイルをsln内に開く
-                    string devEnvPath = m_devenvPath + @"\devenv.exe";
-                    string projPath = m_scriptLibrary.FullPath;
-                    var command = $"/edit \"{path}\"";
-                    var cmdsi = new ProcessStartInfo
-                    {
-                        WindowStyle = ProcessWindowStyle.Normal,
-                        FileName = devEnvPath,
-                        RedirectStandardInput = true,
-                        UseShellExecute = false,
-                        Arguments = command
+                    ComponentButton.Click += (object ss, RoutedEventArgs ee) => {
+                        //slnが開いていない場合は新規slnを開く
+                        if (!m_slnOpening)
+                        {
+                            Process p = new Process();
+                            p.StartInfo.FileName = slnPath;
+                            p.StartInfo.UseShellExecute = true;
+                            p.EnableRaisingEvents = true;
+                            //slnが閉じるとフラグが元に戻す
+                            p.Exited += (object s, EventArgs e) => {
+                                m_slnOpening = false;
+                            };
+                            p.Disposed += (object s, EventArgs e) => {
+                                m_slnOpening = false;
+                            };
+                            m_slnOpening = true;
+                            p.Start();
+                            //VSが完全に開いたまで待たないと（約10秒、それでもミスする可能性がある）
+                            //下のdevenv.exeが新規VSを開いてしまうので10秒間強制中断
+                            Thread.Sleep(10000);
+                        }
+
+                        //devenv.exeを使って対象の.csファイルをsln内に開く
+                        string devEnvPath = m_devenvPath + @"\devenv.exe";
+                        string projPath = m_scriptLibrary.FullPath;
+                        var command = $"/edit \"{path}\"";
+                        var cmdsi = new ProcessStartInfo
+                        {
+                            WindowStyle = ProcessWindowStyle.Normal,
+                            FileName = devEnvPath,
+                            RedirectStandardInput = true,
+                            UseShellExecute = false,
+                            Arguments = command
+                        };
+                        Process cmd = Process.Start(cmdsi);
                     };
-                    Process cmd = Process.Start(cmdsi);
-                };
-                stackPanelTemp.Children.Add(ComponentButton);
+                    stackPanelTemp.Children.Add(ComponentButton);
+                }
 
                 Button RemoveComponentButton = new Button();
                 RemoveComponentButton.Content = "Remove Script";
@@ -2717,6 +2743,12 @@ namespace GameEngine.GameEntity
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if (inspectorObject == null) { return; }
+
+            if(inspectorObject.Name == "MainCamera")
+            {
+                CenterMessageBox.Show(new WindowWrapper(this), "Main Cameraは削除禁止です！", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
 
             //ゲーム側、描画側のオブジェクトを削除
             m_loader.RemoveGameObject(inspectorObject.Name);

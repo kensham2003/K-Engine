@@ -61,6 +61,8 @@ namespace GameEngine.GameLoop
         /// </summary>
         public void Play()
         {
+            m_game.SetCameraModelVisibility(false);
+            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.ChangeActiveCamera());
             m_simulate = true;
             m_game.m_firstFrame = true;
         }
@@ -73,6 +75,8 @@ namespace GameEngine.GameLoop
         {
             m_simulate = false;
             m_game.RedrawGameObjects();
+            m_game.SetCameraModelVisibility(true);
+            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.ChangeActiveCamera());
         }
 
 

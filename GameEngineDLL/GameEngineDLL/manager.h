@@ -21,6 +21,9 @@ private:
 	static std::list<std::shared_ptr<GameObject>> m_GameObject[5];
 	static std::stringstream m_GameObjectCache[5];
 
+	static std::shared_ptr<GameObject> m_Camera;
+	static std::shared_ptr<GameObject> m_MainCamera;
+
 	static bool m_IsPlaying;
 
 
@@ -43,6 +46,8 @@ public:
 	static int GetObjectCount(int layer);
 
 	static void AddModel(const char* ObjectName, const char* FileName);
+
+	static void AddMainCamera(const char* FileName);
 
 	static void AddBoxCollider(const char* ObjectName, const char* FileName);
 
@@ -121,6 +126,8 @@ public:
 	static void SetModelVS(const char* ObjectName, const char* FileName);
 
 	static void SetModelPS(const char* ObjectName, const char* FileName);
+
+	static void ChangeActiveCamera();
 };
 
 template<class Archive>

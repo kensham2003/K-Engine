@@ -51,7 +51,7 @@ public:
 		}
 	}
 	virtual void Draw() {
-		if (!m_DrawFlag) { return; }
+		//if (!m_DrawFlag) { return; }
 		for (Component* component : m_Component) {
 			component->Draw();
 		}
@@ -71,6 +71,7 @@ public:
 		}
 	}
 
+	bool GetDrawFlag() { return m_DrawFlag; }
 	void SetDrawFlag(bool Flag) { m_DrawFlag = Flag; }
 	bool GetCanRayHit() { return m_CanRayHit; }
 	void SetCanRayHit(bool hit) { m_CanRayHit = hit; }

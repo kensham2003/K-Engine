@@ -292,6 +292,18 @@ namespace GameEngine.ScriptLoading
 
 
         /// <summary>
+        /// ゲームオブジェクトを追加
+        /// </summary>
+        /// <param name="objectName">オブジェクト名</param>
+        /// <param name="modelFileName">モデルのファイル名</param>
+        public void AddGameObject(string objectName, int layer)
+        {
+            GameObject gameObject = new GameObject(objectName);
+            m_game.AddGameObject(gameObject, layer);
+        }
+
+
+        /// <summary>
         /// ゲームシミュレーションを開始
         /// </summary>
         public void Play()
@@ -608,10 +620,17 @@ namespace GameEngine.ScriptLoading
         /// <returns>指定されたオブジェクト</returns>
         public GameObject FindGameObject(string name)
         {
-            foreach(GameObject gameObject in m_gameObjects)
+            for(int i = 0; i < Define.NUM_LAYER; i++)
             {
-                if(gameObject.Name == name) { return gameObject; }
+                foreach (GameObject gameObject in m_game.m_gameObjects[i])
+                {
+                    if (gameObject.Name == name) { return gameObject; }
+                }
             }
+            //foreach(GameObject gameObject in m_gameObjects)
+            //{
+            //    if(gameObject.Name == name) { return gameObject; }
+            //}
             return null;
         }
 

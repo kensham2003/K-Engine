@@ -267,6 +267,18 @@ namespace GameEngine.GameLoop
 
 
         /// <summary>
+        /// シミュレート時カメラのアイコンを非表示
+        /// </summary>
+        public void SetCameraModelVisibility(bool visibility)
+        {
+            foreach(GameObject gameObject in m_gameObjects[Define.LAYER_CAMERA])
+            {
+                MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectDrawFlag(gameObject.Name, visibility));
+            }
+        }
+
+
+        /// <summary>
         /// 名前に対応しているゲームオブジェクトを取得
         /// </summary>
         /// <param name="name">オブジェクトの名前</param>

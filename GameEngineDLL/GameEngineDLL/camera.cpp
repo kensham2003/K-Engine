@@ -23,6 +23,8 @@ void Camera::Update()
 
 void Camera::Draw()
 {
+	if (!m_Active) { return; }
+
 	//ビューマトリクス設定
 	D3DXMATRIX viewMatrix;
 	D3DXMATRIX world, rot, trans;
