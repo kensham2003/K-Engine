@@ -222,7 +222,7 @@ namespace GameEngine
             m_lastWatch = lastChange;
 
             //Sandbox AppDomainをアンロード
-            string serializedGameObjects = m_loader.UninitDomain();
+            string[] serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.m_appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
@@ -268,7 +268,7 @@ namespace GameEngine
             
 
             //Sandbox AppDomainをアンロード
-            string serializedGameObjects = m_loader.UninitDomain();
+            string[] serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.m_appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
@@ -2204,7 +2204,7 @@ namespace GameEngine.GameEntity
         public void ReloadDll()
         {
             //m_loaderを再作成（AppDomain内のアセンブリ（dll情報）を更新するため）
-            string serializedGameObjects = m_loader.UninitDomain();
+            string[] serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.m_appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);

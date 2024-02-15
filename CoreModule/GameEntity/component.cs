@@ -24,6 +24,7 @@ namespace GameEngine.GameEntity
     [JsonDerivedType(typeof(Collider))]
     [JsonDerivedType(typeof(BoxCollider))]
     [JsonDerivedType(typeof(SphereCollider))]
+    [JsonDerivedType(typeof(Camera))]
     [Serializable]
     public class Component
     {
