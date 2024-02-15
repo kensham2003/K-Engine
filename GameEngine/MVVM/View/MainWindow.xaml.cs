@@ -2300,6 +2300,24 @@ namespace GameEngine.GameEntity
                     }
                 };
 
+                void SetGameObjectValue(bool isProperty, ComboBox cb, string changedName)
+                {
+                    string changedValue = cb.SelectedItem.ToString();
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue);
+
+                    //Set value失敗
+                    if(result != null)
+                    {
+                        foreach(object o in cb.Items)
+                        {
+                            if(o.ToString() == result)
+                            {
+                                cb.SelectedItem = o;
+                            }
+                        }
+                    }
+                }
+
                 //チェックボックスの値をオブジェクトの値へ代入（ローカル関数）
                 //（ローカル関数はオーバーロードがサポートされていない）
                 void SetValueBool(bool isProperty, CheckBox cb, string changedName, string changedValue)
@@ -2426,6 +2444,29 @@ namespace GameEngine.GameEntity
                             stackPanelOneProp.Children.Add(vectorPanel);
                             stackPanelProp.Children.Add(stackPanelOneProp);
 
+                            break;
+
+                        case string value when value == typeof(GameObject).AssemblyQualifiedName:
+                            ComboBox propInputComboBox = new ComboBox() { MinWidth = 30 };
+                            foreach(object o in HierarchyListBox.Items)
+                            {
+                                propInputComboBox.Items.Add(o);
+                            }
+                            propInputComboBox.SelectedIndex = propInputComboBox.Items.Add("null");
+                            foreach(GameObject obj in HierarchyListBox.Items)
+                            {
+                                if(obj.Name == propInfos[i].PropValues[j])
+                                {
+                                    propInputComboBox.SelectedItem = obj;
+                                    break;
+                                }
+                            }
+                            propInputComboBox.SelectionChanged += (object sender, SelectionChangedEventArgs e) =>
+                            {
+                                SetGameObjectValue(true, propInputComboBox, propName);
+                            };
+                            stackPanelOneProp.Children.Add(propInputComboBox);
+                            stackPanelProp.Children.Add(stackPanelOneProp);
                             break;
 
                         default:
@@ -2572,6 +2613,29 @@ namespace GameEngine.GameEntity
                             stackPanelOneField.Children.Add(vectorPanel);
                             stackPanelField.Children.Add(stackPanelOneField);
 
+                            break;
+
+                        case string value when value == typeof(GameObject).AssemblyQualifiedName:
+                            ComboBox fieldInputComboBox = new ComboBox() { MinWidth = 30 };
+                            foreach (object o in HierarchyListBox.Items)
+                            {
+                                fieldInputComboBox.Items.Add(o);
+                            }
+                            fieldInputComboBox.SelectedIndex = fieldInputComboBox.Items.Add("null");
+                            foreach (GameObject obj in HierarchyListBox.Items)
+                            {
+                                if (obj.Name == fieldInfos[i].PropValues[k])
+                                {
+                                    fieldInputComboBox.SelectedItem = obj;
+                                    break;
+                                }
+                            }
+                            fieldInputComboBox.SelectionChanged += (object sender, SelectionChangedEventArgs e) =>
+                            {
+                                SetGameObjectValue(false, fieldInputComboBox, fieldName);
+                            };
+                            stackPanelOneField.Children.Add(fieldInputComboBox);
+                            stackPanelField.Children.Add(stackPanelOneField);
                             break;
 
                         //bool以外の型はテキストで表示

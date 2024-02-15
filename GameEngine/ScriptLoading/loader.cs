@@ -775,6 +775,10 @@ namespace GameEngine.ScriptLoading
                                 {
                                     newValue = new SVector3(propValue);
                                 }
+                                else if(type == typeof(GameObject))
+                                {
+                                    newValue = FindGameObject(propValue);
+                                }
                                 else
                                 {
                                     newValue = Convert.ChangeType(propValue, type);
@@ -802,6 +806,10 @@ namespace GameEngine.ScriptLoading
                             {
                                 value = new SVector3(propValue);
                             }
+                            else if (type == typeof(GameObject))
+                            {
+                                value = FindGameObject(propValue);
+                            }
                             else
                             {
                                 value = Convert.ChangeType(propValue, type);
@@ -821,6 +829,10 @@ namespace GameEngine.ScriptLoading
                         if (type == typeof(SVector3))
                         {
                             value = new SVector3(propValue);
+                        }
+                        else if (type == typeof(GameObject))
+                        {
+                            value = FindGameObject(propValue);
                         }
                         else
                         {
@@ -861,6 +873,10 @@ namespace GameEngine.ScriptLoading
                                 {
                                     newValue = new SVector3(fieldValue);
                                 }
+                                else if (type == typeof(GameObject))
+                                {
+                                    newValue = FindGameObject(fieldValue);
+                                }
                                 else
                                 {
                                     newValue = Convert.ChangeType(fieldValue, type);
@@ -888,6 +904,10 @@ namespace GameEngine.ScriptLoading
                             {
                                 value = new SVector3(fieldValue);
                             }
+                            else if (type == typeof(GameObject))
+                            {
+                                value = FindGameObject(fieldValue);
+                            }
                             else
                             {
                                 value = Convert.ChangeType(fieldValue, type);
@@ -910,6 +930,10 @@ namespace GameEngine.ScriptLoading
                         {
                             value = new SVector3(fieldValue);
                         }
+                        else if (type == typeof(GameObject))
+                        {
+                            value = FindGameObject(fieldValue);
+                        }
                         else
                         {
                             value = Convert.ChangeType(fieldValue, type);
@@ -919,25 +943,33 @@ namespace GameEngine.ScriptLoading
 
                 }
                 //新しいインスタンスに替える(0番目はモデルのためi+1にする)
-                foreach(string s in Define.preDefinedColliders)
+                foreach(string s in Define.preDefinedComponents)
                 {
                     if(s == gameObject.ComponentName[i])
                     {
-                        gameObject.ReplaceCollider(ins);
-                        if (s == "BoxCollider")
+                        foreach(string ss in Define.preDefinedColliders)
                         {
-                            BoxCollider bc = gameObject.Collider as BoxCollider;
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderSize(gameObjectName, bc.Size));
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderRotate(gameObjectName, bc.Rotate));
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, bc.Offset));
-                        }
-                        else if(s == "SphereCollider")
-                        {
-                            SphereCollider sc = gameObject.Collider as SphereCollider;
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderSize(gameObjectName, sc.Size));
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderOffset(gameObjectName, sc.Offset));
-                        }
+                            if(ss == gameObject.ComponentName[i])
+                            {
+                                gameObject.ReplaceCollider(ins);
+                                if (ss == "BoxCollider")
+                                {
+                                    BoxCollider bc = gameObject.Collider as BoxCollider;
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderSize(gameObjectName, bc.Size));
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderRotate(gameObjectName, bc.Rotate));
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, bc.Offset));
+                                }
+                                else if (ss == "SphereCollider")
+                                {
+                                    SphereCollider sc = gameObject.Collider as SphereCollider;
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderSize(gameObjectName, sc.Size));
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderOffset(gameObjectName, sc.Offset));
+                                }
 
+                                return null;
+                            }
+                        }
+                        gameObject.ReplaceComponent(ins, gameObject.FindComponentIndex(gameObject.ComponentName[i]));
                         return null;
                     }
                 }

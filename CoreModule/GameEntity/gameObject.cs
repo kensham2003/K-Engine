@@ -222,6 +222,28 @@ namespace GameEngine.GameEntity
             return -1;
         }
 
+        public int FindComponentIndex(string name)
+        {
+            int index = 0;
+            foreach(Component c in Components)
+            {
+                if(c.Name == null)
+                {
+                    index++;
+                    continue;
+                }
+                foreach(string s in Define.preDefinedComponents)
+                {
+                    if(s == c.Name.Replace("GameEngine.GameEntity.", ""))
+                    {
+                        return index;
+                    }
+                }
+                index++;
+            }
+            return -1;
+        }
+
         public bool RemoveComponent(string name)
         {
             foreach (Component component in Components)
