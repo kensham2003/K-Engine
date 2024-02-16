@@ -8,10 +8,6 @@
 /// 
 /////////////////////////////////////////////////////////
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -21,19 +17,19 @@ namespace GameEngine
     {
         public WindowWrapper(IntPtr handle)
         {
-            _hwnd = handle;
+            m_hwnd = handle;
         }
 
         public WindowWrapper(Window window)
         {
-            _hwnd = new WindowInteropHelper(window).Handle;
+            m_hwnd = new WindowInteropHelper(window).Handle;
         }
 
         public IntPtr Handle
         {
-            get { return _hwnd; }
+            get { return m_hwnd; }
         }
 
-        private IntPtr _hwnd;
+        private IntPtr m_hwnd;
     }
 }

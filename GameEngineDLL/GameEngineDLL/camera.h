@@ -5,7 +5,6 @@
 
 class Camera : public Component
 {
-
 private:
 	float m_MoveSpeed = 0.0f;
 

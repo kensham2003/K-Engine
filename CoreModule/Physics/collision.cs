@@ -9,7 +9,6 @@ using System;
 
 using GameEngine.GameEntity;
 using GameEngine.Detail;
-using System.Numerics;
 
 namespace GameEngine.Physics
 {

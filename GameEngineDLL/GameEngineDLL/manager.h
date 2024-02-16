@@ -26,7 +26,6 @@ private:
 
 	static bool m_IsPlaying;
 
-
 public:
 	static void Init();
 	static void Uninit();
@@ -35,14 +34,6 @@ public:
 
 	static std::shared_ptr<GameObject> AddGameObject(const char* ObjectName, int layer); //Add empty object
 
-	//template <typename T> //テンプレート関数
-	//static T* AddGameObject(int Layer) {
-	//	T* gameObject = new T();
-	//	m_GameObject[Layer].push_back(gameObject);
-	//	gameObject->Init();
-
-	//	return gameObject;
-	//}
 	static int GetObjectCount(int layer);
 
 	static void AddModel(const char* ObjectName, const char* FileName);
@@ -72,11 +63,6 @@ public:
 	static int GetModelSubsetNum(const char* ObjectName);
 
 	static void RenameGameObject(const char* ObjectName, const char* newName);
-
-	//static GameObject* GetGameObject(const char* Name)
-	//{
-	//	return m_GameObjectMap[Name];
-	//}
 
 	//名前が合っているゲームオブジェクトを取得
 	static std::shared_ptr<GameObject> GetGameObject(std::string name) {
