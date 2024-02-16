@@ -330,14 +330,21 @@ namespace GameEngine
 
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(DispatcherTimerTick);
-            dispatcherTimer.Interval = TimeSpan.FromSeconds(30);
+            dispatcherTimer.Interval = TimeSpan.FromSeconds(120);
             dispatcherTimer.Start();
         }
 
+
+        /// <summary>
+        /// ロードしてから2分ごとに行う関数
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DispatcherTimerTick(object sender, EventArgs e)
         {
             SaveFile("自動セーブ成功！");
         }
+
 
         private void Host_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -849,11 +856,6 @@ namespace GameEngine
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
-            //m_loader.UninitDomain();
-            //AppDomain.Unload(m_sandbox.m_appDomain);
-            //m_sandbox.InitSandbox();
-            //m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
-            //m_loader.InitDomain();
             m_loader.RemoveAllGameObjects(Define.LAYER_3D_OBJECT);
 
             JsonSerializerOptions options = new JsonSerializerOptions()
@@ -889,25 +891,6 @@ namespace GameEngine
 
         private void MenuItem_Save_Click(object sender, RoutedEventArgs e)
         {
-            ////JsonSerializerOptions options = new JsonSerializerOptions()
-            ////{
-            ////    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
-            ////    WriteIndented = true,
-            ////    IncludeFields = true,
-            ////};
-
-            //string fileName = "TestScene.json";
-            ////foreach(object o in HierarchyListBox.Items)
-            ////{
-            ////    GameObject g = o as GameObject;
-            ////    string jsonStr = JsonSerializer.Serialize(g.Components.ToArray(), options);
-            ////    File.WriteAllText(fileName, jsonStr);
-            ////}
-            ////string jsonString = JsonSerializer.Serialize(HierarchyListBox.Items, options);
-            //string jsonString = m_loader.Serialize(Define.LAYER_3D_OBJECT);
-            //File.WriteAllText(fileName, jsonString);
-            //SetMessage("セーブ成功！");
-
             var confirmWindow = new confirmWindow("セーブしますか？");
             confirmWindow.Owner = GetWindow(this);
             if (confirmWindow.ShowDialog() == true)
@@ -919,6 +902,11 @@ namespace GameEngine
             }
         }
 
+
+        /// <summary>
+        /// 現在の情報をファイルにセーブ（TestScene.json）、メインカメラ含まない
+        /// </summary>
+        /// <param name="successMsg">成功したらデバッグログに出すメッセージ</param>
         private void SaveFile(string successMsg)
         {
             string fileName = "TestScene.json";
@@ -927,22 +915,10 @@ namespace GameEngine
             SetMessage(successMsg);
         }
 
-        //private void MenuItem_Run_Click(object sender, RoutedEventArgs e)
-        //{
-        //    InspectorToObject();
-        //    timer.Start();
-        //}
-
-        //private void MenuItem_Stop_Click(object sender, RoutedEventArgs e)
-        //{
-        //    timer.Stop();
-        //}
-
         private void MenuItem_Simulate_Play_Click(object sender, RoutedEventArgs e)
         {
             if (!m_isSuccessfullyBuilt)
             {
-                //MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
                 CenterMessageBox.Show(new WindowWrapper(this), "ビルドエラーを修正してからシミュレートしてください。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
