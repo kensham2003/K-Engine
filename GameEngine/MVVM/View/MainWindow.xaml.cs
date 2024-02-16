@@ -1,4 +1,11 @@
-﻿using System;
+﻿/////////////////////////////////////////////
+///
+///  MainWindowクラス
+///  
+///  機能：メインウインドウの制御
+/// 
+/////////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,58 +51,68 @@ namespace GameEngine
     /// </summary>
     public partial class MainWindow : Window
     {
-        MainViewModel m_mainViewModel;
-
+        //メンバ変数
+        #region
+        //インポート関数
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
+        //ビューモデル関連
+        MainViewModel m_mainViewModel;
+
+        //レンダー関連
         TimeSpan m_lastRender;
         bool m_lastVisible;
 
+        //カーソル関連
         Point m_oldMousePosition;
         bool    m_mouseLeftButtonPressed = false;
         bool    m_mouseRightButtonPressed = false;
-        //float   cameraMoveSpeed = 0.0f;
-        //Vector3 cameraMoveVelocity = Vector3.Zero;
-        GameObject m_selectedObject;
-
-        bool m_simulating = false;
-
         Point m_mousePosition;
         Point m_newMousePosition;
+        bool m_hostLeftButtonDown = false;
+        GameObject m_selectedObject;
 
+        //インスペクター関連
         bool m_inspectorIsWorldCoordinate = true;
         bool m_inspectorIsScaleLinked = false;
 
+        //エディタカメラ関連
         Task m_task;
 
+        //エンジン内部時間計測関連
         System.Timers.Timer m_timer;
 
+        //ファイル監視関連
         FileSystemWatcher m_fileSystemWatcher;
         private List<string> m_filesToIgnore = new List<string>();
         DateTime m_lastWatch = DateTime.MinValue;
 
+        //ファイル生成関連
         CSharpCompilation m_compilation;
-        //Dictionary<string, AppDomain> m_scriptDomainDictionary = new Dictionary<string, AppDomain>();
 
+        //シミュレート関連
+        bool m_simulating = false;
         Sandbox m_sandbox;
         Loader m_loader;
 
+        //スクリプトコンパイル関連
         Project m_scriptLibrary;
         BasicFileLogger m_logger = new BasicFileLogger();
         bool m_isSuccessfullyBuilt = true;
-
         bool m_slnOpening = false;
-        bool m_hostLeftButtonDown = false;
 
+        //設定関連
         Settings m_settings;
         string m_devenvPath;
 
+        //プロジェクトブラウザ関連
         bool m_pressedPageButton = false;
         bool m_projectBrowserLoading = true;
         string m_currentPath;
         Stack<string> m_traversedPath = new Stack<string>();
         Stack<string> m_nextPath = new Stack<string>();
+        #endregion
 
         public MainWindow()
         {

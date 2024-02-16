@@ -5,7 +5,6 @@
 ///  機能：メッセージウインドウのビューモデル
 /// 
 /////////////////////////////////////////////
-
 using GameEngine.Services;
 
 namespace GameEngine.MVVM.ViewModel

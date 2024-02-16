@@ -5,7 +5,6 @@
 ///  機能：メインウインドウのビューモデル
 /// 
 /////////////////////////////////////////////
-
 using System.Collections.Generic;
 
 using GameEngine.Services;
