@@ -114,6 +114,10 @@ public:
 	static void SetModelPS(const char* ObjectName, const char* FileName);
 
 	static void ChangeActiveCamera();
+
+	static void SetCameraTargetPosition(D3DXVECTOR3 target);
+
+	static void SetCameraFocusTarget(bool focus);
 };
 
 template<class Archive>

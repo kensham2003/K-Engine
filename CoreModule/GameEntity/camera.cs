@@ -6,14 +6,27 @@ namespace GameEngine.GameEntity
 {
     public class Camera : Component
     {
-        public GameObject m_Target { get; set; } = null;
+        public GameObject LookAtTarget { get; set; } = null;
 
-        public SVector3 m_Offset { get; set; } = SVector3.Zero();
+        public SVector3 LookAtOffset { get; set; } = SVector3.Zero();
+
+        public GameObject FollowTarget { get; set; } = null;
+
+        public SVector3 FollowOffset { get; set; } = SVector3.Zero();
+
+        public override void BeginPlay()
+        {
+            if(FollowTarget != null)
+            {
+                GetParent().Position = FollowTarget.Position + FollowOffset;
+            }
+        }
+
         public override void Update(TimeSpan gameTime)
         {
-            if(m_Target != null)
+            if (FollowTarget != null)
             {
-                SVector3 dir = m_Target.Position - GetParent().Position;
+                GetParent().Position = FollowTarget.Position + FollowOffset;
             }
         }
     }

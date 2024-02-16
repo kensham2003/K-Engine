@@ -243,3 +243,13 @@ void Manager::ChangeActiveCamera()
 	m_Camera->GetComponent<Camera>()->SetActive(!m_Camera->GetComponent<Camera>()->IsActive());
 	m_MainCamera->GetComponent<MainCamera>()->SetActive(!m_MainCamera->GetComponent<MainCamera>()->IsActive());
 }
+
+void Manager::SetCameraTargetPosition(D3DXVECTOR3 target)
+{
+	m_MainCamera->GetComponent<MainCamera>()->SetTargetPosition(target);
+}
+
+void Manager::SetCameraFocusTarget(bool focus)
+{
+	m_MainCamera->GetComponent<MainCamera>()->SetFocusTarget(focus);
+}

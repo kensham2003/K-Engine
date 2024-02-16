@@ -102,4 +102,7 @@ extern "C" {
 	__declspec(dllexport) void __cdecl SetScenePlaying(bool playing);
 
 	__declspec(dllexport) void __cdecl ChangeActiveCamera();
+
+	__declspec(dllexport) void __cdecl SetCameraTargetPosition(D3DXVECTOR3 target);
+	__declspec(dllexport) void __cdecl SetCameraFocusTarget(bool focus);
 }

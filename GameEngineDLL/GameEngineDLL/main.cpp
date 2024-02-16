@@ -249,3 +249,13 @@ void ChangeActiveCamera()
 {
 	Manager::ChangeActiveCamera();
 }
+
+void SetCameraTargetPosition(D3DXVECTOR3 target)
+{
+	Manager::SetCameraTargetPosition(target);
+}
+
+void SetCameraFocusTarget(bool focus)
+{
+	Manager::SetCameraFocusTarget(focus);
+}

@@ -1074,5 +1074,15 @@ namespace GameEngine.ScriptLoading
             GameObject gameObject = FindGameObject(gameObjectName);
             m_game.RemoveGameObject(gameObject);
         }
+
+
+        /// <summary>
+        /// 対象レイヤーの全オブジェクトを削除
+        /// </summary>
+        /// <param name="layer">指定したレイヤー</param>
+        public void RemoveAllGameObjects(int layer)
+        {
+            m_game.RemoveAllGameObjects(layer);
+        }
     }
 }

@@ -327,6 +327,16 @@ namespace GameEngine
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit("MainCamera", false));
             m_loader.AddGameObject("MainCamera", Define.LAYER_CAMERA);
             m_loader.AddComponentToGameObject("MainCamera", "Camera");
+
+            System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+            dispatcherTimer.Tick += new EventHandler(DispatcherTimerTick);
+            dispatcherTimer.Interval = TimeSpan.FromSeconds(30);
+            dispatcherTimer.Start();
+        }
+
+        private void DispatcherTimerTick(object sender, EventArgs e)
+        {
+            SaveFile("自動セーブ成功！");
         }
 
         private void Host_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -554,6 +564,12 @@ namespace GameEngine
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void ChangeActiveCamera();
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetCameraTargetPosition(Vector3 target);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetCameraFocusTarget(bool focus);
 
             /// <summary>
             /// Method used to invoke an Action that will catch DllNotFoundExceptions and display a warning dialog.
@@ -833,6 +849,13 @@ namespace GameEngine
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
+            //m_loader.UninitDomain();
+            //AppDomain.Unload(m_sandbox.m_appDomain);
+            //m_sandbox.InitSandbox();
+            //m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
+            //m_loader.InitDomain();
+            m_loader.RemoveAllGameObjects(Define.LAYER_3D_OBJECT);
+
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
@@ -841,36 +864,67 @@ namespace GameEngine
             };
             string fileName = "TestScene.json";
             string jsonString = File.ReadAllText(fileName);
+            string[] jsonStrings = new string[Define.NUM_LAYER];
+            for(int i = 0; i < Define.NUM_LAYER; i++)
+            {
+                jsonStrings[i] = "[]";
+            }
+            jsonStrings[Define.LAYER_3D_OBJECT] = jsonString;
             List<GameObject> gameObjects = JsonSerializer.Deserialize<List<GameObject>>(jsonString, options);
 
             foreach (GameObject gameObject in gameObjects)
             {
+                if(gameObject.Name == "MainCamera") { continue; }
                 HierarchyListBox.Items.Add(gameObject);
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Name, gameObject.ModelName));
+                if(gameObject.ModelName != null)
+                {
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Name, gameObject.ModelName));
+                }
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Name, gameObject.Position));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Name, gameObject.Rotation));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Name, gameObject.Scale));
             }
+            m_loader.LoadGameObjects(jsonStrings);
         }
 
         private void MenuItem_Save_Click(object sender, RoutedEventArgs e)
         {
-            JsonSerializerOptions options = new JsonSerializerOptions()
-            {
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
-                WriteIndented = true,
-                IncludeFields = true,
-            };
+            ////JsonSerializerOptions options = new JsonSerializerOptions()
+            ////{
+            ////    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+            ////    WriteIndented = true,
+            ////    IncludeFields = true,
+            ////};
 
+            //string fileName = "TestScene.json";
+            ////foreach(object o in HierarchyListBox.Items)
+            ////{
+            ////    GameObject g = o as GameObject;
+            ////    string jsonStr = JsonSerializer.Serialize(g.Components.ToArray(), options);
+            ////    File.WriteAllText(fileName, jsonStr);
+            ////}
+            ////string jsonString = JsonSerializer.Serialize(HierarchyListBox.Items, options);
+            //string jsonString = m_loader.Serialize(Define.LAYER_3D_OBJECT);
+            //File.WriteAllText(fileName, jsonString);
+            //SetMessage("セーブ成功！");
+
+            var confirmWindow = new confirmWindow("セーブしますか？");
+            confirmWindow.Owner = GetWindow(this);
+            if (confirmWindow.ShowDialog() == true)
+            {
+                if (confirmWindow.m_isConfirm)
+                {
+                    SaveFile("セーブ成功！");
+                }
+            }
+        }
+
+        private void SaveFile(string successMsg)
+        {
             string fileName = "TestScene.json";
-            //foreach(object o in HierarchyListBox.Items)
-            //{
-            //    GameObject g = o as GameObject;
-            //    string jsonStr = JsonSerializer.Serialize(g.Components.ToArray(), options);
-            //    File.WriteAllText(fileName, jsonStr);
-            //}
-            string jsonString = JsonSerializer.Serialize(HierarchyListBox.Items, options);
+            string jsonString = m_loader.Serialize(Define.LAYER_3D_OBJECT);
             File.WriteAllText(fileName, jsonString);
+            SetMessage(successMsg);
         }
 
         //private void MenuItem_Run_Click(object sender, RoutedEventArgs e)
