@@ -4,14 +4,4 @@
              xmlns:local="clr-namespace:GameEngine"
 			 ShutdownMode="OnMainWindowClose">
 	<!--StartupUri="MainWindow.xaml"-->
-    <Application.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!--NetworkViewのテンプレートをインポート-->
-                <ResourceDictionary Source="pack://application:,,,/TsNode;component/Template.xaml" />
-                <!--サンプルをインポート-->
-                <ResourceDictionary Source="pack://application:,,,/TsNode;component/Preset/Presettemplate.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Application.Resources>
 </Application>

@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Text.Json.Serialization;
 using GameEngine.Detail;
 
 namespace GameEngine.GameEntity

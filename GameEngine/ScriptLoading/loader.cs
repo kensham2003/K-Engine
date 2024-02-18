@@ -119,6 +119,10 @@ namespace GameEngine.ScriptLoading
                                     {
                                         newValue = new SVector3(propValue);
                                     }
+                                    else if (type == typeof(GameObject))
+                                    {
+                                        newValue = FindGameObject(propValue);
+                                    }
                                     else
                                     {
                                         newValue = Convert.ChangeType(propValue, type);
@@ -171,6 +175,10 @@ namespace GameEngine.ScriptLoading
                                     if (type == typeof(SVector3))
                                     {
                                         newValue = new SVector3(propValue);
+                                    }
+                                    else if (type == typeof(GameObject))
+                                    {
+                                        newValue = FindGameObject(propValue);
                                     }
                                     else
                                     {

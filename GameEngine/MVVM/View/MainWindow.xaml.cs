@@ -342,7 +342,10 @@ namespace GameEngine
         /// <param name="e"></param>
         private void DispatcherTimerTick(object sender, EventArgs e)
         {
-            SaveFile("自動セーブ成功！");
+            if (!m_simulating)
+            {
+                SaveFile("自動セーブ成功！");
+            }
         }
 
 
@@ -944,6 +947,7 @@ namespace GameEngine
                 {
                     this.Dispatcher.Invoke(() =>
                     {
+                        //Input.Keyboard.UpdateKeyState();
                         //デバッグログを取得
                         List<string> debugMessage = m_loader.GetDebugMessage();
                         if (debugMessage.Count() > 0)
@@ -2974,6 +2978,11 @@ namespace GameEngine.GameEntity
 
             //現在のパスを更新
             m_currentPath = e.NewLocation.ParsingName;
+        }
+
+        public static void UpdateKeyboardState()
+        {
+
         }
 
     }

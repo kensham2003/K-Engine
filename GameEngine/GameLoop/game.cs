@@ -58,6 +58,8 @@ namespace GameEngine.GameLoop
         {
             DestroyList.ClearList();
 
+            Input.Keyboard.UpdateKeyState();
+
             //最初のフレームならBeginPlay()を呼ぶ
             if (m_firstFrame)
             {
