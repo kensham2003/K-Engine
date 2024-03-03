@@ -348,7 +348,7 @@
 			</TabControl.Resources>
 			<TabItem Header="Project">
 				<DockPanel>
-					<DockPanel DockPanel.Dock="Top">
+					<DockPanel DockPanel.Dock="Top" MaxHeight="30">
 						<Button x:Name="Button_ToDefaultPath" Content="To Project Top"
 								Click="ExplorerBrowser_ToDefaultPath"
 								Width="120"/>
@@ -370,11 +370,37 @@
 								 VerticalContentAlignment="Center"
 								 KeyDown="ProjectBrowser_Path_KeyDown"/>
 					</DockPanel>
-					<WindowsFormsHost>
-						<wfc:ExplorerBrowser x:Name="ProjectBrowser"
+					<!--<WindowsFormsHost>
+						--><!--<wfc:ExplorerBrowser x:Name="ProjectBrowser"
 											 Load="ProjectBrowser_Load"
-											 NavigationComplete="ProjectBrowser_NavigationComplete"/>
-					</WindowsFormsHost>
+											 NavigationComplete="ProjectBrowser_NavigationComplete"/>--><!--
+						
+					</WindowsFormsHost>-->
+						<ListView x:Name="ProjectBrowser"
+								  DockPanel.Dock="Right"
+								  Height="160"
+								  Background="{DynamicResource ResourceKey=WindowBackgroundBrush}"
+								  Loaded="ProjectBrowser_Loaded"
+								  LostFocus="ProjectBrowser_LostFocus">
+						<ListView.Resources>
+							<ContextMenu x:Key="ProjectBrowserItemContextMenu">
+								<MenuItem Header="Add to game" Click="ProjectBrowser_Item_Add"/>
+							</ContextMenu>
+						</ListView.Resources>
+						<ListView.ItemContainerStyle>
+							<Style TargetType="ListViewItem">
+								<!--<Style.Triggers>
+									<Trigger Property="IsMouseOver" Value="True">
+										<Setter Property="IsSelected" Value="True"/>
+									</Trigger>
+								</Style.Triggers>-->
+								<Setter Property="Foreground" Value="#eeeeee"/>
+								<!--<Setter Property="ContextMenu" Value="{StaticResource ProjectBrowserItemContextMenu}"/>-->
+								<EventSetter Event="MouseDoubleClick" Handler="ProjectBrowser_Item_DoubleClick"/>
+								<EventSetter Event="ContextMenuOpening" Handler="ProjectBrowser_Item_ContextMenuOpening"/>
+							</Style>
+						</ListView.ItemContainerStyle>
+					</ListView>
 				</DockPanel>
 			</TabItem>
 		</TabControl>

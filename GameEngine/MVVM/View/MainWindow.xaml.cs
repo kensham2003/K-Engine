@@ -112,6 +112,7 @@ namespace GameEngine
         string m_currentPath;
         Stack<string> m_traversedPath = new Stack<string>();
         Stack<string> m_nextPath = new Stack<string>();
+        System.Collections.ObjectModel.ObservableCollection<string> m_projectBrowserItems = new System.Collections.ObjectModel.ObservableCollection<string>();
         #endregion
 
         public MainWindow()
@@ -142,7 +143,8 @@ namespace GameEngine
                 string path = assembly.Location;                    //実行ファイルのパス
                 string dir = System.IO.Path.GetDirectoryName(path); //実行ファイルの場所
 
-                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(dir));
+                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(dir));
+                ProjectBrowser_Goto(dir);
             }
 
             //タイマー
@@ -847,6 +849,46 @@ namespace GameEngine
 
             m_loader.AddGameObject(objectName, filename);
             
+            HierarchyListBox.Items.Add(gameObject);
+
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(objectName, filename));
+        }
+
+
+        private void Host_AddModel(string filename)
+        {
+            //.obj以外のファイルドロップは禁止
+            if (System.IO.Path.GetExtension(filename) != ".obj")
+            {
+                CenterMessageBox.Show(new WindowWrapper(this), ".objのみドロップできます！", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
+            string objectName = System.IO.Path.GetFileNameWithoutExtension(filename);
+
+            //同じモデルを入れる場合は名前を「モデル_2」のようにする
+            int cnt = 1;
+            for (int i = 0; i < HierarchyListBox.Items.Count; i++)
+            {
+                GameObject now = HierarchyListBox.Items.GetItemAt(i) as GameObject;
+                if (filename == now.ModelName)
+                {
+                    cnt++;
+                }
+            }
+            if (cnt > 1)
+            {
+                objectName = objectName + "_" + cnt.ToString();
+            }
+
+            //C++側とゲーム処理側にオブジェクト登録
+            GameObject gameObject = new GameObject(objectName);
+            gameObject.ModelName = filename;
+            gameObject.AddModel(filename);
+            //gameObject.AddComponent(new GameEntity.testComponent(gameObject));
+            //m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+
+            m_loader.AddGameObject(objectName, filename);
+
             HierarchyListBox.Items.Add(gameObject);
 
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(objectName, filename));
@@ -2835,7 +2877,8 @@ namespace GameEngine.GameEntity
         /// </summary>
         private void ExplorerBrowser_ToDefaultPath(object sender, RoutedEventArgs e)
         {
-            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            ProjectBrowser_Goto(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
         }
 
         /// <summary>
@@ -2847,7 +2890,8 @@ namespace GameEngine.GameEntity
 
             //前のパスを取得
             string prevPath = m_traversedPath.Pop();
-            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(prevPath));
+            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(prevPath));
+            ProjectBrowser_Goto(prevPath);
 
             //次のパスを追加
             m_nextPath.Push(m_currentPath);
@@ -2874,7 +2918,8 @@ namespace GameEngine.GameEntity
 
             //次のパスを取得
             string nextPath = m_nextPath.Pop();
-            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(nextPath));
+            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(nextPath));
+            ProjectBrowser_Goto(nextPath);
 
             //前のパスを記録
             m_traversedPath.Push(m_currentPath);
@@ -2901,7 +2946,8 @@ namespace GameEngine.GameEntity
             DirectoryInfo parentInfo = new System.IO.DirectoryInfo(m_currentPath).Parent;
             if (parentInfo != null)
             {
-                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(parentInfo.FullName));
+                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(parentInfo.FullName));
+                ProjectBrowser_Goto(parentInfo.FullName);
             }
             //既に一番上のパスにいる場合は元のパスに戻す
             else
@@ -2922,7 +2968,8 @@ namespace GameEngine.GameEntity
             //有効なパスの場合
             if (System.IO.Directory.Exists(ProjectBrowser_Path.Text))
             {
-                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(ProjectBrowser_Path.Text));
+                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(ProjectBrowser_Path.Text));
+                ProjectBrowser_Goto(ProjectBrowser_Path.Text);
             }
             //無効パスの場合は元のパスに戻す
             else
@@ -2985,6 +3032,118 @@ namespace GameEngine.GameEntity
 
         }
 
+        private void ProjectBrowser_Loaded(object sender, RoutedEventArgs e)
+        {
+            m_projectBrowserLoading = false;
+            //各種初期化
+            string currentPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            Button_PreviousPage.IsEnabled = false;
+            Button_NextPage.IsEnabled = false;
+            ProjectBrowser_Path.Text = currentPath;
+            m_currentPath = currentPath;
+
+            //リストビューのアイテムを更新
+            m_projectBrowserItems.Clear();
+            foreach(string s in Directory.GetDirectories(currentPath))
+            {
+                //s.Replace(currentPath, "");
+                m_projectBrowserItems.Add(s.Replace(currentPath + @"\", ""));
+            }
+            foreach(string obj in Directory.GetFiles(currentPath, "*.obj"))
+            {
+                //obj.Replace(currentPath, "");
+                m_projectBrowserItems.Add(obj.Replace(currentPath + @"\", ""));
+            }
+            ProjectBrowser.ItemsSource = m_projectBrowserItems;
+        }
+
+        private void ProjectBrowser_Goto(string directory)
+        {
+            //前のパスを記録
+            m_traversedPath.Push(m_currentPath);
+            Button_PreviousPage.IsEnabled = true;
+
+            //テキストを表示
+            ProjectBrowser_Path.Text = directory;
+
+            //次のパスをクリア
+            m_nextPath.Clear();
+            Button_NextPage.IsEnabled = false;
+
+            //現在のパスを更新
+            m_currentPath = directory;
+
+            //リストビューのアイテムを更新
+            m_projectBrowserItems.Clear();
+            foreach (string s in Directory.GetDirectories(directory))
+            {
+                m_projectBrowserItems.Add(s.Replace(directory + @"\", ""));
+            }
+            foreach (string obj in Directory.GetFiles(directory, "*.obj"))
+            {
+                m_projectBrowserItems.Add(obj.Replace(directory + @"\", ""));
+            }
+        }
+
+        private void ProjectBrowser_Item_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            //選んでいない場合は処理しない
+            if (ProjectBrowser.SelectedItem == null) return;
+
+            //.objを選んだ場合は直接ホストに入れる
+            if (Path.GetExtension(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString()) == ".obj")
+            {
+                Host_AddModel(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+                return;
+            }
+
+            //フォルダの場合は入る
+            ProjectBrowser_Goto(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+        }
+
+        private void ProjectBrowser_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ProjectBrowser.SelectedItem = null;
+        }
+
+        private void ProjectBrowser_Item_Add(object sender, RoutedEventArgs e)
+        {
+            //.objを選んだ場合は直接ホストに入れる
+            if (Path.GetExtension(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString()) == ".obj")
+            {
+                Host_AddModel(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+                return;
+            }
+        }
+
+
+        private void ProjectBrowser_Item_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            FrameworkElement b = e.Source as FrameworkElement;
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem item = new MenuItem();
+            if (Path.GetExtension(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString()) != ".obj")
+            {
+                item.Header = "Enter Folder";
+                item.Click += ProjectBrowser_Enter_Folder;
+            }
+            else
+            {
+                item.Header = "Add to game";
+                item.Click += ProjectBrowser_Item_Add;
+            }
+            contextMenu.Items.Add(item);
+            b.ContextMenu = contextMenu;
+        }
+
+        private void ProjectBrowser_Enter_Folder(object sender, RoutedEventArgs e)
+        {
+            //選んでいない場合は処理しない
+            if (ProjectBrowser.SelectedItem == null) return;
+
+            //フォルダの場合は入る
+            ProjectBrowser_Goto(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+        }
     }
 
 
