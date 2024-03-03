@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="Message Log" Height="300" Width="600"
 		Loaded="MessageWindow_Loaded"
-		WindowStartupLocation="CenterScreen">
+		WindowStartupLocation="CenterScreen"
+		Background="{DynamicResource ResourceKey=WindowBackgroundBrush}">
 	<Grid>
 		<StackPanel Orientation="Vertical">
 			<StackPanel Orientation="Horizontal">
@@ -19,7 +20,14 @@
 			<ListView x:Name="MessageLogListView" 
 					  ItemsSource="{Binding Path=ItemsService.Items}"
 					  Height="180"
-					  SelectionChanged="MessageLogListView_SelectionChanged"/>
+					  SelectionChanged="MessageLogListView_SelectionChanged"
+					  Background="{DynamicResource ResourceKey=ControlBackgroundBrush}">
+				<ListView.ItemContainerStyle>
+					<Style TargetType="ListViewItem">
+						<Setter Property="Foreground" Value="#eeeeee"/>
+					</Style>
+				</ListView.ItemContainerStyle>
+			</ListView>
 			<Label x:Name="MessageSelected" Height="60"
 				   Content=""/>
 		</StackPanel>

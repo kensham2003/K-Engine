@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:GameEngine"
         mc:Ignorable="d"
         Title="Path Setting" Height="275" Width="550"
-		WindowStartupLocation="CenterOwner">
+		WindowStartupLocation="CenterOwner"
+		Background="{DynamicResource ResourceKey=WindowBackgroundBrush}">
 	<Grid>
-		<TextBlock VerticalAlignment="Top"  Margin="10,10,10,170">
+		<TextBlock VerticalAlignment="Top"  Margin="10,10,10,170" Style="{StaticResource TextBlockStyle}">
 			devenv.exeのパス：<LineBreak/>
 			VS2019の例：C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE
 		</TextBlock>

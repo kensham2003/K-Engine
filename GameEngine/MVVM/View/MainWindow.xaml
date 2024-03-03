@@ -10,7 +10,11 @@
         mc:Ignorable="d"
         Title="K Engine"
 		Closing="MainWindow_Closing"
-		Loaded="MainWindow_Loaded">
+		Loaded="MainWindow_Loaded"
+		Background="{DynamicResource ResourceKey=WindowBackgroundBrush}"
+		>
+
+
 	<!--Height="600" Width="1000"-->
 	<Grid>
 
@@ -31,8 +35,9 @@
 			<ColumnDefinition Width="250"/>
 		</Grid.ColumnDefinitions>
 
-		<Menu Grid.Row="0" Grid.ColumnSpan="5" Height="Auto">
-			<MenuItem Header="ファイル">
+		<Menu Grid.Row="0" Grid.ColumnSpan="5" Height="Auto"
+			  Foreground="Black">
+			<MenuItem Header="ファイル" Foreground="Black">
 				<MenuItem x:Name="MenuItem_Open" Header="開く" Click="MenuItem_Open_Click"/>
 				<MenuItem x:Name="MenuItem_Save" Header="保存" Click="MenuItem_Save_Click"/>
 			</MenuItem>
@@ -47,9 +52,42 @@
 			</MenuItem>
 		</Menu>
 
-		<TabControl Grid.Row="1" Grid.Column="0" AllowDrop="True" PreviewDrop="Host_PreviewDrop">
-			<TabItem Header="Hierarchy">
-				<ListBox x:Name="HierarchyListBox" SelectionChanged="HierarchyListBox_SelectionChanged" MouseLeftButtonDown="HierarchyListBox_MouseLeftButtonDown" Focusable="True">
+		<!--<Border Margin="0,10,0,0"  Background="{DynamicResource ControlBackgroundBrush}">-->
+			<TabControl Grid.Row="1" Grid.Column="0" AllowDrop="True" PreviewDrop="Host_PreviewDrop"
+					Background="{DynamicResource ResourceKey=WindowBackgroundBrush}">
+			<TabControl.Resources>
+				<Style TargetType="TabItem">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="TabItem">
+								<Grid Name="Panel">
+									<Border Name="Border" BorderThickness="1,1,1,0" BorderBrush="#eeeeee" CornerRadius="4,4,0,0" Margin="2,0">
+										<ContentPresenter x:Name="ContentSite"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="10,2"/>
+									</Border>
+								</Grid>
+								<ControlTemplate.Triggers>
+									<Trigger Property="IsSelected" Value="False">
+										<Setter TargetName="Panel" Property="Background" Value="LightGray" />
+										<Setter TargetName="Panel" Property="TextBlock.Foreground" Value="Black"></Setter>
+									</Trigger>
+									<Trigger Property="IsSelected" Value="True">
+										<Setter TargetName="Panel" Property="Background" Value="#303030" />
+										<Setter TargetName="Panel" Property="TextBlock.Foreground" Value="#eeeeee"></Setter>
+									</Trigger>
+								</ControlTemplate.Triggers>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+			</TabControl.Resources>
+			<TabItem Header="Hierarchy"
+					 Foreground="{DynamicResource ForegroundBrush}">
+				<ListBox x:Name="HierarchyListBox" SelectionChanged="HierarchyListBox_SelectionChanged" MouseLeftButtonDown="HierarchyListBox_MouseLeftButtonDown" Focusable="True"
+						 Background="{DynamicResource ResourceKey=ControlBackgroundBrush}">
 					<ListBox.Resources>
 						<ContextMenu x:Key="listBoxItemContextMenu">
 							<MenuItem Header="Remove" Click="Hierarchy_RemoveObject"/>
@@ -58,6 +96,7 @@
 					<ListBox.ItemContainerStyle>
 						<Style TargetType="ListBoxItem">
 							<Setter Property="ContextMenu" Value="{StaticResource listBoxItemContextMenu}"/>
+							<Setter Property="Foreground" Value="#eeeeee"/>
 						</Style>
 					</ListBox.ItemContainerStyle>
 					<ListBox.ContextMenu>
@@ -68,8 +107,9 @@
 				</ListBox>
 			</TabItem>
 		</TabControl>
-
-		<GridSplitter Grid.Row="1" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+		<!--</Border>-->
+	
+		<GridSplitter Grid.Row="1" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Black"/>
 
 		<Grid Grid.Row="1" Grid.Column="2" x:Name="host" AllowDrop="True" PreviewDrop="Host_PreviewDrop" MouseMove="Host_MouseMove" MouseWheel="Host_MouseWheel" MouseDown="Host_MouseDown" MouseLeftButtonDown="Host_MouseLeftButtonDown" MouseLeftButtonUp="Host_MouseLeftButtonUp" MouseRightButtonDown="Host_MouseRightButtonDown" MouseUp="Host_MouseUp" Focusable="True">
 			<Image>
@@ -79,9 +119,40 @@
 			</Image>
 		</Grid>
 
-		<GridSplitter Grid.Row="1" Grid.Column="3" Grid.RowSpan="3" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+		<GridSplitter Grid.Row="1" Grid.Column="3" Grid.RowSpan="3" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Black"/>
 
-		<TabControl Grid.Row="1" Grid.Column="4" Grid.RowSpan="3" MouseLeftButtonDown="Panel_MouseLeftButtonDown" Focusable="True" Name="Inspector_Panel">
+		<TabControl Grid.Row="1" Grid.Column="4" Grid.RowSpan="3" MouseLeftButtonDown="Panel_MouseLeftButtonDown" Focusable="True" Name="Inspector_Panel"
+					Background="{DynamicResource ResourceKey=WindowBackgroundBrush}"
+					Foreground="{DynamicResource ResourceKey=ForegroundBrush}">
+			<TabControl.Resources>
+				<Style TargetType="TabItem">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="TabItem">
+								<Grid Name="Panel">
+									<Border Name="Border" BorderThickness="1,1,1,0" BorderBrush="#eeeeee" CornerRadius="4,4,0,0" Margin="2,0">
+										<ContentPresenter x:Name="ContentSite"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="10,2"/>
+									</Border>
+								</Grid>
+								<ControlTemplate.Triggers>
+									<Trigger Property="IsSelected" Value="False">
+										<Setter TargetName="Panel" Property="Background" Value="LightGray" />
+										<Setter TargetName="Panel" Property="TextBlock.Foreground" Value="Black"></Setter>
+									</Trigger>
+									<Trigger Property="IsSelected" Value="True">
+										<Setter TargetName="Panel" Property="Background" Value="#303030" />
+										<Setter TargetName="Panel" Property="TextBlock.Foreground" Value="#eeeeee"></Setter>
+									</Trigger>
+								</ControlTemplate.Triggers>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+			</TabControl.Resources>
 			<TabItem Header="Inspector">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
 					<StackPanel Orientation="Vertical" Name="Inspector_StackPanel" Loaded="Inspector_Panel_Loaded">
@@ -94,7 +165,7 @@
 										<Setter Property="FlowDirection" Value="LeftToRight"/>
 									</Style>
 								</CheckBox.Resources>
-								<TextBlock FlowDirection="LeftToRight" Text=" Light"/>
+								<TextBlock FlowDirection="LeftToRight" Text=" Light" Style="{StaticResource TextBlockStyle}"/>
 							</CheckBox>
 							<CheckBox x:Name="Model_Ray"  FlowDirection="RightToLeft" DockPanel.Dock="Left" IsChecked="True" Checked="Model_Ray_Checked" Unchecked="Model_Ray_Unchecked">
 								<!--チェックボックスのアイコンがミラーになることを防止-->
@@ -103,7 +174,7 @@
 										<Setter Property="FlowDirection" Value="LeftToRight"/>
 									</Style>
 								</CheckBox.Resources>
-								<TextBlock FlowDirection="LeftToRight" Text=" Ray"/>
+								<TextBlock FlowDirection="LeftToRight" Text=" Ray" Style="{StaticResource TextBlockStyle}"/>
 							</CheckBox>
 							<TextBox x:Name="Inspector_Name" KeyDown="Inspector_Name_KeyDown" FlowDirection="LeftToRight"/>
 						</DockPanel>
@@ -241,11 +312,40 @@
 		</TabControl>
 
 
-		<GridSplitter Grid.Row="2" Grid.ColumnSpan="3" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+		<GridSplitter Grid.Row="2" Grid.ColumnSpan="3" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="Black"/>
 
 
 
-		<TabControl Grid.Row="3" Grid.ColumnSpan="3">
+		<TabControl Grid.Row="3" Grid.ColumnSpan="3" Background="{DynamicResource ResourceKey=WindowBackgroundBrush}">
+			<TabControl.Resources>
+				<Style TargetType="TabItem">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="TabItem">
+								<Grid Name="Panel">
+									<Border Name="Border" BorderThickness="1,1,1,0" BorderBrush="#eeeeee" CornerRadius="4,4,0,0" Margin="2,0">
+										<ContentPresenter x:Name="ContentSite"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="10,2"/>
+									</Border>
+								</Grid>
+								<ControlTemplate.Triggers>
+									<Trigger Property="IsSelected" Value="False">
+										<Setter TargetName="Panel" Property="Background" Value="LightGray" />
+										<Setter TargetName="Panel" Property="TextBlock.Foreground" Value="Black"></Setter>
+									</Trigger>
+									<Trigger Property="IsSelected" Value="True">
+										<Setter TargetName="Panel" Property="Background" Value="#303030" />
+										<Setter TargetName="Panel" Property="TextBlock.Foreground" Value="#eeeeee"></Setter>
+									</Trigger>
+								</ControlTemplate.Triggers>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+			</TabControl.Resources>
 			<TabItem Header="Project">
 				<DockPanel>
 					<DockPanel DockPanel.Dock="Top">
@@ -280,7 +380,8 @@
 		</TabControl>
 
 		<Grid Grid.Row="4" Grid.ColumnSpan="5">
-			<Label x:Name="MessageLog" Content="Welcome to K Engine!" x:FieldModifier="public">
+			<Label x:Name="MessageLog" Content="Welcome to K Engine!" x:FieldModifier="public"
+				   Foreground="{DynamicResource ResourceKey=ForegroundBrush}">
 				<bh:Interaction.Triggers>
 					<bh:EventTrigger EventName="MouseLeftButtonDown">
 						<bh:InvokeCommandAction Command="{Binding Path=OpenMessageWindowCommand}"/>

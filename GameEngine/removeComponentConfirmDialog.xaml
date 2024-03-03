@@ -6,12 +6,21 @@
         xmlns:local="clr-namespace:GameEngine"
         mc:Ignorable="d"
         Title="Remove Component" Height="275" Width="400"
-		WindowStartupLocation="CenterOwner">
+		WindowStartupLocation="CenterOwner"
+		Background="{DynamicResource ResourceKey=WindowBackgroundBrush}">
     <Grid>
-		<TextBlock x:Name="textBlock" Text="ああああああああああああああああああああああ" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 0, 100"/>
+		<TextBlock x:Name="textBlock" Text="ああああああああああああああああああああああ" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 0, 100"
+				   Style="{StaticResource TextBlockStyle}"/>
 		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 			<StackPanel.Resources>
 				<Style TargetType="{x:Type Button}">
+					<Style.Resources>
+						<Style TargetType="Border">
+							<Setter Property="CornerRadius" Value="3" />
+						</Style>
+					</Style.Resources>
+					<Setter Property="Background" Value="#505050"/>
+					<Setter Property="Foreground" Value="#eeeeee"/>
 					<Setter Property="Margin" Value="20,50,20,0"/>
 				</Style>
 			</StackPanel.Resources>
