@@ -6,6 +6,7 @@
 /// 
 ////////////////////////////////////////
 using System;
+using System.Windows;
 
 namespace GameEngine.ScriptLoading
 {
@@ -21,6 +22,5 @@ namespace GameEngine.ScriptLoading
         {
             m_appDomain = AppDomain.CreateDomain("Sandbox");
         }
-
     }
 }

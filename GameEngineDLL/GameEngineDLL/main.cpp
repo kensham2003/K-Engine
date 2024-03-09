@@ -40,17 +40,29 @@ int GetObjectCount(int layer) {
 
 void SetObjectPosition(const char* ObjectName, D3DXVECTOR3 Position)
 {
-	Manager::GetGameObject(ObjectName)->SetPosition(Position);
+	std::shared_ptr<GameObject> gameObject = Manager::GetGameObject(ObjectName);
+	if (gameObject != nullptr) {
+		gameObject->SetPosition(Position);
+	}
+	//Manager::GetGameObject(ObjectName)->SetPosition(Position);
 }
 
 void SetObjectRotation(const char* ObjectName, D3DXVECTOR3 Rotation)
 {
-	Manager::GetGameObject(ObjectName)->SetRotation(Rotation);
+	std::shared_ptr<GameObject> gameObject = Manager::GetGameObject(ObjectName);
+	if (gameObject != nullptr) {
+		gameObject->SetRotation(Rotation);
+	}
+	//Manager::GetGameObject(ObjectName)->SetRotation(Rotation);
 }
 
 void SetObjectScale(const char* ObjectName, D3DXVECTOR3 Scale)
 {
-	Manager::GetGameObject(ObjectName)->SetScale(Scale);
+	std::shared_ptr<GameObject> gameObject = Manager::GetGameObject(ObjectName);
+	if (gameObject != nullptr) {
+		gameObject->SetScale(Scale);
+	}
+	//Manager::GetGameObject(ObjectName)->SetScale(Scale);
 }
 
 void SetObjectTransform(const char* ObjectName, D3DXVECTOR3 Position, D3DXVECTOR3 Rotation, D3DXVECTOR3 Scale) {
@@ -150,6 +162,11 @@ void AddModel(const char* ObjectName, const char* FileName)
 	Manager::AddModel(ObjectName, FileName);
 }
 
+void __cdecl AddMainCamera(const char* FileName)
+{
+	Manager::AddMainCamera(FileName);
+}
+
 void AddBoxCollider(const char* ObjectName, const char* FileName)
 {
 	Manager::AddBoxCollider(ObjectName, FileName);
@@ -226,4 +243,19 @@ void SetModelPS(const char* ObjectName, const char* FileName) {
 
 void SetScenePlaying(bool playing) {
 	Manager::SetPlaying(playing);
+}
+
+void ChangeActiveCamera()
+{
+	Manager::ChangeActiveCamera();
+}
+
+void SetCameraTargetPosition(D3DXVECTOR3 target)
+{
+	Manager::SetCameraTargetPosition(target);
+}
+
+void SetCameraFocusTarget(bool focus)
+{
+	Manager::SetCameraFocusTarget(focus);
 }

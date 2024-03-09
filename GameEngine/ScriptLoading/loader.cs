@@ -19,12 +19,14 @@ namespace GameEngine.ScriptLoading
 {
     public class Loader : MarshalByRefObject
     {
-        public List<GameObject> m_gameObjects = new List<GameObject>();
+        //public List<GameObject> m_gameObjects = new List<GameObject>();
+        public List<GameObject>[] m_gameObjects = new List<GameObject>[Define.NUM_LAYER];
         GameLoop.GameLoop m_gameLoop;
         Game m_game;
 
         //シーンオブジェクトをシリアライズした文字列
-        public string m_serializeStr;
+        //public string m_serializeStr;
+        public string[] m_serializeStr = new string[Define.NUM_LAYER];
 
         //ロードしたアセンブリ
         private Dictionary<string, Assembly> m_nameAssemblyDict;
@@ -51,9 +53,13 @@ namespace GameEngine.ScriptLoading
         /// Loaderの終了処理
         /// </summary>
         /// <returns>シリアライズされたゲームオブジェクト情報</returns>
-        public string UninitDomain()
+        public string[] UninitDomain()
         {
-            m_serializeStr = Serialize();
+            for(int i = 0; i < Define.NUM_LAYER; i++)
+            {
+                m_serializeStr[i] = Serialize(i);
+            }
+            //m_serializeStr = Serialize();
             m_gameLoop.Quit();
             return m_serializeStr;
         }
@@ -63,158 +69,169 @@ namespace GameEngine.ScriptLoading
         /// デシリアライズして全ゲームオブジェクトを生成
         /// </summary>
         /// <param name="str">シリアライズ文字列</param>
-        public void LoadGameObjects(string str)
+        public void LoadGameObjects(string[] str)
         {
-            m_gameObjects = new List<GameObject>();
+            m_gameObjects = new List<GameObject>[Define.NUM_LAYER];
             Deserialize(str);
-            foreach (GameObject gameObject in m_gameObjects)
+            for (int p = 0; p < Define.NUM_LAYER; p++)
             {
-                //GameScriptのリストで再構築する
-                for (int i = 0; i < gameObject.ComponentName.Count; i++)
+                foreach (GameObject gameObject in m_gameObjects[p])
                 {
-                    //インスタンス生成
-                    //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
-                    var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
-                    if(typeName == null)
+                    //GameScriptのリストで再構築する
+                    for (int i = 0; i < gameObject.ComponentName.Count; i++)
                     {
-                        Assembly asm = typeof(GameObject).Assembly;
-                        typeName = asm.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
-                    }
-                    var instance = Activator.CreateInstance(typeName, null);
-                    dynamic ins = Convert.ChangeType(instance, typeName);
-
-                    //プロパティ情報再構築
-                    ComponentPropInfo oldGameScriptPropInfo = gameObject.ComponentPropInfos[i];
-                    ComponentPropInfo newGameScriptPropInfo = new ComponentPropInfo();
-                    PropertyInfo[] newPropInfos = typeName.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    int propAmount = oldGameScriptPropInfo.PropAmount;
-                    newGameScriptPropInfo.PropAmount = newPropInfos.Count();
-                    foreach (PropertyInfo newInfo in newPropInfos)
-                    {
-                        bool isSet = false;
-                        for (int m = 0; m < oldGameScriptPropInfo.PropAmount; m++)
+                        //インスタンス生成
+                        //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
+                        var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
+                        if (typeName == null)
                         {
-                            //変数が減った場合
-                            if (newPropInfos.Count() < m) break;
+                            Assembly asm = typeof(GameObject).Assembly;
+                            typeName = asm.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
+                        }
+                        var instance = Activator.CreateInstance(typeName, null);
+                        dynamic ins = Convert.ChangeType(instance, typeName);
 
-                            //変数名前が同じ（タイプを含む）の場合
-                            if (newInfo.Name == oldGameScriptPropInfo.PropNames[m] && newInfo.PropertyType.AssemblyQualifiedName == oldGameScriptPropInfo.PropTypes[m])
+                        //プロパティ情報再構築
+                        ComponentPropInfo oldGameScriptPropInfo = gameObject.ComponentPropInfos[i];
+                        ComponentPropInfo newGameScriptPropInfo = new ComponentPropInfo();
+                        PropertyInfo[] newPropInfos = typeName.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                        int propAmount = oldGameScriptPropInfo.PropAmount;
+                        newGameScriptPropInfo.PropAmount = newPropInfos.Count();
+                        foreach (PropertyInfo newInfo in newPropInfos)
+                        {
+                            bool isSet = false;
+                            for (int m = 0; m < oldGameScriptPropInfo.PropAmount; m++)
                             {
-                                //前の値をそのままで代入
-                                string propName = oldGameScriptPropInfo.PropNames[m];
-                                string propTypeName = oldGameScriptPropInfo.PropTypes[m];
-                                Type type = Type.GetType(propTypeName);
-                                string propValue = oldGameScriptPropInfo.PropValues[m];
-                                var prop = typeName.GetProperty(propName);
-                                object newValue;
-                                if(type == typeof(SVector3))
-                                {
-                                    newValue = new SVector3(propValue);
-                                }
-                                else
-                                {
-                                    newValue = Convert.ChangeType(propValue, type);
-                                }
-                                prop.SetValue(ins, newValue);
+                                //変数が減った場合
+                                if (newPropInfos.Count() < m) break;
 
-                                newGameScriptPropInfo.PropNames.Add(propName);
-                                newGameScriptPropInfo.PropTypes.Add(propTypeName);
-                                newGameScriptPropInfo.PropValues.Add(propValue);
+                                //変数名前が同じ（タイプを含む）の場合
+                                if (newInfo.Name == oldGameScriptPropInfo.PropNames[m] && newInfo.PropertyType.AssemblyQualifiedName == oldGameScriptPropInfo.PropTypes[m])
+                                {
+                                    //前の値をそのままで代入
+                                    string propName = oldGameScriptPropInfo.PropNames[m];
+                                    string propTypeName = oldGameScriptPropInfo.PropTypes[m];
+                                    Type type = Type.GetType(propTypeName);
+                                    string propValue = oldGameScriptPropInfo.PropValues[m];
+                                    var prop = typeName.GetProperty(propName);
+                                    object newValue;
+                                    if (type == typeof(SVector3))
+                                    {
+                                        newValue = new SVector3(propValue);
+                                    }
+                                    else if (type == typeof(GameObject))
+                                    {
+                                        newValue = FindGameObject(propValue);
+                                    }
+                                    else
+                                    {
+                                        newValue = Convert.ChangeType(propValue, type);
+                                    }
+                                    prop.SetValue(ins, newValue);
 
-                                isSet = true;
+                                    newGameScriptPropInfo.PropNames.Add(propName);
+                                    newGameScriptPropInfo.PropTypes.Add(propTypeName);
+                                    newGameScriptPropInfo.PropValues.Add(propValue);
+
+                                    isSet = true;
+                                    break;
+                                }
+                            }
+
+                            //元のリストにない変数である場合（dllの値をそのまま使う）
+                            if (!isSet)
+                            {
+                                newGameScriptPropInfo.PropTypes.Add(newInfo.PropertyType.AssemblyQualifiedName);
+                                newGameScriptPropInfo.PropNames.Add(newInfo.Name);
+                                newGameScriptPropInfo.PropValues.Add(Convert.ToString(newInfo.GetValue(ins)));
+                            }
+                        }
+                        gameObject.ComponentPropInfos[i] = newGameScriptPropInfo;
+
+                        //フィールド情報再構築
+                        ComponentPropInfo oldGameScriptFieldInfo = gameObject.ComponentFieldInfos[i];
+                        ComponentPropInfo newGameScriptFieldInfo = new ComponentPropInfo();
+                        FieldInfo[] newFieldInfos = typeName.GetFields();
+                        int fieldAmount = oldGameScriptFieldInfo.PropAmount;
+                        newGameScriptFieldInfo.PropAmount = newFieldInfos.Count();
+                        foreach (FieldInfo newInfo in newFieldInfos)
+                        {
+                            bool isSet = false;
+                            for (int m = 0; m < oldGameScriptFieldInfo.PropAmount; m++)
+                            {
+                                //変数が減った場合
+                                if (newFieldInfos.Count() < m) break;
+
+                                //変数名前が同じ（タイプを含む）の場合
+                                if (newInfo.Name == oldGameScriptFieldInfo.PropNames[m] && newInfo.FieldType.AssemblyQualifiedName == oldGameScriptFieldInfo.PropTypes[m])
+                                {
+                                    //前の値をそのままで代入
+                                    string fieldName = oldGameScriptFieldInfo.PropNames[m];
+                                    string fieldTypeName = oldGameScriptFieldInfo.PropTypes[m];
+                                    Type type = Type.GetType(fieldTypeName);
+                                    string propValue = oldGameScriptFieldInfo.PropValues[m];
+                                    var field = typeName.GetField(fieldName);
+                                    object newValue;
+                                    if (type == typeof(SVector3))
+                                    {
+                                        newValue = new SVector3(propValue);
+                                    }
+                                    else if (type == typeof(GameObject))
+                                    {
+                                        newValue = FindGameObject(propValue);
+                                    }
+                                    else
+                                    {
+                                        newValue = Convert.ChangeType(propValue, type);
+                                    }
+                                    field.SetValue(ins, newValue);
+
+                                    newGameScriptFieldInfo.PropNames.Add(fieldName);
+                                    newGameScriptFieldInfo.PropTypes.Add(fieldTypeName);
+                                    newGameScriptFieldInfo.PropValues.Add(propValue);
+
+                                    isSet = true;
+                                    break;
+                                }
+                            }
+
+                            //元のリストにない変数である場合（dllの値をそのまま使う）
+                            if (!isSet)
+                            {
+                                newGameScriptFieldInfo.PropTypes.Add(newInfo.FieldType.AssemblyQualifiedName);
+                                newGameScriptFieldInfo.PropNames.Add(newInfo.Name);
+                                newGameScriptFieldInfo.PropValues.Add(Convert.ToString(newInfo.GetValue(ins)));
+                            }
+                        }
+                        gameObject.ComponentFieldInfos[i] = newGameScriptFieldInfo;
+
+                        bool addedInstance = false;
+                        foreach (string s in Define.preDefinedComponents)
+                        {
+                            if (s == gameObject.ComponentName[i])
+                            {
+                                gameObject.AddComponent(ins, gameObject.ComponentName[i]);
+                                addedInstance = true;
                                 break;
                             }
                         }
-
-                        //元のリストにない変数である場合（dllの値をそのまま使う）
-                        if (!isSet)
+                        foreach (string s in Define.preDefinedColliders)
                         {
-                            newGameScriptPropInfo.PropTypes.Add(newInfo.PropertyType.AssemblyQualifiedName);
-                            newGameScriptPropInfo.PropNames.Add(newInfo.Name);
-                            newGameScriptPropInfo.PropValues.Add(Convert.ToString(newInfo.GetValue(ins)));
-                        }
-                    }
-                    gameObject.ComponentPropInfos[i] = newGameScriptPropInfo;
-
-                    //フィールド情報再構築
-                    ComponentPropInfo oldGameScriptFieldInfo = gameObject.ComponentFieldInfos[i];
-                    ComponentPropInfo newGameScriptFieldInfo = new ComponentPropInfo();
-                    FieldInfo[] newFieldInfos = typeName.GetFields();
-                    int fieldAmount = oldGameScriptFieldInfo.PropAmount;
-                    newGameScriptFieldInfo.PropAmount = newFieldInfos.Count();
-                    foreach(FieldInfo newInfo in newFieldInfos)
-                    {
-                        bool isSet = false;
-                        for(int m = 0; m < oldGameScriptFieldInfo.PropAmount; m++)
-                        {
-                            //変数が減った場合
-                            if (newFieldInfos.Count() < m) break;
-
-                            //変数名前が同じ（タイプを含む）の場合
-                            if(newInfo.Name == oldGameScriptFieldInfo.PropNames[m] && newInfo.FieldType.AssemblyQualifiedName == oldGameScriptFieldInfo.PropTypes[m])
+                            if (s == gameObject.ComponentName[i])
                             {
-                                //前の値をそのままで代入
-                                string fieldName = oldGameScriptFieldInfo.PropNames[m];
-                                string fieldTypeName = oldGameScriptFieldInfo.PropTypes[m];
-                                Type type = Type.GetType(fieldTypeName);
-                                string propValue = oldGameScriptFieldInfo.PropValues[m];
-                                var field = typeName.GetField(fieldName);
-                                object newValue;
-                                if (type == typeof(SVector3))
-                                {
-                                    newValue = new SVector3(propValue);
-                                }
-                                else
-                                {
-                                    newValue = Convert.ChangeType(propValue, type);
-                                }
-                                field.SetValue(ins, newValue);
-
-                                newGameScriptFieldInfo.PropNames.Add(fieldName);
-                                newGameScriptFieldInfo.PropTypes.Add(fieldTypeName);
-                                newGameScriptFieldInfo.PropValues.Add(propValue);
-
-                                isSet = true;
+                                gameObject.HasCollider = true;
+                                gameObject.Collider = ins;
                                 break;
                             }
                         }
-
-                        //元のリストにない変数である場合（dllの値をそのまま使う）
-                        if (!isSet)
+                        if (!addedInstance)
                         {
-                            newGameScriptFieldInfo.PropTypes.Add(newInfo.FieldType.AssemblyQualifiedName);
-                            newGameScriptFieldInfo.PropNames.Add(newInfo.Name);
-                            newGameScriptFieldInfo.PropValues.Add(Convert.ToString(newInfo.GetValue(ins)));
+                            gameObject.AddScript(ins, gameObject.ComponentName[i]);
                         }
-                    }
-                    gameObject.ComponentFieldInfos[i] = newGameScriptFieldInfo;
-
-                    bool addedInstance = false;
-                    foreach(string s in Define.preDefinedComponents)
-                    {
-                        if(s == gameObject.ComponentName[i])
-                        {
-                            gameObject.AddComponent(ins, gameObject.ComponentName[i]);
-                            addedInstance = true;
-                            break;
-                        }
-                    }
-                    foreach (string s in Define.preDefinedColliders)
-                    {
-                        if (s == gameObject.ComponentName[i])
-                        {
-                            gameObject.HasCollider = true;
-                            gameObject.Collider = ins;
-                            break;
-                        }
-                    }
-                    if (!addedInstance)
-                    {
-                        gameObject.AddScript(ins, gameObject.ComponentName[i]);
                     }
                 }
             }
-            m_game.m_gameObjects[1] = m_gameObjects;
+            m_game.m_gameObjects = m_gameObjects;
         }
 
         
@@ -262,10 +279,10 @@ namespace GameEngine.ScriptLoading
 
 
         /// <summary>
-        /// オブジェクト状態をデシリアライズ
+        /// オブジェクトの状態をシリアライズして一時保存
         /// </summary>
-        /// <param name="str">シリアライズされた文字列</param>
-        public void Deserialize(string str)
+        /// <returns>シリアライズされた文字列</returns>
+        public string Serialize(int layer)
         {
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
@@ -273,7 +290,27 @@ namespace GameEngine.ScriptLoading
                 WriteIndented = true,
                 IncludeFields = true,
             };
-            m_gameObjects = JsonSerializer.Deserialize<List<GameObject>>(str, options);
+
+            return JsonSerializer.Serialize(m_game.m_gameObjects[layer], options);
+        }
+
+
+        /// <summary>
+        /// オブジェクト状態をデシリアライズ
+        /// </summary>
+        /// <param name="str">シリアライズされた文字列</param>
+        public void Deserialize(string[] str)
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions()
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+                WriteIndented = true,
+                IncludeFields = true,
+            };
+            for(int i = 0; i < Define.NUM_LAYER; i++)
+            {
+                m_gameObjects[i] = JsonSerializer.Deserialize<List<GameObject>>(str[i], options);
+            }
         }
 
 
@@ -288,6 +325,18 @@ namespace GameEngine.ScriptLoading
             gameObject.ModelName = modelFileName;
             gameObject.AddModel(modelFileName);
             m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+        }
+
+
+        /// <summary>
+        /// ゲームオブジェクトを追加
+        /// </summary>
+        /// <param name="objectName">オブジェクト名</param>
+        /// <param name="modelFileName">モデルのファイル名</param>
+        public void AddGameObject(string objectName, int layer)
+        {
+            GameObject gameObject = new GameObject(objectName);
+            m_game.AddGameObject(gameObject, layer);
         }
 
 
@@ -608,10 +657,17 @@ namespace GameEngine.ScriptLoading
         /// <returns>指定されたオブジェクト</returns>
         public GameObject FindGameObject(string name)
         {
-            foreach(GameObject gameObject in m_gameObjects)
+            for(int i = 0; i < Define.NUM_LAYER; i++)
             {
-                if(gameObject.Name == name) { return gameObject; }
+                foreach (GameObject gameObject in m_game.m_gameObjects[i])
+                {
+                    if (gameObject.Name == name) { return gameObject; }
+                }
             }
+            //foreach(GameObject gameObject in m_gameObjects)
+            //{
+            //    if(gameObject.Name == name) { return gameObject; }
+            //}
             return null;
         }
 
@@ -727,6 +783,10 @@ namespace GameEngine.ScriptLoading
                                 {
                                     newValue = new SVector3(propValue);
                                 }
+                                else if(type == typeof(GameObject))
+                                {
+                                    newValue = FindGameObject(propValue);
+                                }
                                 else
                                 {
                                     newValue = Convert.ChangeType(propValue, type);
@@ -754,6 +814,10 @@ namespace GameEngine.ScriptLoading
                             {
                                 value = new SVector3(propValue);
                             }
+                            else if (type == typeof(GameObject))
+                            {
+                                value = FindGameObject(propValue);
+                            }
                             else
                             {
                                 value = Convert.ChangeType(propValue, type);
@@ -773,6 +837,10 @@ namespace GameEngine.ScriptLoading
                         if (type == typeof(SVector3))
                         {
                             value = new SVector3(propValue);
+                        }
+                        else if (type == typeof(GameObject))
+                        {
+                            value = FindGameObject(propValue);
                         }
                         else
                         {
@@ -813,6 +881,10 @@ namespace GameEngine.ScriptLoading
                                 {
                                     newValue = new SVector3(fieldValue);
                                 }
+                                else if (type == typeof(GameObject))
+                                {
+                                    newValue = FindGameObject(fieldValue);
+                                }
                                 else
                                 {
                                     newValue = Convert.ChangeType(fieldValue, type);
@@ -840,6 +912,10 @@ namespace GameEngine.ScriptLoading
                             {
                                 value = new SVector3(fieldValue);
                             }
+                            else if (type == typeof(GameObject))
+                            {
+                                value = FindGameObject(fieldValue);
+                            }
                             else
                             {
                                 value = Convert.ChangeType(fieldValue, type);
@@ -862,6 +938,10 @@ namespace GameEngine.ScriptLoading
                         {
                             value = new SVector3(fieldValue);
                         }
+                        else if (type == typeof(GameObject))
+                        {
+                            value = FindGameObject(fieldValue);
+                        }
                         else
                         {
                             value = Convert.ChangeType(fieldValue, type);
@@ -871,25 +951,33 @@ namespace GameEngine.ScriptLoading
 
                 }
                 //新しいインスタンスに替える(0番目はモデルのためi+1にする)
-                foreach(string s in Define.preDefinedColliders)
+                foreach(string s in Define.preDefinedComponents)
                 {
                     if(s == gameObject.ComponentName[i])
                     {
-                        gameObject.ReplaceCollider(ins);
-                        if (s == "BoxCollider")
+                        foreach(string ss in Define.preDefinedColliders)
                         {
-                            BoxCollider bc = gameObject.Collider as BoxCollider;
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderSize(gameObjectName, bc.Size));
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderRotate(gameObjectName, bc.Rotate));
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, bc.Offset));
-                        }
-                        else if(s == "SphereCollider")
-                        {
-                            SphereCollider sc = gameObject.Collider as SphereCollider;
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderSize(gameObjectName, sc.Size));
-                            MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderOffset(gameObjectName, sc.Offset));
-                        }
+                            if(ss == gameObject.ComponentName[i])
+                            {
+                                gameObject.ReplaceCollider(ins);
+                                if (ss == "BoxCollider")
+                                {
+                                    BoxCollider bc = gameObject.Collider as BoxCollider;
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderSize(gameObjectName, bc.Size));
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderRotate(gameObjectName, bc.Rotate));
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectBoxColliderOffset(gameObjectName, bc.Offset));
+                                }
+                                else if (ss == "SphereCollider")
+                                {
+                                    SphereCollider sc = gameObject.Collider as SphereCollider;
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderSize(gameObjectName, sc.Size));
+                                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectSphereColliderOffset(gameObjectName, sc.Offset));
+                                }
 
+                                return null;
+                            }
+                        }
+                        gameObject.ReplaceComponent(ins, gameObject.FindComponentIndex(gameObject.ComponentName[i]));
                         return null;
                     }
                 }
@@ -993,6 +1081,16 @@ namespace GameEngine.ScriptLoading
         {
             GameObject gameObject = FindGameObject(gameObjectName);
             m_game.RemoveGameObject(gameObject);
+        }
+
+
+        /// <summary>
+        /// 対象レイヤーの全オブジェクトを削除
+        /// </summary>
+        /// <param name="layer">指定したレイヤー</param>
+        public void RemoveAllGameObjects(int layer)
+        {
+            m_game.RemoveAllGameObjects(layer);
         }
     }
 }

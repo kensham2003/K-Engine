@@ -79,6 +79,7 @@
     <Compile Include="Detail\SMatrix3x3.cs" />
     <Compile Include="Detail\sVector3.cs" />
     <Compile Include="GameEntity\boxCollider.cs" />
+    <Compile Include="GameEntity\camera.cs" />
     <Compile Include="GameEntity\collider.cs" />
     <Compile Include="GameEntity\component.cs" />
     <Compile Include="GameEntity\destroyList.cs" />

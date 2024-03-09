@@ -38,6 +38,8 @@ void Model::Update()
 
 void Model::Draw()
 {
+	if (!m_GameObject->GetDrawFlag()) { return; }
+
 	// 入力レイアウト設定
 	Renderer::GetDeviceContext()->IASetInputLayout(m_VertexLayout);
 

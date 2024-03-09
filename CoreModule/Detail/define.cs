@@ -6,7 +6,6 @@
 /// 
 ////////////////////////////////////////
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System;
@@ -26,7 +25,10 @@ namespace GameEngine.Detail
         public static readonly IList<string> preDefinedComponents = new ReadOnlyCollection<string>(
             new List<string> {
                 "BoxCollider",
-                "SphereCollider"
+                "SphereCollider",
+                "Camera",
+                "MainCamera",
+                "Field"
             }
             );
 

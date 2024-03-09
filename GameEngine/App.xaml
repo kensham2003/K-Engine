@@ -3,15 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:GameEngine"
 			 ShutdownMode="OnMainWindowClose">
-	<!--StartupUri="MainWindow.xaml"-->
-    <Application.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!--NetworkViewのテンプレートをインポート-->
-                <ResourceDictionary Source="pack://application:,,,/TsNode;component/Template.xaml" />
-                <!--サンプルをインポート-->
-                <ResourceDictionary Source="pack://application:,,,/TsNode;component/Preset/Presettemplate.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Application.Resources>
+	<Application.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="DarkTheme.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Application.Resources>
 </Application>

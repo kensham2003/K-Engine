@@ -6,10 +6,6 @@
 /// 
 ///////////////////////////////////////
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using GameEngine.MVVM.ViewModel;
 
@@ -17,13 +13,13 @@ namespace GameEngine.Services
 {
     public class ViewModelLocator
     {
-        private readonly IServiceProvider _provider;
+        private readonly IServiceProvider m_provider;
         public ViewModelLocator(IServiceProvider provider)
         {
-            _provider = provider;
+            m_provider = provider;
         }
 
-        public MainViewModel m_mainViewModel => _provider.GetRequiredService<MainViewModel>();
-        public MessageViewModel m_messageViewModel => _provider.GetRequiredService<MessageViewModel>();
+        public MainViewModel m_mainViewModel => m_provider.GetRequiredService<MainViewModel>();
+        public MessageViewModel m_messageViewModel => m_provider.GetRequiredService<MessageViewModel>();
     }
 }

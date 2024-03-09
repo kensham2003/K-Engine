@@ -5,23 +5,16 @@
 ///  機能：メインウインドウのビューモデル
 /// 
 /////////////////////////////////////////////
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using GameEngine.Services;
-using GameEngine.MVVM;
-using GameEngine.MVVM.View;
 
 namespace GameEngine.MVVM.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private readonly IWindowManager _windowManager;
-        private readonly ViewModelLocator _viewModelLocator;
+        private readonly IWindowManager m_windowManager;
+        private readonly ViewModelLocator m_viewModelLocator;
 
         public IItemsService ItemsService { get; set; }
 
@@ -31,11 +24,11 @@ namespace GameEngine.MVVM.ViewModel
 
         public MainViewModel(IItemsService itemsService, IWindowManager windowManager, ViewModelLocator viewModelLocator)
         {
-            _windowManager = windowManager;
-            _viewModelLocator = viewModelLocator;
+            m_windowManager = windowManager;
+            m_viewModelLocator = viewModelLocator;
             ItemsService = itemsService;
 
-            OpenMessageWindowCommand = new RelayCommand((object o) => { _windowManager.ShowWindow(_viewModelLocator.m_messageViewModel); }, (object o) => true);
+            OpenMessageWindowCommand = new RelayCommand((object o) => { m_windowManager.ShowWindow(m_viewModelLocator.m_messageViewModel); }, (object o) => true);
         }
 
         public void AddItem(string item)

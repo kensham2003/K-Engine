@@ -7,9 +7,6 @@
 ///////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using GameEngine.MVVM.ViewModel;
 
@@ -23,17 +20,17 @@ namespace GameEngine.Services
 
     public class WindowManager : IWindowManager
     {
-        private readonly WindowMapper _windowMapper;
+        private readonly WindowMapper m_windowMapper;
         private Dictionary<Type, int> m_windowCounter = new Dictionary<Type, int>();
 
         public WindowManager(WindowMapper windowMapper)
         {
-            _windowMapper = windowMapper;
+            m_windowMapper = windowMapper;
         }
 
         public void ShowWindow(ViewModelBase viewModel)
         {
-            var windowType = _windowMapper.GetWindowTypeForViewModel(viewModel.GetType());
+            var windowType = m_windowMapper.GetWindowTypeForViewModel(viewModel.GetType());
             if(windowType != null)
             {
                 //対象ウインドウが存在している場合は生成しない

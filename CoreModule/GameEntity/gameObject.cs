@@ -6,14 +6,9 @@
 /// 
 ////////////////////////////////////////
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Numerics;
-using System.Runtime.Serialization;
 
 using GameEngine.Detail;
 
@@ -213,6 +208,28 @@ namespace GameEngine.GameEntity
                 foreach (string s in Define.preDefinedColliders)
                 {
                     if (s == c.Name.Replace("GameEngine.GameEntity.", ""))
+                    {
+                        return index;
+                    }
+                }
+                index++;
+            }
+            return -1;
+        }
+
+        public int FindComponentIndex(string name)
+        {
+            int index = 0;
+            foreach(Component c in Components)
+            {
+                if(c.Name == null)
+                {
+                    index++;
+                    continue;
+                }
+                foreach(string s in Define.preDefinedComponents)
+                {
+                    if(s == c.Name.Replace("GameEngine.GameEntity.", ""))
                     {
                         return index;
                     }

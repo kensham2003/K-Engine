@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
 namespace GameEngine
 {
@@ -19,7 +7,7 @@ namespace GameEngine
     /// </summary>
     public partial class removeComponentConfirmDialog : Window
     {
-        public bool IsConfirm = false;
+        public bool m_isConfirm = false;
 
         public removeComponentConfirmDialog()
         {
@@ -34,13 +22,13 @@ namespace GameEngine
 
         private void YesButtonClick(object sender, RoutedEventArgs e)
         {
-            IsConfirm = true;
+            m_isConfirm = true;
             DialogResult = true;
         }
 
         private void NoButtonClick(object sender, RoutedEventArgs e)
         {
-            IsConfirm = false;
+            m_isConfirm = false;
             DialogResult = true;
         }
     }

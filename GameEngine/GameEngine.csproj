@@ -244,9 +244,6 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Xml.ReaderWriter" />
-    <Reference Include="TsNode, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TsNode.1.0.8\lib\net462\TsNode.dll</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -257,6 +254,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="confirmWindow.xaml.cs">
+      <DependentUpon>confirmWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MVVM\relayCommand.cs" />
     <Compile Include="MVVM\ViewModel\mainViewModel.cs" />
     <Compile Include="MVVM\ViewModel\messageViewModel.cs" />
@@ -283,6 +283,14 @@
     <Compile Include="UserSettings\Settings.cs" />
     <Compile Include="Utility\centerMessageBox.cs" />
     <Compile Include="Utility\windowWrapper.cs" />
+    <Page Include="confirmWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DarkTheme.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MVVM\View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

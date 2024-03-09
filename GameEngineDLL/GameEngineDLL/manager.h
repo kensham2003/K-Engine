@@ -21,8 +21,10 @@ private:
 	static std::list<std::shared_ptr<GameObject>> m_GameObject[5];
 	static std::stringstream m_GameObjectCache[5];
 
-	static bool m_IsPlaying;
+	static std::shared_ptr<GameObject> m_Camera;
+	static std::shared_ptr<GameObject> m_MainCamera;
 
+	static bool m_IsPlaying;
 
 public:
 	static void Init();
@@ -32,17 +34,11 @@ public:
 
 	static std::shared_ptr<GameObject> AddGameObject(const char* ObjectName, int layer); //Add empty object
 
-	//template <typename T> //テンプレート関数
-	//static T* AddGameObject(int Layer) {
-	//	T* gameObject = new T();
-	//	m_GameObject[Layer].push_back(gameObject);
-	//	gameObject->Init();
-
-	//	return gameObject;
-	//}
 	static int GetObjectCount(int layer);
 
 	static void AddModel(const char* ObjectName, const char* FileName);
+
+	static void AddMainCamera(const char* FileName);
 
 	static void AddBoxCollider(const char* ObjectName, const char* FileName);
 
@@ -67,11 +63,6 @@ public:
 	static int GetModelSubsetNum(const char* ObjectName);
 
 	static void RenameGameObject(const char* ObjectName, const char* newName);
-
-	//static GameObject* GetGameObject(const char* Name)
-	//{
-	//	return m_GameObjectMap[Name];
-	//}
 
 	//名前が合っているゲームオブジェクトを取得
 	static std::shared_ptr<GameObject> GetGameObject(std::string name) {
@@ -121,6 +112,12 @@ public:
 	static void SetModelVS(const char* ObjectName, const char* FileName);
 
 	static void SetModelPS(const char* ObjectName, const char* FileName);
+
+	static void ChangeActiveCamera();
+
+	static void SetCameraTargetPosition(D3DXVECTOR3 target);
+
+	static void SetCameraFocusTarget(bool focus);
 };
 
 template<class Archive>

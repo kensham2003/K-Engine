@@ -6,15 +6,7 @@
 /// 
 ////////////////////////////////////////
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Numerics;
 using System.Text.Json.Serialization;
-using System.Runtime.Serialization;
-
-using GameEngine.Detail;
 
 namespace GameEngine.GameEntity
 {
@@ -24,6 +16,7 @@ namespace GameEngine.GameEntity
     [JsonDerivedType(typeof(Collider))]
     [JsonDerivedType(typeof(BoxCollider))]
     [JsonDerivedType(typeof(SphereCollider))]
+    [JsonDerivedType(typeof(Camera))]
     [Serializable]
     public class Component
     {

@@ -255,6 +255,7 @@
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="mainCamera.h" />
     <ClInclude Include="manager.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="player.h" />
@@ -268,6 +269,7 @@
     <ClCompile Include="field.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainCamera.cpp" />
     <ClCompile Include="manager.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="pch.cpp">

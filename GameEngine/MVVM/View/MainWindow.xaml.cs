@@ -1,4 +1,11 @@
-﻿using System;
+﻿/////////////////////////////////////////////
+///
+///  MainWindowクラス
+///  
+///  機能：メインウインドウの制御
+/// 
+/////////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,10 +25,6 @@ using System.Reflection;
 
 using System.Text.Json;
 using System.IO;
-
-using TsNode.Interface;
-using TsNode.Preset.ViewModels;
-using System.Collections.ObjectModel;
 
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Timers;
@@ -48,103 +51,69 @@ namespace GameEngine
     /// </summary>
     public partial class MainWindow : Window
     {
-        MainViewModel m_mainViewModel;
-
+        //メンバ変数
+        #region
+        //インポート関数
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
-        TimeSpan lastRender;
-        bool lastVisible;
+        //ビューモデル関連
+        MainViewModel m_mainViewModel;
 
-        Point oldMousePosition;
-        bool    mouseLeftButtonPressed = false;
-        bool    mouseRightButtonPressed = false;
-        //float   cameraMoveSpeed = 0.0f;
-        //Vector3 cameraMoveVelocity = Vector3.Zero;
-        GameObject selectedObject;
+        //レンダー関連
+        TimeSpan m_lastRender;
+        bool m_lastVisible;
 
-        bool m_simulating = false;
+        //カーソル関連
+        Point m_oldMousePosition;
+        bool    m_mouseLeftButtonPressed = false;
+        bool    m_mouseRightButtonPressed = false;
+        Point m_mousePosition;
+        Point m_newMousePosition;
+        bool m_hostLeftButtonDown = false;
+        GameObject m_selectedObject;
 
-        Point mousePosition;
-        Point newMousePosition;
+        //インスペクター関連
+        bool m_inspectorIsWorldCoordinate = true;
+        bool m_inspectorIsScaleLinked = false;
 
-        bool inspector_isWorldCoordinate = true;
-        bool inspector_isScaleLinked = false;
+        //エディタカメラ関連
+        Task m_task;
 
-        Task task;
+        //エンジン内部時間計測関連
+        System.Timers.Timer m_timer;
 
-        System.Timers.Timer timer;
-
+        //ファイル監視関連
         FileSystemWatcher m_fileSystemWatcher;
         private List<string> m_filesToIgnore = new List<string>();
         DateTime m_lastWatch = DateTime.MinValue;
 
+        //ファイル生成関連
         CSharpCompilation m_compilation;
-        //Dictionary<string, AppDomain> m_scriptDomainDictionary = new Dictionary<string, AppDomain>();
 
+        //シミュレート関連
+        bool m_simulating = false;
         Sandbox m_sandbox;
         Loader m_loader;
 
+        //スクリプトコンパイル関連
         Project m_scriptLibrary;
         BasicFileLogger m_logger = new BasicFileLogger();
         bool m_isSuccessfullyBuilt = true;
-
         bool m_slnOpening = false;
-        bool m_hostLeftButtonDown = false;
 
+        //設定関連
         Settings m_settings;
         string m_devenvPath;
 
+        //プロジェクトブラウザ関連
         bool m_pressedPageButton = false;
         bool m_projectBrowserLoading = true;
         string m_currentPath;
         Stack<string> m_traversedPath = new Stack<string>();
         Stack<string> m_nextPath = new Stack<string>();
-
-        //public class MainWindowDataContext
-        //{
-        //    public ObservableCollection<INodeDataContext> Nodes { get; set; }
-        //    public ObservableCollection<IConnectionDataContext> Connections { get; set; }
-
-        //    public MainWindowDataContext()
-        //    {
-        //        Nodes = new ObservableCollection<INodeDataContext>();
-        //        Connections = new ObservableCollection<IConnectionDataContext>();
-
-        //        //ノード一個目を作る
-        //        var node1 = new PresetNodeViewModel()
-        //        {
-        //            OutputPlugs = new ObservableCollection<IPlugDataContext>
-        //        {
-        //            new PresentPlugViewModel(),
-        //        }
-        //        };
-
-        //        //ノード二個目を作る
-        //        var node2 = new PresetNodeViewModel()
-        //        {
-        //            X = 150,
-        //            InputPlugs = new ObservableCollection<IPlugDataContext>
-        //        {
-        //            new PresentPlugViewModel(),
-        //        },
-        //        };
-
-        //        //ノードを追加する
-        //        Nodes.Add(node1);
-        //        Nodes.Add(node2);
-
-        //        //繋ぐ線を作る
-        //        var connection = new PresetConnectionViewModel()
-        //        {
-        //            SourcePlug = node1.OutputPlugs[0],
-        //            DestPlug = node2.InputPlugs[0],
-        //        };
-
-        //        //線を追加する
-        //        Connections.Add(connection);
-        //    }
-        //}
+        System.Collections.ObjectModel.ObservableCollection<string> m_projectBrowserItems = new System.Collections.ObjectModel.ObservableCollection<string>();
+        #endregion
 
         public MainWindow()
         {
@@ -174,13 +143,14 @@ namespace GameEngine
                 string path = assembly.Location;                    //実行ファイルのパス
                 string dir = System.IO.Path.GetDirectoryName(path); //実行ファイルの場所
 
-                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(dir));
+                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(dir));
+                ProjectBrowser_Goto(dir);
             }
 
             //タイマー
             {
-                timer = new System.Timers.Timer(1.0 / 30.0);
-                timer.Elapsed += new ElapsedEventHandler(TimerUpdate);
+                m_timer = new System.Timers.Timer(1.0 / 30.0);
+                m_timer.Elapsed += new ElapsedEventHandler(TimerUpdate);
             }
 
             ////ノードエディタ
@@ -222,7 +192,7 @@ namespace GameEngine
             m_lastWatch = lastChange;
 
             //Sandbox AppDomainをアンロード
-            string serializedGameObjects = m_loader.UninitDomain();
+            string[] serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.m_appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
@@ -268,7 +238,7 @@ namespace GameEngine
             
 
             //Sandbox AppDomainをアンロード
-            string serializedGameObjects = m_loader.UninitDomain();
+            string[] serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.m_appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
@@ -351,7 +321,35 @@ namespace GameEngine
             m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
             m_logger.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Normal;
             ReloadDll();
+
+            //メインカメラを追加
+            GameObject gameObject = new GameObject("MainCamera");
+            HierarchyListBox.Items.Add(gameObject);
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddMainCamera(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\EngineAssets\\model\\camera.obj"));
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit("MainCamera", false));
+            m_loader.AddGameObject("MainCamera", Define.LAYER_CAMERA);
+            m_loader.AddComponentToGameObject("MainCamera", "Camera");
+
+            System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+            dispatcherTimer.Tick += new EventHandler(DispatcherTimerTick);
+            dispatcherTimer.Interval = TimeSpan.FromSeconds(120);
+            dispatcherTimer.Start();
         }
+
+
+        /// <summary>
+        /// ロードしてから2分ごとに行う関数
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DispatcherTimerTick(object sender, EventArgs e)
+        {
+            if (!m_simulating)
+            {
+                SaveFile("自動セーブ成功！");
+            }
+        }
+
 
         private void Host_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -375,10 +373,10 @@ namespace GameEngine
             // Stop rendering if the D3DImage isn't visible - currently just if width or height is 0
             // TODO: more optimizations possible (scrolled off screen, etc...)
             bool isVisible = (surfWidth != 0 && surfHeight != 0);
-            if (lastVisible != isVisible)
+            if (m_lastVisible != isVisible)
             {
-                lastVisible = isVisible;
-                if (lastVisible)
+                m_lastVisible = isVisible;
+                if (m_lastVisible)
                 {
                     CompositionTarget.Rendering += CompositionTarget_Rendering;
                 }
@@ -408,10 +406,10 @@ namespace GameEngine
 
             // It's possible for Rendering to call back twice in the same frame 
             // so only render when we haven't already rendered in this frame.
-            if (this.lastRender != args.RenderingTime)
+            if (this.m_lastRender != args.RenderingTime)
             {
                 InteropImage.RequestRender();
-                this.lastRender = args.RenderingTime;
+                this.m_lastRender = args.RenderingTime;
             }
         }
 
@@ -523,6 +521,9 @@ namespace GameEngine
             public static extern void AddModel(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void AddMainCamera(string FileName);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void AddBoxCollider(string ObjectName, string FileName);
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -572,6 +573,15 @@ namespace GameEngine
 
             [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
             public static extern void SetScenePlaying(bool playing);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void ChangeActiveCamera();
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetCameraTargetPosition(Vector3 target);
+
+            [DllImport("GameEngineDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+            public static extern void SetCameraFocusTarget(bool focus);
 
             /// <summary>
             /// Method used to invoke an Action that will catch DllNotFoundExceptions and display a warning dialog.
@@ -638,7 +648,7 @@ namespace GameEngine
 
             //マウスとホストの相対位置を取得して、C++側に送る
             Point localMousePosition = e.GetPosition(host);
-            oldMousePosition = localMousePosition;
+            m_oldMousePosition = localMousePosition;
             double height = host.ActualHeight;
             double width = host.ActualWidth;
             localMousePosition.Y -= height / 2;
@@ -671,16 +681,21 @@ namespace GameEngine
         private void Host_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             m_hostLeftButtonDown = false;
-            oldMousePosition = e.GetPosition(host);
+            m_oldMousePosition = e.GetPosition(host);
         }
 
         //右ボタン押しながら+WASD：カメラを移動
         private void Host_MouseRightButtonDown(object sender, MouseEventArgs e)
         {
+            //シミュレート中は動かせないように
+            if (m_simulating)
+            {
+                return;
+            }
             host.Focus();
-            mouseRightButtonPressed = true;
-            task = new Task(MoveCameraTask);
-            task.Start();
+            m_mouseRightButtonPressed = true;
+            m_task = new Task(MoveCameraTask);
+            m_task.Start();
         }
 
         private void Host_MouseDown(object sender, MouseButtonEventArgs e)
@@ -690,7 +705,7 @@ namespace GameEngine
 
         private void Host_MouseUp(object sender, MouseEventArgs e)
         {
-            mouseRightButtonPressed = false;
+            m_mouseRightButtonPressed = false;
         }
 
         //60fpsで移動
@@ -698,7 +713,7 @@ namespace GameEngine
         {
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseRightButtonPressed)
+            while (m_mouseRightButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
@@ -724,10 +739,10 @@ namespace GameEngine
             //右ボタン：カメラ方向移動
             if (e.RightButton == MouseButtonState.Pressed)
             {
-                mouseRightButtonPressed = true;
+                m_mouseRightButtonPressed = true;
 
-                cameraRotation.Y += (float)(mousePosition.X - oldMousePosition.X) * 0.003f;
-                cameraRotation.X += (float)(mousePosition.Y - oldMousePosition.Y) * 0.003f;
+                cameraRotation.Y += (float)(mousePosition.X - m_oldMousePosition.X) * 0.003f;
+                cameraRotation.X += (float)(mousePosition.Y - m_oldMousePosition.Y) * 0.003f;
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation("Camera", cameraRotation));
 
@@ -735,14 +750,14 @@ namespace GameEngine
 
             if(e.RightButton == MouseButtonState.Released)
             {
-                mouseRightButtonPressed = false;
+                m_mouseRightButtonPressed = false;
             }
 
             //ホイールボタン：カメラ前後移動
             if(e.MiddleButton == MouseButtonState.Pressed)
             {
-                float dx = (float)(mousePosition.X - oldMousePosition.X) * 0.01f;
-                float dy = (float)(mousePosition.Y - oldMousePosition.Y) * 0.01f;
+                float dx = (float)(mousePosition.X - m_oldMousePosition.X) * 0.01f;
+                float dy = (float)(mousePosition.Y - m_oldMousePosition.Y) * 0.01f;
 
                 cameraPosition.X -= (float)Math.Cos(cameraRotation.Y) * dx - (float)Math.Sin(cameraRotation.Y) * (float)Math.Sin(cameraRotation.X) * dy;
                 cameraPosition.Z += (float)Math.Sin(cameraRotation.Y) * dx + (float)Math.Cos(cameraRotation.Y) * (float)Math.Sin(cameraRotation.X) * dy;
@@ -760,8 +775,8 @@ namespace GameEngine
                 if (gameObject == null)
                     return;
 
-                float dx = (float)(mousePosition.X - oldMousePosition.X) * 0.01f;
-                float dy = (float)(mousePosition.Y - oldMousePosition.Y) * 0.01f;
+                float dx = (float)(mousePosition.X - m_oldMousePosition.X) * 0.01f;
+                float dy = (float)(mousePosition.Y - m_oldMousePosition.Y) * 0.01f;
 
                 Vector3 position = gameObject.Position;
                 position.X += (float)Math.Cos(cameraRotation.Y) * dx - (float)Math.Sin(cameraRotation.Y) * (float)Math.Sin(cameraRotation.X) * dy;
@@ -774,11 +789,16 @@ namespace GameEngine
                 ObjectToInspector();
             }
 
-            oldMousePosition = mousePosition;
+            m_oldMousePosition = mousePosition;
         }
 
         private void Host_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            //シミュレート中は動かせないように
+            if (m_simulating)
+            {
+                return;
+            }
             int wheel = e.Delta;
             Vector3 cameraPosition = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition("Camera"));
             Vector3 cameraRotation = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation("Camera"));
@@ -833,6 +853,46 @@ namespace GameEngine
 
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(objectName, filename));
         }
+
+
+        private void Host_AddModel(string filename)
+        {
+            //.obj以外のファイルドロップは禁止
+            if (System.IO.Path.GetExtension(filename) != ".obj")
+            {
+                CenterMessageBox.Show(new WindowWrapper(this), ".objのみドロップできます！", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
+            string objectName = System.IO.Path.GetFileNameWithoutExtension(filename);
+
+            //同じモデルを入れる場合は名前を「モデル_2」のようにする
+            int cnt = 1;
+            for (int i = 0; i < HierarchyListBox.Items.Count; i++)
+            {
+                GameObject now = HierarchyListBox.Items.GetItemAt(i) as GameObject;
+                if (filename == now.ModelName)
+                {
+                    cnt++;
+                }
+            }
+            if (cnt > 1)
+            {
+                objectName = objectName + "_" + cnt.ToString();
+            }
+
+            //C++側とゲーム処理側にオブジェクト登録
+            GameObject gameObject = new GameObject(objectName);
+            gameObject.ModelName = filename;
+            gameObject.AddModel(filename);
+            //gameObject.AddComponent(new GameEntity.testComponent(gameObject));
+            //m_game.AddGameObject(gameObject, Define.LAYER_3D_OBJECT);
+
+            m_loader.AddGameObject(objectName, filename);
+
+            HierarchyListBox.Items.Add(gameObject);
+
+            NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(objectName, filename));
+        }
         
 
         //=====================
@@ -841,6 +901,8 @@ namespace GameEngine
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
+            m_loader.RemoveAllGameObjects(Define.LAYER_3D_OBJECT);
+
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
@@ -849,54 +911,59 @@ namespace GameEngine
             };
             string fileName = "TestScene.json";
             string jsonString = File.ReadAllText(fileName);
+            string[] jsonStrings = new string[Define.NUM_LAYER];
+            for(int i = 0; i < Define.NUM_LAYER; i++)
+            {
+                jsonStrings[i] = "[]";
+            }
+            jsonStrings[Define.LAYER_3D_OBJECT] = jsonString;
             List<GameObject> gameObjects = JsonSerializer.Deserialize<List<GameObject>>(jsonString, options);
 
             foreach (GameObject gameObject in gameObjects)
             {
+                if(gameObject.Name == "MainCamera") { continue; }
                 HierarchyListBox.Items.Add(gameObject);
-                NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Name, gameObject.ModelName));
+                if(gameObject.ModelName != null)
+                {
+                    NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddModel(gameObject.Name, gameObject.ModelName));
+                }
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(gameObject.Name, gameObject.Position));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectRotation(gameObject.Name, gameObject.Rotation));
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Name, gameObject.Scale));
             }
+            m_loader.LoadGameObjects(jsonStrings);
         }
 
         private void MenuItem_Save_Click(object sender, RoutedEventArgs e)
         {
-            JsonSerializerOptions options = new JsonSerializerOptions()
+            var confirmWindow = new confirmWindow("セーブしますか？");
+            confirmWindow.Owner = GetWindow(this);
+            if (confirmWindow.ShowDialog() == true)
             {
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
-                WriteIndented = true,
-                IncludeFields = true,
-            };
-
-            string fileName = "TestScene.json";
-            //foreach(object o in HierarchyListBox.Items)
-            //{
-            //    GameObject g = o as GameObject;
-            //    string jsonStr = JsonSerializer.Serialize(g.Components.ToArray(), options);
-            //    File.WriteAllText(fileName, jsonStr);
-            //}
-            string jsonString = JsonSerializer.Serialize(HierarchyListBox.Items, options);
-            File.WriteAllText(fileName, jsonString);
+                if (confirmWindow.m_isConfirm)
+                {
+                    SaveFile("セーブ成功！");
+                }
+            }
         }
 
-        //private void MenuItem_Run_Click(object sender, RoutedEventArgs e)
-        //{
-        //    InspectorToObject();
-        //    timer.Start();
-        //}
 
-        //private void MenuItem_Stop_Click(object sender, RoutedEventArgs e)
-        //{
-        //    timer.Stop();
-        //}
+        /// <summary>
+        /// 現在の情報をファイルにセーブ（TestScene.json）、メインカメラ含まない
+        /// </summary>
+        /// <param name="successMsg">成功したらデバッグログに出すメッセージ</param>
+        private void SaveFile(string successMsg)
+        {
+            string fileName = "TestScene.json";
+            string jsonString = m_loader.Serialize(Define.LAYER_3D_OBJECT);
+            File.WriteAllText(fileName, jsonString);
+            SetMessage(successMsg);
+        }
 
         private void MenuItem_Simulate_Play_Click(object sender, RoutedEventArgs e)
         {
             if (!m_isSuccessfullyBuilt)
             {
-                //MessageBox.Show("ビルドエラーを修正してからシミュレートしてください。", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
                 CenterMessageBox.Show(new WindowWrapper(this), "ビルドエラーを修正してからシミュレートしてください。", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
@@ -922,6 +989,7 @@ namespace GameEngine
                 {
                     this.Dispatcher.Invoke(() =>
                     {
+                        //Input.Keyboard.UpdateKeyState();
                         //デバッグログを取得
                         List<string> debugMessage = m_loader.GetDebugMessage();
                         if (debugMessage.Count() > 0)
@@ -1263,9 +1331,9 @@ namespace GameEngine
 
         private void Inspector_Position_X_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(MoveObjectTaskX));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1273,9 +1341,9 @@ namespace GameEngine
 
         private void Inspector_Position_Y_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(MoveObjectTaskY));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1283,9 +1351,9 @@ namespace GameEngine
 
         private void Inspector_Position_Z_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(MoveObjectTaskZ));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1294,7 +1362,7 @@ namespace GameEngine
 
         private void MoveObjectTaskX()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecX = new Vector3(1.0f, 0.0f, 0.0f);
 
             double xDiff;
@@ -1302,35 +1370,35 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
-                    if (inspector_isWorldCoordinate)
+                    if (m_inspectorIsWorldCoordinate)
                     {
                         NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecX * (float)xDiff));
                     }
@@ -1347,7 +1415,7 @@ namespace GameEngine
                         m_loader.SetGameObjectPosition(objectName, Pos.X, Pos.Y, Pos.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1356,7 +1424,7 @@ namespace GameEngine
 
         private void MoveObjectTaskY()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecY = new Vector3(0.0f, 1.0f, 0.0f);
 
             double xDiff;
@@ -1364,35 +1432,35 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
-                    if (inspector_isWorldCoordinate)
+                    if (m_inspectorIsWorldCoordinate)
                     {
                         NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecY * (float)xDiff));
                     }
@@ -1409,7 +1477,7 @@ namespace GameEngine
                         m_loader.SetGameObjectPosition(objectName, Pos.X, Pos.Y, Pos.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1418,7 +1486,7 @@ namespace GameEngine
 
         private void MoveObjectTaskZ()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecZ = new Vector3(0.0f, 0.0f, 1.0f);
 
             double xDiff;
@@ -1426,35 +1494,35 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
-                    if (inspector_isWorldCoordinate)
+                    if (m_inspectorIsWorldCoordinate)
                     {
                         NativeMethods.InvokeWithDllProtection(() => NativeMethods.MoveObjectPosition(objectName, vecZ * (float)xDiff));
                     }
@@ -1471,7 +1539,7 @@ namespace GameEngine
                         m_loader.SetGameObjectPosition(objectName, Pos.X, Pos.Y, Pos.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1479,7 +1547,7 @@ namespace GameEngine
 
         private void Inspector_Position_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            mouseLeftButtonPressed = false;
+            m_mouseLeftButtonPressed = false;
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Vector3 Pos = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectPosition(gameObject.ToString()));
             gameObject.Position = Pos;
@@ -1487,14 +1555,14 @@ namespace GameEngine
 
         private void Inspector_Change_World_Local(object sender, RoutedEventArgs e)
         {
-            if (inspector_isWorldCoordinate)
+            if (m_inspectorIsWorldCoordinate)
             {
-                inspector_isWorldCoordinate = false;
+                m_inspectorIsWorldCoordinate = false;
                 Inspector_Coordinate_Button.Content = "ローカル";
             }
             else
             {
-                inspector_isWorldCoordinate = true;
+                m_inspectorIsWorldCoordinate = true;
                 Inspector_Coordinate_Button.Content = "ワールド";
             }
         }
@@ -1505,9 +1573,9 @@ namespace GameEngine
 
         private void Inspector_Rotation_X_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(RotateObjectTaskX));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1515,9 +1583,9 @@ namespace GameEngine
 
         private void Inspector_Rotation_Y_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(RotateObjectTaskY));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1525,9 +1593,9 @@ namespace GameEngine
 
         private void Inspector_Rotation_Z_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(RotateObjectTaskZ));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1535,7 +1603,7 @@ namespace GameEngine
 
         private void RotateObjectTaskX()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecX = new Vector3(1.0f, 0.0f, 0.0f);
 
             double xDiff;
@@ -1543,32 +1611,32 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
                     NativeMethods.InvokeWithDllProtection(() => NativeMethods.RotateObject(objectName, vecX * (float)xDiff));
@@ -1580,7 +1648,7 @@ namespace GameEngine
                         m_loader.SetGameObjectRotation(objectName, Rot.X, Rot.Y, Rot.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1588,7 +1656,7 @@ namespace GameEngine
 
         private void RotateObjectTaskY()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecY = new Vector3(0.0f, 1.0f, 0.0f);
 
             double xDiff;
@@ -1596,32 +1664,32 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
                     NativeMethods.InvokeWithDllProtection(() => NativeMethods.RotateObject(objectName, vecY * (float)xDiff));
@@ -1633,7 +1701,7 @@ namespace GameEngine
                         m_loader.SetGameObjectRotation(objectName, Rot.X, Rot.Y, Rot.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1641,7 +1709,7 @@ namespace GameEngine
         
         private void RotateObjectTaskZ()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecZ = new Vector3(0.0f, 0.0f, 1.0f);
 
             double xDiff;
@@ -1649,32 +1717,32 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
                     NativeMethods.InvokeWithDllProtection(() => NativeMethods.RotateObject(objectName, vecZ * (float)xDiff));
@@ -1686,7 +1754,7 @@ namespace GameEngine
                         m_loader.SetGameObjectRotation(objectName, Rot.X, Rot.Y, Rot.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1694,7 +1762,7 @@ namespace GameEngine
 
         private void Inspector_Rotation_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            mouseLeftButtonPressed = false;
+            m_mouseLeftButtonPressed = false;
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Vector3 Rot = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectRotation(gameObject.ToString()));
             gameObject.Rotation = Rot;
@@ -1706,9 +1774,9 @@ namespace GameEngine
 
         private void Inspector_Scale_X_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(ScaleObjectTaskX));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1716,9 +1784,9 @@ namespace GameEngine
 
         private void Inspector_Scale_Y_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(ScaleObjectTaskY));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1726,9 +1794,9 @@ namespace GameEngine
 
         private void Inspector_Scale_Z_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mousePosition = PointToScreen(Mouse.GetPosition(this));
-            mouseLeftButtonPressed = true;
-            selectedObject = HierarchyListBox.SelectedItem as GameObject;
+            m_mousePosition = PointToScreen(Mouse.GetPosition(this));
+            m_mouseLeftButtonPressed = true;
+            m_selectedObject = HierarchyListBox.SelectedItem as GameObject;
             var th = new Thread(new ThreadStart(ScaleObjectTaskZ));
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
@@ -1736,9 +1804,9 @@ namespace GameEngine
 
         private void ScaleObjectTaskX()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecX = new Vector3(1.0f, 0.0f, 0.0f);
-            if (inspector_isScaleLinked)
+            if (m_inspectorIsScaleLinked)
             {
                 vecX = new Vector3(1.0f, 1.0f, 1.0f);
             }
@@ -1747,32 +1815,32 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
                     NativeMethods.InvokeWithDllProtection(() => NativeMethods.ScaleObject(objectName, vecX * (float)xDiff));
@@ -1786,7 +1854,7 @@ namespace GameEngine
                         m_loader.SetGameObjectScale(objectName, Scl.X, Scl.Y, Scl.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1794,9 +1862,9 @@ namespace GameEngine
 
         private void ScaleObjectTaskY()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecY = new Vector3(0.0f, 1.0f, 0.0f);
-            if (inspector_isScaleLinked)
+            if (m_inspectorIsScaleLinked)
             {
                 vecY = new Vector3(1.0f, 1.0f, 1.0f);
             }
@@ -1805,32 +1873,32 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
                     NativeMethods.InvokeWithDllProtection(() => NativeMethods.ScaleObject(objectName, vecY * (float)xDiff));
@@ -1844,7 +1912,7 @@ namespace GameEngine
                         m_loader.SetGameObjectScale(objectName, Scl.X, Scl.Y, Scl.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1852,9 +1920,9 @@ namespace GameEngine
 
         private void ScaleObjectTaskZ()
         {
-            string objectName = selectedObject.ToString();
+            string objectName = m_selectedObject.ToString();
             Vector3 vecZ = new Vector3(0.0f, 0.0f, 1.0f);
-            if (inspector_isScaleLinked)
+            if (m_inspectorIsScaleLinked)
             {
                 vecZ = new Vector3(1.0f, 1.0f, 1.0f);
             }
@@ -1863,32 +1931,32 @@ namespace GameEngine
             //60fps
             DateTime now = DateTime.Now;
             TimeSpan interval = TimeSpan.FromSeconds(1.0f / 60);
-            while (mouseLeftButtonPressed)
+            while (m_mouseLeftButtonPressed)
             {
                 if (DateTime.Now.Subtract(now) > interval)
                 {
                     //マウス座標を取得
                     this.Dispatcher.Invoke(() => {
-                        newMousePosition = PointToScreen(Mouse.GetPosition(this));
+                        m_newMousePosition = PointToScreen(Mouse.GetPosition(this));
                         //右いっぱいになったら左に移動
-                        if (newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
+                        if (m_newMousePosition.X >= System.Windows.SystemParameters.PrimaryScreenWidth - 1 && m_mousePosition.X < System.Windows.SystemParameters.PrimaryScreenWidth - 1)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos(1, (int)newMousePosition.Y);
-                            newMousePosition.X = 1;
-                            mousePosition.X = 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos(1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = 1;
+                            m_mousePosition.X = 1 - diff;
                         }
                         //左いっぱいになったら右に移動
-                        else if (newMousePosition.X <= 0 && mousePosition.X > 0)
+                        else if (m_newMousePosition.X <= 0 && m_mousePosition.X > 0)
                         {
-                            double diff = newMousePosition.X - mousePosition.X;
-                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)newMousePosition.Y);
-                            newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
-                            mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
+                            double diff = m_newMousePosition.X - m_mousePosition.X;
+                            SetCursorPos((int)System.Windows.SystemParameters.PrimaryScreenWidth - 1, (int)m_newMousePosition.Y);
+                            m_newMousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1;
+                            m_mousePosition.X = System.Windows.SystemParameters.PrimaryScreenWidth - 1 - diff;
                         }
                     });
 
-                    xDiff = newMousePosition.X - mousePosition.X;
+                    xDiff = m_newMousePosition.X - m_mousePosition.X;
                     //スケーリング、プールダウンメニューで設定可能にしたら便利かも
                     xDiff *= 0.01f;
                     NativeMethods.InvokeWithDllProtection(() => NativeMethods.ScaleObject(objectName, vecZ * (float)xDiff));
@@ -1902,7 +1970,7 @@ namespace GameEngine
                         m_loader.SetGameObjectScale(objectName, Scl.X, Scl.Y, Scl.Z);
                     });
 
-                    mousePosition = newMousePosition;
+                    m_mousePosition = m_newMousePosition;
                     now = DateTime.Now;
                 }
             }
@@ -1910,7 +1978,7 @@ namespace GameEngine
 
         private void Inspector_Scale_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            mouseLeftButtonPressed = false;
+            m_mouseLeftButtonPressed = false;
             GameObject gameObject = HierarchyListBox.SelectedItem as GameObject;
             Vector3 Scl = NativeMethods.InvokeWithDllProtection(() => NativeMethods.GetObjectScale(gameObject.ToString()));
             gameObject.Scale = Scl;
@@ -1918,14 +1986,14 @@ namespace GameEngine
 
         private void Inspector_Change_Scale_Link(object sender, RoutedEventArgs e)
         {
-            if (inspector_isScaleLinked)
+            if (m_inspectorIsScaleLinked)
             {
-                inspector_isScaleLinked = false;
+                m_inspectorIsScaleLinked = false;
                 Inspector_Scale_Button.Content = "Not Linked";
             }
             else
             {
-                inspector_isScaleLinked = true;
+                m_inspectorIsScaleLinked = true;
                 Inspector_Scale_Button.Content = "Linked";
             }
         }
@@ -2180,7 +2248,7 @@ namespace GameEngine.GameEntity
         public void ReloadDll()
         {
             //m_loaderを再作成（AppDomain内のアセンブリ（dll情報）を更新するため）
-            string serializedGameObjects = m_loader.UninitDomain();
+            string[] serializedGameObjects = m_loader.UninitDomain();
             AppDomain.Unload(m_sandbox.m_appDomain);
             m_sandbox.InitSandbox();
             m_loader = (Loader)m_sandbox.m_appDomain.CreateInstanceAndUnwrap(typeof(Loader).Assembly.FullName, typeof(Loader).FullName);
@@ -2275,6 +2343,24 @@ namespace GameEngine.GameEntity
                         tbz.Text = resultVector.Z.ToString();
                     }
                 };
+
+                void SetGameObjectValue(bool isProperty, ComboBox cb, string changedName)
+                {
+                    string changedValue = cb.SelectedItem.ToString();
+                    string result = m_loader.SetPropertyOrFieldValue(isProperty, gameObjectName, scriptName, changedName, changedValue);
+
+                    //Set value失敗
+                    if(result != null)
+                    {
+                        foreach(object o in cb.Items)
+                        {
+                            if(o.ToString() == result)
+                            {
+                                cb.SelectedItem = o;
+                            }
+                        }
+                    }
+                }
 
                 //チェックボックスの値をオブジェクトの値へ代入（ローカル関数）
                 //（ローカル関数はオーバーロードがサポートされていない）
@@ -2402,6 +2488,29 @@ namespace GameEngine.GameEntity
                             stackPanelOneProp.Children.Add(vectorPanel);
                             stackPanelProp.Children.Add(stackPanelOneProp);
 
+                            break;
+
+                        case string value when value == typeof(GameObject).AssemblyQualifiedName:
+                            ComboBox propInputComboBox = new ComboBox() { MinWidth = 30 };
+                            foreach(object o in HierarchyListBox.Items)
+                            {
+                                propInputComboBox.Items.Add(o);
+                            }
+                            propInputComboBox.SelectedIndex = propInputComboBox.Items.Add("null");
+                            foreach(GameObject obj in HierarchyListBox.Items)
+                            {
+                                if(obj.Name == propInfos[i].PropValues[j])
+                                {
+                                    propInputComboBox.SelectedItem = obj;
+                                    break;
+                                }
+                            }
+                            propInputComboBox.SelectionChanged += (object sender, SelectionChangedEventArgs e) =>
+                            {
+                                SetGameObjectValue(true, propInputComboBox, propName);
+                            };
+                            stackPanelOneProp.Children.Add(propInputComboBox);
+                            stackPanelProp.Children.Add(stackPanelOneProp);
                             break;
 
                         default:
@@ -2550,6 +2659,29 @@ namespace GameEngine.GameEntity
 
                             break;
 
+                        case string value when value == typeof(GameObject).AssemblyQualifiedName:
+                            ComboBox fieldInputComboBox = new ComboBox() { MinWidth = 30 };
+                            foreach (object o in HierarchyListBox.Items)
+                            {
+                                fieldInputComboBox.Items.Add(o);
+                            }
+                            fieldInputComboBox.SelectedIndex = fieldInputComboBox.Items.Add("null");
+                            foreach (GameObject obj in HierarchyListBox.Items)
+                            {
+                                if (obj.Name == fieldInfos[i].PropValues[k])
+                                {
+                                    fieldInputComboBox.SelectedItem = obj;
+                                    break;
+                                }
+                            }
+                            fieldInputComboBox.SelectionChanged += (object sender, SelectionChangedEventArgs e) =>
+                            {
+                                SetGameObjectValue(false, fieldInputComboBox, fieldName);
+                            };
+                            stackPanelOneField.Children.Add(fieldInputComboBox);
+                            stackPanelField.Children.Add(stackPanelOneField);
+                            break;
+
                         //bool以外の型はテキストで表示
                         default:
                             TextBox fieldInputField = new TextBox() { MinWidth = 30 };
@@ -2580,49 +2712,61 @@ namespace GameEngine.GameEntity
                 }
                 stackPanelTemp.Children.Add(stackPanelField);
 
-                Button ComponentButton = new Button();
-                ComponentButton.Content = "Open Script";
-                ComponentButton.Width = 180;
-                string path = scriptPaths[i];
-                string slnPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.sln";
-                
-                ComponentButton.Click += (object ss, RoutedEventArgs ee) => {
-                    //slnが開いていない場合は新規slnを開く
-                    if (!m_slnOpening)
+                bool predefined = false;
+                foreach(string s in Define.preDefinedComponents)
+                {
+                    if(scriptName == s)
                     {
-                        Process p = new Process();
-                        p.StartInfo.FileName = slnPath;
-                        p.StartInfo.UseShellExecute = true;
-                        p.EnableRaisingEvents = true;
-                        //slnが閉じるとフラグが元に戻す
-                        p.Exited += (object s, EventArgs e) => {
-                            m_slnOpening = false; 
-                        };
-                        p.Disposed += (object s, EventArgs e) => {
-                            m_slnOpening = false; 
-                        };
-                        m_slnOpening = true;
-                        p.Start();
-                        //VSが完全に開いたまで待たないと（約10秒、それでもミスする可能性がある）
-                        //下のdevenv.exeが新規VSを開いてしまうので10秒間強制中断
-                        Thread.Sleep(10000);
+                        predefined = true;
+                        break;
                     }
+                }
+                if (!predefined)
+                {
+                    Button ComponentButton = new Button();
+                    ComponentButton.Content = "Open Script";
+                    ComponentButton.Width = 180;
+                    string path = scriptPaths[i];
+                    string slnPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.sln";
 
-                    //devenv.exeを使って対象の.csファイルをsln内に開く
-                    string devEnvPath = m_devenvPath + @"\devenv.exe";
-                    string projPath = m_scriptLibrary.FullPath;
-                    var command = $"/edit \"{path}\"";
-                    var cmdsi = new ProcessStartInfo
-                    {
-                        WindowStyle = ProcessWindowStyle.Normal,
-                        FileName = devEnvPath,
-                        RedirectStandardInput = true,
-                        UseShellExecute = false,
-                        Arguments = command
+                    ComponentButton.Click += (object ss, RoutedEventArgs ee) => {
+                        //slnが開いていない場合は新規slnを開く
+                        if (!m_slnOpening)
+                        {
+                            Process p = new Process();
+                            p.StartInfo.FileName = slnPath;
+                            p.StartInfo.UseShellExecute = true;
+                            p.EnableRaisingEvents = true;
+                            //slnが閉じるとフラグが元に戻す
+                            p.Exited += (object s, EventArgs e) => {
+                                m_slnOpening = false;
+                            };
+                            p.Disposed += (object s, EventArgs e) => {
+                                m_slnOpening = false;
+                            };
+                            m_slnOpening = true;
+                            p.Start();
+                            //VSが完全に開いたまで待たないと（約10秒、それでもミスする可能性がある）
+                            //下のdevenv.exeが新規VSを開いてしまうので10秒間強制中断
+                            Thread.Sleep(10000);
+                        }
+
+                        //devenv.exeを使って対象の.csファイルをsln内に開く
+                        string devEnvPath = m_devenvPath + @"\devenv.exe";
+                        string projPath = m_scriptLibrary.FullPath;
+                        var command = $"/edit \"{path}\"";
+                        var cmdsi = new ProcessStartInfo
+                        {
+                            WindowStyle = ProcessWindowStyle.Normal,
+                            FileName = devEnvPath,
+                            RedirectStandardInput = true,
+                            UseShellExecute = false,
+                            Arguments = command
+                        };
+                        Process cmd = Process.Start(cmdsi);
                     };
-                    Process cmd = Process.Start(cmdsi);
-                };
-                stackPanelTemp.Children.Add(ComponentButton);
+                    stackPanelTemp.Children.Add(ComponentButton);
+                }
 
                 Button RemoveComponentButton = new Button();
                 RemoveComponentButton.Content = "Remove Script";
@@ -2635,7 +2779,7 @@ namespace GameEngine.GameEntity
                     confirmDialog.Owner = GetWindow(this);
                     if (confirmDialog.ShowDialog() == true)
                     {
-                        if (confirmDialog.IsConfirm)
+                        if (confirmDialog.m_isConfirm)
                         {
                             m_loader.RemoveScriptFromGameObjectByIndex(gameObjectName, index);
                             LoadComponents(gameObjectName);
@@ -2708,6 +2852,12 @@ namespace GameEngine.GameEntity
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
             if (inspectorObject == null) { return; }
 
+            if(inspectorObject.Name == "MainCamera")
+            {
+                CenterMessageBox.Show(new WindowWrapper(this), "Main Cameraは削除禁止です！", "Alert", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
+
             //ゲーム側、描画側のオブジェクトを削除
             m_loader.RemoveGameObject(inspectorObject.Name);
 
@@ -2727,7 +2877,8 @@ namespace GameEngine.GameEntity
         /// </summary>
         private void ExplorerBrowser_ToDefaultPath(object sender, RoutedEventArgs e)
         {
-            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            ProjectBrowser_Goto(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
         }
 
         /// <summary>
@@ -2739,7 +2890,8 @@ namespace GameEngine.GameEntity
 
             //前のパスを取得
             string prevPath = m_traversedPath.Pop();
-            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(prevPath));
+            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(prevPath));
+            ProjectBrowser_Goto(prevPath);
 
             //次のパスを追加
             m_nextPath.Push(m_currentPath);
@@ -2766,7 +2918,8 @@ namespace GameEngine.GameEntity
 
             //次のパスを取得
             string nextPath = m_nextPath.Pop();
-            ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(nextPath));
+            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(nextPath));
+            ProjectBrowser_Goto(nextPath);
 
             //前のパスを記録
             m_traversedPath.Push(m_currentPath);
@@ -2793,7 +2946,8 @@ namespace GameEngine.GameEntity
             DirectoryInfo parentInfo = new System.IO.DirectoryInfo(m_currentPath).Parent;
             if (parentInfo != null)
             {
-                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(parentInfo.FullName));
+                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(parentInfo.FullName));
+                ProjectBrowser_Goto(parentInfo.FullName);
             }
             //既に一番上のパスにいる場合は元のパスに戻す
             else
@@ -2814,7 +2968,8 @@ namespace GameEngine.GameEntity
             //有効なパスの場合
             if (System.IO.Directory.Exists(ProjectBrowser_Path.Text))
             {
-                ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(ProjectBrowser_Path.Text));
+                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(ProjectBrowser_Path.Text));
+                ProjectBrowser_Goto(ProjectBrowser_Path.Text);
             }
             //無効パスの場合は元のパスに戻す
             else
@@ -2872,6 +3027,123 @@ namespace GameEngine.GameEntity
             m_currentPath = e.NewLocation.ParsingName;
         }
 
+        public static void UpdateKeyboardState()
+        {
+
+        }
+
+        private void ProjectBrowser_Loaded(object sender, RoutedEventArgs e)
+        {
+            m_projectBrowserLoading = false;
+            //各種初期化
+            string currentPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            Button_PreviousPage.IsEnabled = false;
+            Button_NextPage.IsEnabled = false;
+            ProjectBrowser_Path.Text = currentPath;
+            m_currentPath = currentPath;
+
+            //リストビューのアイテムを更新
+            m_projectBrowserItems.Clear();
+            foreach(string s in Directory.GetDirectories(currentPath))
+            {
+                //s.Replace(currentPath, "");
+                m_projectBrowserItems.Add(s.Replace(currentPath + @"\", ""));
+            }
+            foreach(string obj in Directory.GetFiles(currentPath, "*.obj"))
+            {
+                //obj.Replace(currentPath, "");
+                m_projectBrowserItems.Add(obj.Replace(currentPath + @"\", ""));
+            }
+            ProjectBrowser.ItemsSource = m_projectBrowserItems;
+        }
+
+        private void ProjectBrowser_Goto(string directory)
+        {
+            //前のパスを記録
+            m_traversedPath.Push(m_currentPath);
+            Button_PreviousPage.IsEnabled = true;
+
+            //テキストを表示
+            ProjectBrowser_Path.Text = directory;
+
+            //次のパスをクリア
+            m_nextPath.Clear();
+            Button_NextPage.IsEnabled = false;
+
+            //現在のパスを更新
+            m_currentPath = directory;
+
+            //リストビューのアイテムを更新
+            m_projectBrowserItems.Clear();
+            foreach (string s in Directory.GetDirectories(directory))
+            {
+                m_projectBrowserItems.Add(s.Replace(directory + @"\", ""));
+            }
+            foreach (string obj in Directory.GetFiles(directory, "*.obj"))
+            {
+                m_projectBrowserItems.Add(obj.Replace(directory + @"\", ""));
+            }
+        }
+
+        private void ProjectBrowser_Item_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            //選んでいない場合は処理しない
+            if (ProjectBrowser.SelectedItem == null) return;
+
+            //.objを選んだ場合は直接ホストに入れる
+            if (Path.GetExtension(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString()) == ".obj")
+            {
+                Host_AddModel(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+                return;
+            }
+
+            //フォルダの場合は入る
+            ProjectBrowser_Goto(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+        }
+
+        private void ProjectBrowser_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ProjectBrowser.SelectedItem = null;
+        }
+
+        private void ProjectBrowser_Item_Add(object sender, RoutedEventArgs e)
+        {
+            //.objを選んだ場合は直接ホストに入れる
+            if (Path.GetExtension(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString()) == ".obj")
+            {
+                Host_AddModel(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+                return;
+            }
+        }
+
+
+        private void ProjectBrowser_Item_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            FrameworkElement b = e.Source as FrameworkElement;
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem item = new MenuItem();
+            if (Path.GetExtension(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString()) != ".obj")
+            {
+                item.Header = "Enter Folder";
+                item.Click += ProjectBrowser_Enter_Folder;
+            }
+            else
+            {
+                item.Header = "Add to game";
+                item.Click += ProjectBrowser_Item_Add;
+            }
+            contextMenu.Items.Add(item);
+            b.ContextMenu = contextMenu;
+        }
+
+        private void ProjectBrowser_Enter_Folder(object sender, RoutedEventArgs e)
+        {
+            //選んでいない場合は処理しない
+            if (ProjectBrowser.SelectedItem == null) return;
+
+            //フォルダの場合は入る
+            ProjectBrowser_Goto(m_currentPath + @"\" + ProjectBrowser.SelectedItem.ToString());
+        }
     }
 
 

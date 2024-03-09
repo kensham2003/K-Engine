@@ -204,7 +204,7 @@ void Renderer::Init()
 	// ÉâÉCÉgèâä˙âª
 	LIGHT light{};
 	light.Enable = true;
-	light.Direction = D3DXVECTOR4(1.0f, -1.0f, 1.0f, 0.0f);
+	light.Direction = D3DXVECTOR4(0.5f, -1.0f, 0.5f, 0.0f);
 	D3DXVec4Normalize(&light.Direction, &light.Direction);
 	light.Ambient = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.0f);
 	light.Diffuse = D3DXCOLOR(2.0f, 2.0f, 2.0f, 1.0f);

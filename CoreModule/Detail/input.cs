@@ -6,6 +6,7 @@
 /// 
 ////////////////////////////////////////
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -23,8 +24,33 @@ namespace GameEngine.Detail
                 Toggled = 2
             }
 
+            //別のAppDomainでも使える（なぜか）
             [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
             private static extern short GetKeyState(int keyCode);
+
+            //なぜか別のAppDomainではキー入力取れないので使わない
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            private static extern bool GetKeyboardState(byte[] lpKeyState);
+
+            //今フレームのキー状態
+            private static Dictionary<Keys, bool> m_keyState = new Dictionary<Keys, bool>();
+
+            //前フレームのキー状態
+            private static Dictionary<Keys, bool> m_oldKeyState = new Dictionary<Keys, bool>();
+
+
+            /// <summary>
+            /// キーの状態を更新
+            /// </summary>
+            public static void UpdateKeyState()
+            {
+                m_oldKeyState = new Dictionary<Keys, bool>(m_keyState);
+                foreach(Keys key in Enum.GetValues(typeof(Keys)))
+                {
+                    m_keyState[key] = IsKeyDown(key);
+                }
+            }
 
 
             /// <summary>
@@ -59,6 +85,8 @@ namespace GameEngine.Detail
             public static bool IsKeyDown(Keys key)
             {
                 return KeyStates.Down == (GetKeyState(key) & KeyStates.Down);
+                //byte keyCode = GetVirtualKeyCode(key);
+                //return ((m_keyState[keyCode] & 0x80) != 0);
             }
 
 
@@ -70,6 +98,28 @@ namespace GameEngine.Detail
             public static bool IsKeyToggled(Keys key)
             {
                 return KeyStates.Toggled == (GetKeyState(key) & KeyStates.Toggled);
+            }
+
+
+            /// <summary>
+            /// キーが今フレーム押され始めたか
+            /// </summary>
+            /// <param name="key">キー名</param>
+            /// <returns></returns>
+            public static bool IsKeyTriggered(Keys key)
+            {
+                return (m_keyState[key] && !m_oldKeyState[key]);
+            }
+
+
+            /// <summary>
+            /// キーが今フレーム離され始めたか
+            /// </summary>
+            /// <param name="key">キー名</param>
+            /// <returns></returns>
+            public static bool IsKeyReleased(Keys key)
+            {
+                return (!m_keyState[key] && m_oldKeyState[key]);
             }
         }
     }

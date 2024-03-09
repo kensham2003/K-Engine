@@ -25,6 +25,9 @@ namespace GameEngine.GameLoop
         /// </summary>
         public List<GameObject>[] m_gameObjects = new List<GameObject>[5];
 
+        private Camera m_mainCamera;
+        private bool m_mainCameraHasTarget;
+
 
         /// <summary>
         /// ゲームを初期化
@@ -55,9 +58,21 @@ namespace GameEngine.GameLoop
         {
             DestroyList.ClearList();
 
+            Input.Keyboard.UpdateKeyState();
+
             //最初のフレームならBeginPlay()を呼ぶ
             if (m_firstFrame)
             {
+                m_mainCamera = FindGameObject("MainCamera").GetComponent<Camera>();
+                if(m_mainCamera.LookAtTarget != null)
+                {
+                    m_mainCameraHasTarget = true;
+                }
+                else
+                {
+                    m_mainCameraHasTarget = false;
+                }
+                MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetCameraFocusTarget(m_mainCameraHasTarget));
                 for (int i = 0; i < Define.NUM_LAYER; i++)
                 {
                     foreach (GameObject gameObject in m_gameObjects[i])
@@ -66,6 +81,11 @@ namespace GameEngine.GameLoop
                         gameObject.ObjectsColliding.Clear();
                         gameObject.BeginPlay();
                     }
+                }
+
+                if (m_mainCameraHasTarget)
+                {
+                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetCameraTargetPosition(m_mainCamera.LookAtTarget.Position + m_mainCamera.LookAtOffset));
                 }
                 m_firstFrame = false;
             }
@@ -216,6 +236,28 @@ namespace GameEngine.GameLoop
                 MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectDrawFlag(gameObject.Name, false));
             }
 
+            if (m_mainCameraHasTarget)
+            {
+                if(m_mainCamera.LookAtTarget == null)
+                {
+                    m_mainCameraHasTarget = false;
+                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetCameraFocusTarget(m_mainCameraHasTarget));
+                }
+            }
+            else
+            {
+                if(m_mainCamera.LookAtTarget != null)
+                {
+                    m_mainCameraHasTarget = true;
+                    MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetCameraFocusTarget(m_mainCameraHasTarget));
+                }
+            }
+
+            if (m_mainCameraHasTarget)
+            {
+                MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetCameraTargetPosition(m_mainCamera.LookAtTarget.Position + m_mainCamera.LookAtOffset));
+            }
+
             //更新が終わったオブジェクトの位置情報などを描画側（C++）に送る
             for (int i = 0; i < Define.NUM_LAYER; i++)
             {
@@ -251,6 +293,19 @@ namespace GameEngine.GameLoop
 
 
         /// <summary>
+        /// 対象レイヤーの全オブジェクトを削除
+        /// </summary>
+        /// <param name="layer">指定したレイヤー</param>
+        public void RemoveAllGameObjects(int layer)
+        {
+            foreach(GameObject gameObject in m_gameObjects[layer])
+            {
+                RemoveGameObject(gameObject);
+            }
+        }
+
+
+        /// <summary>
         /// シーン内のオブジェクトを全部描画するように（シミュレート停止する時Destroyされた物を復活）
         /// </summary>
         public void RedrawGameObjects()
@@ -262,6 +317,18 @@ namespace GameEngine.GameLoop
                     gameObject.Active = true;
                     MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectDrawFlag(gameObject.Name, true));
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// シミュレート時カメラのアイコンを非表示
+        /// </summary>
+        public void SetCameraModelVisibility(bool visibility)
+        {
+            foreach(GameObject gameObject in m_gameObjects[Define.LAYER_CAMERA])
+            {
+                MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.SetObjectDrawFlag(gameObject.Name, visibility));
             }
         }
 
