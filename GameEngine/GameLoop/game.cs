@@ -300,8 +300,10 @@ namespace GameEngine.GameLoop
         {
             foreach(GameObject gameObject in m_gameObjects[layer])
             {
-                RemoveGameObject(gameObject);
+                MainWindow.NativeMethods.InvokeWithDllProtection(() => MainWindow.NativeMethods.RemoveObject(gameObject.Name));
             }
+
+            m_gameObjects[layer].Clear();
         }
 
 

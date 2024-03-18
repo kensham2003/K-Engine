@@ -81,7 +81,6 @@ namespace GameEngine.ScriptLoading
                     for (int i = 0; i < gameObject.ComponentName.Count; i++)
                     {
                         //インスタンス生成
-                        //var typeName = m_nameAssemblyDict[gameObject.GameScriptName[i]].GetType("GameEngine.GameEntity." + gameObject.GameScriptName[i]);
                         var typeName = m_Assembly.GetType("GameEngine.GameEntity." + gameObject.ComponentName[i]);
                         if (typeName == null)
                         {

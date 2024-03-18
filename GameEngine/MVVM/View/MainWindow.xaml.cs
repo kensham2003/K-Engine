@@ -95,6 +95,7 @@ namespace GameEngine
         bool m_simulating = false;
         Sandbox m_sandbox;
         Loader m_loader;
+        GameObject m_mainCamera;
 
         //スクリプトコンパイル関連
         Project m_scriptLibrary;
@@ -306,16 +307,6 @@ namespace GameEngine
         {
             Init();
             this.InitializeRendering();
-            //var a = MSBuildLocator.QueryVisualStudioInstances().ToList();
-            //var vs2019 = MSBuildLocator.QueryVisualStudioInstances().Where(x => x.Name == "Visual Studio Community 2019").First();
-            //if (MSBuildLocator.CanRegister)
-            //{
-            //    MSBuildLocator.RegisterDefaults();
-            //}
-            //else
-            //{
-            //    MSBuildLocator.RegisterInstance(vs2019);
-            //}
 
             m_scriptLibrary = new Project(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/ScriptsLibrary.csproj");
             m_logger.Parameters = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/ScriptsLibrary/buildLog.txt";
@@ -323,8 +314,9 @@ namespace GameEngine
             ReloadDll();
 
             //メインカメラを追加
-            GameObject gameObject = new GameObject("MainCamera");
-            HierarchyListBox.Items.Add(gameObject);
+            //GameObject gameObject = new GameObject("MainCamera");
+            m_mainCamera = new GameObject("MainCamera");
+            HierarchyListBox.Items.Add(m_mainCamera);
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddMainCamera(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\EngineAssets\\model\\camera.obj"));
             NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectCanRayHit("MainCamera", false));
             m_loader.AddGameObject("MainCamera", Define.LAYER_CAMERA);
@@ -346,7 +338,7 @@ namespace GameEngine
         {
             if (!m_simulating)
             {
-                SaveFile("自動セーブ成功！");
+                SaveFile("自動セーブ成功！", "temp.json");
             }
         }
 
@@ -634,7 +626,6 @@ namespace GameEngine
         {
             Application.Current.MainWindow = this;
             m_mainViewModel = (MainViewModel)DataContext;
-            //MessageLog.MouseLeftButtonDown += 
         }
 
         //===============================
@@ -902,6 +893,8 @@ namespace GameEngine
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
             m_loader.RemoveAllGameObjects(Define.LAYER_3D_OBJECT);
+            HierarchyListBox.Items.Clear();
+            HierarchyListBox.Items.Add(m_mainCamera);
 
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
@@ -909,7 +902,23 @@ namespace GameEngine
                 WriteIndented = true,
                 IncludeFields = true,
             };
-            string fileName = "TestScene.json";
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            openFileDialog.DefaultExt = ".json";
+            openFileDialog.Filter = "Json documents (.json)|*.json";
+
+            Nullable<bool> result = openFileDialog.ShowDialog();
+            string fileName = "";
+
+            if (result == true)
+            {
+                fileName = openFileDialog.FileName;
+            }
+
+            if (!File.Exists(fileName))
+            {
+                return;
+            }
+
             string jsonString = File.ReadAllText(fileName);
             string[] jsonStrings = new string[Define.NUM_LAYER];
             for(int i = 0; i < Define.NUM_LAYER; i++)
@@ -932,18 +941,23 @@ namespace GameEngine
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(gameObject.Name, gameObject.Scale));
             }
             m_loader.LoadGameObjects(jsonStrings);
+            m_loader.AddGameObject("MainCamera", Define.LAYER_CAMERA);
+            m_loader.AddComponentToGameObject("MainCamera", "Camera");
         }
 
         private void MenuItem_Save_Click(object sender, RoutedEventArgs e)
         {
-            var confirmWindow = new confirmWindow("セーブしますか？");
-            confirmWindow.Owner = GetWindow(this);
-            if (confirmWindow.ShowDialog() == true)
+            //「Save As」ダイアログ
+            Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+            saveFileDialog.FileName = "TestScene";
+            saveFileDialog.DefaultExt = ".json";
+            saveFileDialog.Filter = "Json documents (.json)|*.json";
+
+            Nullable<bool> result = saveFileDialog.ShowDialog();
+
+            if(result == true)
             {
-                if (confirmWindow.m_isConfirm)
-                {
-                    SaveFile("セーブ成功！");
-                }
+                SaveFile("セーブ成功！", saveFileDialog.FileName);
             }
         }
 
@@ -952,9 +966,8 @@ namespace GameEngine
         /// 現在の情報をファイルにセーブ（TestScene.json）、メインカメラ含まない
         /// </summary>
         /// <param name="successMsg">成功したらデバッグログに出すメッセージ</param>
-        private void SaveFile(string successMsg)
+        private void SaveFile(string successMsg, string fileName)
         {
-            string fileName = "TestScene.json";
             string jsonString = m_loader.Serialize(Define.LAYER_3D_OBJECT);
             File.WriteAllText(fileName, jsonString);
             SetMessage(successMsg);
@@ -989,12 +1002,10 @@ namespace GameEngine
                 {
                     this.Dispatcher.Invoke(() =>
                     {
-                        //Input.Keyboard.UpdateKeyState();
                         //デバッグログを取得
                         List<string> debugMessage = m_loader.GetDebugMessage();
                         if (debugMessage.Count() > 0)
                         {
-                            //MessageLog.Content = debugMessage.Last();
                             m_loader.ClearDebugLog();
                             SetMessages(debugMessage);
                         }
@@ -1096,11 +1107,6 @@ namespace GameEngine
 
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectPosition(objectName, gameObject.Position));
             }
-
-            //if (!mouseRightButtonPressed)
-            //{
-            //    cameraMoveVelocity = Vector3.Zero;
-            //}
         }
 
         //==================================
@@ -1240,7 +1246,6 @@ namespace GameEngine
                 NativeMethods.InvokeWithDllProtection(() => NativeMethods.SetObjectScale(objectName, gameObject.Scale));
                 m_loader.SetGameObjectScale(objectName, scale.X, scale.Y, scale.Z);
             }
-            //gameObject.Script = ScriptTextBox.Text;
         }
 
         //=================================
@@ -2795,18 +2800,6 @@ namespace GameEngine.GameEntity
         }
 
 
-        //private void Add_BoxCollider(object sender, RoutedEventArgs e)
-        //{
-        //    GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
-
-        //    //BoxCollider boxCollider = new BoxCollider();
-
-        //    string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\asset\\model\\cube.obj";
-        //    NativeMethods.InvokeWithDllProtection(() => NativeMethods.AddBoxCollider(inspectorObject.Name, path));
-
-        //}
-
-
         private void Model_Lighting_Checked(object sender, RoutedEventArgs e)
         {
             GameObject inspectorObject = HierarchyListBox.SelectedItem as GameObject;
@@ -2877,7 +2870,6 @@ namespace GameEngine.GameEntity
         /// </summary>
         private void ExplorerBrowser_ToDefaultPath(object sender, RoutedEventArgs e)
         {
-            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
             ProjectBrowser_Goto(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
         }
 
@@ -2890,7 +2882,6 @@ namespace GameEngine.GameEntity
 
             //前のパスを取得
             string prevPath = m_traversedPath.Pop();
-            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(prevPath));
             ProjectBrowser_Goto(prevPath);
 
             //次のパスを追加
@@ -2918,7 +2909,6 @@ namespace GameEngine.GameEntity
 
             //次のパスを取得
             string nextPath = m_nextPath.Pop();
-            //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(nextPath));
             ProjectBrowser_Goto(nextPath);
 
             //前のパスを記録
@@ -2946,7 +2936,6 @@ namespace GameEngine.GameEntity
             DirectoryInfo parentInfo = new System.IO.DirectoryInfo(m_currentPath).Parent;
             if (parentInfo != null)
             {
-                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(parentInfo.FullName));
                 ProjectBrowser_Goto(parentInfo.FullName);
             }
             //既に一番上のパスにいる場合は元のパスに戻す
@@ -2968,7 +2957,6 @@ namespace GameEngine.GameEntity
             //有効なパスの場合
             if (System.IO.Directory.Exists(ProjectBrowser_Path.Text))
             {
-                //ProjectBrowser.Navigate(ShellFileSystemFolder.FromFolderPath(ProjectBrowser_Path.Text));
                 ProjectBrowser_Goto(ProjectBrowser_Path.Text);
             }
             //無効パスの場合は元のパスに戻す
@@ -3027,11 +3015,6 @@ namespace GameEngine.GameEntity
             m_currentPath = e.NewLocation.ParsingName;
         }
 
-        public static void UpdateKeyboardState()
-        {
-
-        }
-
         private void ProjectBrowser_Loaded(object sender, RoutedEventArgs e)
         {
             m_projectBrowserLoading = false;
@@ -3046,12 +3029,10 @@ namespace GameEngine.GameEntity
             m_projectBrowserItems.Clear();
             foreach(string s in Directory.GetDirectories(currentPath))
             {
-                //s.Replace(currentPath, "");
                 m_projectBrowserItems.Add(s.Replace(currentPath + @"\", ""));
             }
             foreach(string obj in Directory.GetFiles(currentPath, "*.obj"))
             {
-                //obj.Replace(currentPath, "");
                 m_projectBrowserItems.Add(obj.Replace(currentPath + @"\", ""));
             }
             ProjectBrowser.ItemsSource = m_projectBrowserItems;
